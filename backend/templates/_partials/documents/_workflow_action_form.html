@@ -1,0 +1,29 @@
+<form method="post" id="workflow-action-form" style="display:none;">
+  {% csrf_token %}
+  <input type="hidden" name="action" id="workflow-action-field" />
+  <input type="hidden" name="route" id="workflow-route-field" />
+  <input type="hidden" name="assignee_id" id="workflow-assignee-id" />
+  <input type="hidden" name="assignee_ids" id="workflow-assignee-ids" />
+  <input type="hidden" name="assignees" id="workflow-assignees" />
+  <input type="hidden" name="instruction" id="workflow-instruction" />
+  <input type="hidden" name="due_at" id="workflow-due-at" />
+  <input type="hidden" name="received_number" id="workflow-received-number" />
+  <input type="hidden" name="received_date" id="workflow-received-date" />
+  <input type="hidden" name="sender" id="workflow-sender" />
+  <input type="hidden" name="note" id="workflow-note" />
+  <input type="hidden" name="register_book_id" id="workflow-register-book-id" />
+  <input type="hidden" name="result_note" id="workflow-result-note" />
+  <input type="hidden" name="reason" id="workflow-reason" />
+  <input type="hidden" name="signature_hash" id="workflow-signature-hash" />
+  <input type="hidden" name="signer_position" id="workflow-signer-position" />
+  <input type="hidden" name="issue_number" id="workflow-issue-number" />
+  <input type="hidden" name="issued_date" id="workflow-issued-date" />
+  <input type="hidden" name="channels" id="workflow-channels" />
+  <input type="hidden" name="leader_id" id="workflow-leader-id" />
+  <input type="hidden" name="leader_ids" id="workflow-leader-ids" />
+  <input type="hidden" name="case_leader" id="workflow-case-leader" />
+  <input type="hidden" name="case_due_date" id="workflow-case-due" />
+  <input type="hidden" name="prefix" id="workflow-prefix" />
+  <input type="hidden" name="postfix" id="workflow-postfix" />
+  <input type="hidden" name="year" id="workflow-year" />
+</form>

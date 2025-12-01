@@ -1,0 +1,303 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Văn bản đi (Lãnh đạo){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ======= KPI BAR ======= -->
+            <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Chờ duyệt
+                  </h3>
+                  <span
+                    class="w-7 h-7 grid place-items-center rounded-full bg-amber-50"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      class="w-4 h-4 text-amber-600"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 7v5l4 2" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="text-3xl font-bold pt-1" id="kpiPendingApprove">
+                  0
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Chờ ký
+                  </h3>
+                  <span
+                    class="w-7 h-7 grid place-items-center rounded-full bg-indigo-50"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      class="w-4 h-4 text-indigo-600"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path
+                        d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"
+                      />
+                    </svg>
+                  </span>
+                </div>
+                <div class="text-3xl font-bold pt-1" id="kpiPendingSign">0</div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Đang xử lý
+                  </h3>
+                  <span
+                    class="w-7 h-7 grid place-items-center rounded-full bg-blue-50"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      class="w-4 h-4 text-blue-600"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M12 6v6l4 2" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="text-3xl font-bold pt-1" id="kpiProcessing">0</div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Đã phát hành
+                  </h3>
+                  <span
+                    class="w-7 h-7 grid place-items-center rounded-full bg-emerald-50"
+                    aria-hidden="true"
+                  >
+                    <svg
+                      class="w-4 h-4 text-emerald-600"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M9 12l2 2 4-4" />
+                    </svg>
+                  </span>
+                </div>
+                <div class="text-3xl font-bold pt-1" id="kpiIssued">0</div>
+              </article>
+            </section>
+            <p class="text-xs text-slate-500 mt-2">
+              * Số liệu thống kê dựa trên trang hiện tại
+            </p>
+
+            <!-- ======= Filter Section ======= -->
+            <section
+              class="mt-4 bg-white border border-slate-200 rounded-xl p-3"
+            >
+              <h3 class="text-[14px] font-semibold text-slate-700 mb-3">
+                Tìm kiếm và lọc
+              </h3>
+              <div
+                class="grid grid-cols-1 md:grid-cols-[1fr,auto,auto] gap-3 items-stretch"
+              >
+                <label class="relative">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M8 4a4 4 0 102.83 6.83l3.44 3.44a1 1 0 001.41-1.41l-3.44-3.44A4 4 0 008 4z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <input
+                    id="searchTitle"
+                    type="text"
+                    class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px] placeholder-slate-400"
+                    placeholder="Tìm kiếm theo tiêu đề, số văn bản…"
+                  />
+                </label>
+
+                <!-- Trạng thái -->
+                <div class="relative">
+                  <button
+                    id="btnStatusFilter"
+                    type="button"
+                    class="w-full md:w-48 h-10 px-3 rounded-lg border border-slate-200 text-[14px] flex items-center justify-between hover:bg-slate-50"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  >
+                    <span id="statusLabel">Tất cả trạng thái</span>
+                    <svg
+                      class="w-4 h-4 text-slate-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 9l6 6 6-6"
+                      />
+                    </svg>
+                  </button>
+                  <div
+                    id="statusMenu"
+                    class="hidden absolute z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-sm"
+                    role="listbox"
+                    aria-labelledby="btnStatusFilter"
+                  >
+                    <button
+                      data-status="all"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Tất cả trạng thái
+                    </button>
+                    <button
+                      data-status="cho_duyet"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Chờ duyệt
+                    </button>
+                    <button
+                      data-status="cho_ky"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Chờ ký
+                    </button>
+                    <button
+                      data-status="dang_xu_ly"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Đang xử lý
+                    </button>
+                    <button
+                      data-status="da_phat_hanh"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Đã phát hành
+                    </button>
+                    <button
+                      data-status="tra_lai"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Trả lại
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Mức độ -->
+                <div class="relative">
+                  <button
+                    id="btnLevelFilter"
+                    type="button"
+                    class="w-full md:w-44 h-10 px-3 rounded-lg border border-slate-200 text-[14px] flex items-center justify-between hover:bg-slate-50"
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
+                  >
+                    <span id="levelLabel">Tất cả mức độ</span>
+                    <svg
+                      class="w-4 h-4 text-slate-500"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 9l6 6 6-6"
+                      />
+                    </svg>
+                  </button>
+                  <div
+                    id="levelMenu"
+                    class="hidden absolute z-10 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-sm"
+                    role="listbox"
+                    aria-labelledby="btnLevelFilter"
+                  >
+                    <button
+                      data-level="all"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Tất cả mức độ
+                    </button>
+                    <button
+                      data-level="urgent"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Khẩn
+                    </button>
+                    <button
+                      data-level="high"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Cao
+                    </button>
+                    <button
+                      data-level="normal"
+                      class="filter-item block w-full rounded-md px-3 py-2 text-left text-[14px] hover:bg-slate-100"
+                    >
+                      Thường
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- ======= Table Section ======= -->
+            <section
+              class="mt-5 bg-white border border-slate-200 rounded-xl overflow-hidden"
+            >
+              <header class="px-4 py-3 border-b border-slate-100">
+                <h2 class="text-[15px] font-semibold text-slate-700">
+                  Danh sách văn bản đi
+                </h2>
+                <p class="text-[12.5px] text-slate-500">
+                  Hiển thị <span id="countShown">0</span> văn bản
+                </p>
+              </header>
+
+              <div class="px-4 pb-5">
+                <table class="w-full text-sm tbl-hover min-w-full table-fixed">
+                  <thead class="text-left text-slate-600">
+                    <tr class="border-b border-slate-200">
+                      <th class="py-2 pr-3 w-[30%]">Tiêu đề</th>
+                      <th class="py-2 pr-3 w-[12%]">Số văn bản</th>
+                      <th class="py-2 pr-3 w-[10%]">Ngày tạo</th>
+                      <th class="py-2 pr-3 w-[20%]">Nơi nhận</th>
+                      <th class="py-2 pr-3 w-[10%]">Mức độ</th>
+                      <th class="py-2 pr-3 w-[10%]">Trạng thái</th>
+                      <th class="py-2 pr-0 text-right w-[8%]">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="docTableBody">
+                    <tr>
+                      <td colspan="7" class="py-6 text-center text-sm text-slate-500">
+                        Đang tải dữ liệu văn bản…
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/doc-helpers.js' %}"></script>
+<script src="{% static 'js/lanhdao-vanbandi.js' %}"></script>
+<script>window.LDOutgoingListOverride = true;</script>
+<script src="{% static 'js/lanhdao.js' %}"></script>
+{% endblock %}

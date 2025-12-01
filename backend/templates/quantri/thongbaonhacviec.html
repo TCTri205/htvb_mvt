@@ -1,0 +1,497 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Thông báo - Nhắc việc{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ====== TOP METRICS ====== -->
+            <section
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6"
+            >
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Kênh hoạt động
+                  </h3>
+                  <span class="text-blue-600">📶</span>
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold" id="notifChannelsValue">2/3</div>
+                  <div class="text-[12.5px] text-slate-500" id="notifChannelsText">Kênh online đang hoạt động</div>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Đã gửi (30 ngày)
+                  </h3>
+                  <span class="text-emerald-600">✔</span>
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold" id="notifSentValue">2.103</div>
+                  <div class="text-[12.5px] text-slate-500" id="notifSentText">Tổng thông báo được xử lý</div>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Lỗi (30 ngày)
+                  </h3>
+                  <span class="text-rose-600">✖</span>
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold" id="notifErrorValue">15</div>
+                  <div class="text-[12.5px] text-rose-600" id="notifErrorText">Lỗi gửi nhắc việc</div>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tự động hóa
+                  </h3>
+                  <span class="text-purple-600">⏱</span>
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold" id="notifAutomationValue">5/6</div>
+                  <div class="text-[12.5px] text-slate-500" id="notifAutomationText">Luật chạy tự động</div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ====== SWITCHED TABS ====== -->
+            <div
+              class="mt-5 bg-white border border-slate-200 rounded-xl overflow-hidden"
+            >
+              <!-- Tabs -->
+              <div class="grid grid-cols-3 text-center text-[14px]">
+                <button
+                  data-tab="tab-channels"
+                  class="tab-btn col-span-1 py-2.5 border-b-2 border-blue-600 font-medium text-blue-600"
+                >
+                  <span class="align-middle mr-2">🔔</span>Kênh thông báo
+                </button>
+                <button
+                  data-tab="tab-automation"
+                  class="tab-btn col-span-1 py-2.5 border-b-2 border-transparent hover:bg-slate-50"
+                >
+                  <span class="align-middle mr-2">⚙️</span>Tự động hóa
+                </button>
+                <button
+                  data-tab="tab-logs"
+                  class="tab-btn col-span-1 py-2.5 border-b-2 border-transparent hover:bg-slate-50"
+                >
+                  <span class="align-middle mr-2">⚡</span>Nhật ký gửi
+                </button>
+              </div>
+
+              <!-- CHANNELS -->
+              <section id="tab-channels" class="p-4 lg:p-6 space-y-4">
+                <!-- Email -->
+                <article data-channel-card="email" class="rounded-xl border border-slate-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded-lg bg-blue-50 grid place-items-center text-blue-600"
+                      >
+                        📧
+                      </div>
+                      <div>
+                        <h4 class="font-semibold leading-6">Thư điện tử</h4>
+                        <div
+                          class="flex flex-wrap items-center gap-3 text-[12.5px] text-slate-500"
+                        >
+                          <span>
+                            Đã gửi
+                            <span
+                              class="font-medium text-slate-700"
+                              data-channel-sent="email"
+                            >1.247</span>
+                          </span>
+                          <span
+                            class="text-rose-600"
+                            data-channel-error="email"
+                          >Lỗi 12</span>
+                          <span
+                            class="text-blue-600"
+                            data-channel-rate="email"
+                          >Tỷ lệ thành công 99%</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 mt-1" data-channel-config="email">
+                          Đang tải cấu hình kênh…
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="inline-flex px-2 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700"
+                        >Hoạt động</span
+                      >
+                      <span class="hidden sm:block text-[12.5px] text-slate-500" data-channel-lastused="email"
+                        >Đang tải thời gian sử dụng…</span
+                      >
+                      <button
+                        class="px-3 py-1.5 rounded-md border border-slate-200 text-[12.5px] hover:bg-slate-50"
+                        data-action="detail"
+                        data-channel="email"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12.5px] hover:opacity-90"
+                        data-action="test"
+                        data-channel="email"
+                      >
+                        Kiểm thử
+                      </button>
+                      <label
+                        class="ml-1 inline-flex items-center cursor-pointer"
+                      >
+                        <input type="checkbox" class="sr-only peer" checked />
+                        <span
+                          class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-blue-600 relative after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full peer-checked:after:translate-x-5 transition-all"
+                        ></span>
+                      </label>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Push -->
+                <article data-channel-card="push" class="rounded-xl border border-slate-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded-lg bg-indigo-50 grid place-items-center text-indigo-600"
+                      >
+                        📳
+                      </div>
+                      <div>
+                        <h4 class="font-semibold leading-6">Thông báo đẩy</h4>
+                        <div
+                          class="flex flex-wrap items-center gap-3 text-[12.5px] text-slate-500"
+                        >
+                          <span>
+                            Đã gửi
+                            <span
+                              class="font-medium text-slate-700"
+                              data-channel-sent="push"
+                            >856</span>
+                          </span>
+                          <span
+                            class="text-rose-600"
+                            data-channel-error="push"
+                          >Lỗi 3</span>
+                          <span
+                            class="text-blue-600"
+                            data-channel-rate="push"
+                          >Tỷ lệ thành công 99,6%</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 mt-1" data-channel-config="push">
+                          Đang tải cấu hình kênh…
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="inline-flex px-2 py-1 rounded-full text-[12px] font-semibold bg-emerald-50 text-emerald-700"
+                        >Hoạt động</span
+                      >
+                      <span class="hidden sm:block text-[12.5px] text-slate-500" data-channel-lastused="push"
+                        >Đang tải thời gian sử dụng…</span
+                      >
+                      <button
+                        class="px-3 py-1.5 rounded-md border border-slate-200 text-[12.5px] hover:bg-slate-50"
+                        data-action="detail"
+                        data-channel="push"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12.5px] hover:opacity-90"
+                        data-action="test"
+                        data-channel="push"
+                      >
+                        Kiểm thử
+                      </button>
+                      <label
+                        class="ml-1 inline-flex items-center cursor-pointer"
+                      >
+                        <input type="checkbox" class="sr-only peer" checked />
+                        <span
+                          class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-blue-600 relative after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full peer-checked:after:translate-x-5 transition-all"
+                        ></span>
+                      </label>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- SMS -->
+                <article data-channel-card="sms" class="rounded-xl border border-slate-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-10 h-10 rounded-lg bg-amber-50 grid place-items-center text-amber-600"
+                      >
+                        📱
+                      </div>
+                      <div>
+                        <h4 class="font-semibold leading-6">SMS</h4>
+                        <div
+                          class="flex flex-wrap items-center gap-3 text-[12.5px] text-slate-500"
+                        >
+                          <span>
+                            Đã gửi
+                            <span
+                              class="font-medium text-slate-700"
+                              data-channel-sent="sms"
+                            >0</span>
+                          </span>
+                          <span
+                            class="text-blue-600"
+                            data-channel-rate="sms"
+                          >Tỷ lệ thành công 0%</span>
+                        </div>
+                        <p class="text-[12px] text-slate-500 mt-1" data-channel-config="sms">
+                          Đang tải cấu hình kênh…
+                        </p>
+                      </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="inline-flex px-2 py-1 rounded-full text-[12px] font-semibold bg-slate-100 text-slate-700"
+                        >Tạm dừng</span
+                      >
+                      <span class="hidden sm:block text-[12.5px] text-slate-500" data-channel-lastused="sms"
+                        >Đang tải thời gian sử dụng…</span
+                      >
+                      <button
+                        class="px-3 py-1.5 rounded-md border border-slate-200 text-[12.5px] hover:bg-slate-50"
+                        data-action="detail"
+                        data-channel="sms"
+                      >
+                        Chi tiết
+                      </button>
+                      <button
+                        class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12.5px] hover:opacity-90"
+                        data-action="test"
+                        data-channel="sms"
+                      >
+                        Kiểm thử
+                      </button>
+                      <label
+                        class="ml-1 inline-flex items-center cursor-pointer"
+                      >
+                        <input type="checkbox" class="sr-only peer" />
+                        <span
+                          class="w-10 h-5 bg-slate-300 rounded-full peer-checked:bg-blue-600 relative after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full peer-checked:after:translate-x-5 transition-all"
+                        ></span>
+                      </label>
+                    </div>
+                  </div>
+                </article>
+              </section>
+
+              <!-- AUTOMATION -->
+              <section id="tab-automation" class="hidden p-4 lg:p-6 space-y-4">
+                <div class="flex justify-between items-center mb-4">
+                  <div class="text-[13px] text-slate-600 font-semibold">
+                    Quy tắc nhắc việc &amp; tự động hóa
+                  </div>
+                  <button id="btnCreateRule" class="px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
+                    + Tạo quy tắc
+                  </button>
+                </div>
+                <div id="notifAutomationList" class="space-y-4">
+                  <p class="text-sm text-slate-500">Đang tải dữ liệu tự động hóa…</p>
+                </div>
+              </section>
+
+              <!-- LOGS -->
+              <section id="tab-logs" class="hidden p-4 lg:p-6 space-y-4">
+                <div class="text-[13px] text-slate-600 font-semibold mb-1">
+                  Nhật ký gửi thông báo
+                </div>
+                <div id="notifLogList" class="space-y-4">
+                  <p class="text-sm text-slate-500">Đang tải nhật ký gửi...</p>
+                </div>
+              </section>
+
+
+            </div>
+
+            <!-- ====== MODALS ====== -->
+            
+            <!-- Channel Detail Modal -->
+            <dialog id="channelDetailModal" class="rounded-xl shadow-2xl border-0 backdrop:bg-black/50 max-w-2xl w-full">
+              <div class="bg-white rounded-xl">
+                <header class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                  <h3 class="text-lg font-semibold">Chi tiết cấu hình kênh</h3>
+                  <button type="button" onclick="this.closest('dialog').close()" class="text-slate-400 hover:text-slate-600">
+                    <span class="text-2xl">×</span>
+                  </button>
+                </header>
+                <form id="channelDetailForm" class="p-6 space-y-4">
+                  <input name="channel_type" type="hidden" />
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tên kênh</label>
+                    <input name="name" type="text" required 
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
+                    <textarea name="description" rows="2"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Cấu hình (JSON)</label>
+                    <textarea name="config" rows="8"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"></textarea>
+                    <p class="text-xs text-slate-500 mt-1">Nhập cấu hình dưới dạng JSON hợp lệ</p>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <input type="checkbox" name="is_enabled" id="channelEnabled" class="mr-2" />
+                    <label for="channelEnabled" class="text-sm font-medium text-slate-700">Kích hoạt kênh</label>
+                  </div>
+                  
+                  <footer class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="this.closest('dialog').close()" 
+                      class="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">
+                      Hủy
+                    </button>
+                    <button type="submit" 
+                      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      Lưu thay đổi
+                    </button>
+                  </footer>
+                </form>
+              </div>
+            </dialog>
+
+            <!-- Channel Test Modal -->
+            <dialog id="channelTestModal" class="rounded-xl shadow-2xl border-0 backdrop:bg-black/50 max-w-md w-full">
+              <div class="bg-white rounded-xl">
+                <header class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                  <h3 class="text-lg font-semibold">Kiểm thử kênh thông báo</h3>
+                  <button type="button" onclick="this.closest('dialog').close()" class="text-slate-400 hover:text-slate-600">
+                    <span class="text-2xl">×</span>
+                  </button>
+                </header>
+                <form id="channelTestForm" class="p-6 space-y-4">
+                  <input name="channel_type" type="hidden" />
+                  <p class="text-sm text-slate-600">
+                    Nhập địa chỉ người nhận để gửi thử thông báo kiểm tra.
+                  </p>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Người nhận</label>
+                    <input name="recipient" type="text" required 
+                      placeholder="email@example.com hoặc số điện thoại"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                    <p class="text-xs text-slate-500 mt-1">Định dạng phụ thuộc vào loại kênh (email/điện thoại)</p>
+                  </div>
+                  
+                  <footer class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="this.closest('dialog').close()" 
+                      class="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">
+                      Hủy
+                    </button>
+                    <button type="submit" 
+                      class="px-4 py-2 bg-slate-900 text-white rounded-lg hover:opacity-90">
+                      Gửi thử
+                    </button>
+                  </footer>
+                </form>
+              </div>
+            </dialog>
+
+            <!-- Automation Rule Modal -->
+            <dialog id="automationRuleModal" class="rounded-xl shadow-2xl border-0 backdrop:bg-black/50 max-w-2xl w-full">
+              <div class="bg-white rounded-xl">
+                <header class="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                  <h3 id="ruleModalTitle" class="text-lg font-semibold">Tạo quy tắc tự động</h3>
+                  <button type="button" onclick="this.closest('dialog').close()" class="text-slate-400 hover:text-slate-600">
+                    <span class="text-2xl">×</span>
+                  </button>
+                </header>
+                <form id="automationRuleForm" class="p-6 space-y-4">
+                  <input name="rule_id" type="hidden" />
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tên quy tắc</label>
+                    <input name="name" type="text" required 
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Mô tả</label>
+                    <textarea name="description" rows="2"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Loại sự kiện</label>
+                      <select name="event_type" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Chọn sự kiện --</option>
+                        <option value="document_created">Văn bản mới</option>
+                        <option value="document_assigned">Phân công</option>
+                        <option value="deadline_approaching">Sắp hết hạn</option>
+                        <option value="deadline_passed">Quá hạn</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Kênh gửi</label>
+                      <select name="channel" required
+                        class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">-- Chọn kênh --</option>
+                        <option value="email">Email</option>
+                        <option value="push">Push notification</option>
+                        <option value="sms">SMS</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Điều kiện (JSON)</label>
+                    <textarea name="conditions" rows="4"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm">{}</textarea>
+                    <p class="text-xs text-slate-500 mt-1">Điều kiện khi nào rule được kích hoạt</p>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Template (JSON)</label>
+                    <textarea name="template" rows="4"
+                      class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono text-sm">{}</textarea>
+                    <p class="text-xs text-slate-500 mt-1">Mẫu nội dung thông báo</p>
+                  </div>
+                  
+                  <div class="flex items-center">
+                    <input type="checkbox" name="is_enabled" id="ruleEnabled" class="mr-2" checked />
+                    <label for="ruleEnabled" class="text-sm font-medium text-slate-700">Kích hoạt quy tắc</label>
+                  </div>
+                  
+                  <footer class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="this.closest('dialog').close()" 
+                      class="px-4 py-2 border border-slate-300 rounded-lg hover:bg-slate-50">
+                      Hủy
+                    </button>
+                    <button type="submit" 
+                      class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                      Lưu quy tắc
+                    </button>
+                  </footer>
+                </form>
+              </div>
+            </dialog>
+
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/quantri.js' %}" defer></script>
+<script src="{% static 'js/quantri-notifications.js' %}" defer></script>
+{% endblock %}

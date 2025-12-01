@@ -1,0 +1,645 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Văn thư • Soạn văn bản đi{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ======= BREADCRUMB & ACTIONS (Văn thư) ======= -->
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-2">
+                <a
+                  href="/vanthu/vanbandi.html"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  aria-label="Quay lại Văn bản đi"
+                >
+                  <span aria-hidden="true">←</span> Quay lại danh sách
+                </a>
+                <span class="text-[13px] text-slate-500"
+                  >Văn bản đi • Soạn văn bản mới</span
+                >
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <!-- Văn thư được phép: soạn, lưu nháp, trình, ký nháy (không ký số / không phát hành) -->
+                <button
+                  type="button"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  data-action="preview-draft"
+                  title="Xem nhanh bản in/PDF (nếu có)"
+                >
+                  👁️ Xem trước
+                </button>
+                <button
+                  type="button"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  data-action="sign-initial"
+                  title="Ký nháy xác nhận nội dung dự thảo (CV)"
+                >
+                  🖋️ Ký nháy
+                </button>
+                <button
+                  type="button"
+                  class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                  data-action="submit-approval"
+                  title="Trình duyệt nhiều cấp (CV trình)"
+                >
+                  Trình ký
+                </button>
+                <button
+                  type="button"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  data-action="save-draft"
+                  title="Lưu nháp (Ctrl+S)"
+                >
+                  💾 Lưu nháp
+                </button>
+
+                <!-- Không thuộc quyền CV -->
+                <button
+                  type="button"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-400 cursor-not-allowed"
+                  title="Chỉ Văn thư được cấp số/phát hành"
+                  disabled
+                >
+                  ⤴️ Cấp số/Phát hành
+                </button>
+              </div>
+            </div>
+
+            <!-- ======= STAGE TAGS ======= -->
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+              <span
+                class="px-2.5 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold"
+                >Giai đoạn: SOẠN DỰ THẢO</span
+              >
+              <span
+                class="px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold"
+                >Quyền Văn thư: ✍️ soạn • ✅ trình • 👀 phát hành</span
+              >
+            </div>
+
+            <!-- ======= DRAFT FORM ======= -->
+            <form
+              id="draftForm"
+              method="post"
+              action="/vanthu/vanbandi-taomoi/"
+              class="mt-6 space-y-6"
+              data-entity="outgoing-draft"
+            >
+              {% csrf_token %}
+              <input type="hidden" name="document_id" id="draftDocumentId" />
+              <p
+                id="draftFeedback"
+                class="hidden rounded-md border border-rose-100 bg-rose-50 px-3 py-2 text-[13px] text-rose-700"
+              ></p>
+              <!-- Thông tin chung -->
+              <section class="card p-5 space-y-4 fade-in">
+                <header>
+                  <h2 class="text-[15px] font-semibold text-slate-800">
+                    Thông tin chung
+                  </h2>
+                  <p class="text-[12.5px] text-slate-500">
+                    Điền các thông tin bắt buộc để khởi tạo dự thảo
+                  </p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  <div class="md:col-span-8">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Tiêu đề văn bản
+                      <span class="text-rose-600">*</span></label
+                    >
+                    <input
+                      type="text"
+                      name="title"
+                      required
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="Nhập tiêu đề, ví dụ: 'Quyết định ... năm 2025'"
+                    />
+                  </div>
+
+                  <div class="md:col-span-4">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Ký hiệu dự thảo</label
+                    >
+                    <input
+                      type="text"
+                      name="code"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="VD: 24/QĐ-UBND (tạm)"
+                    />
+                  </div>
+
+                  <div class="md:col-span-4">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Loại văn bản <span class="text-rose-600">*</span></label
+                    >
+                    <select
+                      name="doc_type"
+                      required
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option value="">— Chọn loại —</option>
+                      <option>Quyết định</option>
+                      <option>Công văn</option>
+                      <option>Thông báo</option>
+                      <option>Tờ trình</option>
+                      <option>Kế hoạch</option>
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-4">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Lĩnh vực</label
+                    >
+                    <select
+                      name="field"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option>Hành chính - Tổng hợp</option>
+                      <option>Y tế</option>
+                      <option>Tổ chức - Nhân sự</option>
+                      <option>Tài chính</option>
+                      <option>Giáo dục</option>
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-4">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Đơn vị soạn thảo</label
+                    >
+                    <input
+                      type="text"
+                      name="department"
+                      value="Phòng Hành chính"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div class="md:col-span-6">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Người chủ trì</label
+                    >
+                    <input
+                      type="text"
+                      name="owner"
+                      value="Nguyễn Văn An"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div class="md:col-span-3">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Mức độ</label
+                    >
+                    <select
+                      name="urgency"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option>Thường</option>
+                      <option>Khẩn</option>
+                      <option>Hỏa tốc</option>
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-3">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Độ mật</label
+                    >
+                    <select
+                      name="security"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option>Thường</option>
+                      <option>Mật</option>
+                      <option>Tối mật</option>
+                      <option>Tuyệt mật</option>
+                    </select>
+                  </div>
+
+                  <div class="md:col-span-6">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Nơi nhận chính</label
+                    >
+                    <input
+                      type="text"
+                      name="receivers"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="Nhập nơi nhận, ngăn cách bởi dấu phẩy"
+                    />
+                  </div>
+
+                  <div class="md:col-span-3">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Hạn trình ký</label
+                    >
+                    <input
+                      type="date"
+                      name="due_sign"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div class="md:col-span-3">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Hạn phát hành (dự kiến)</label
+                    >
+                    <input
+                      type="date"
+                      name="due_issue"
+                      class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div class="md:col-span-12">
+                    <label
+                      class="block text-[13px] font-medium text-slate-700 mb-1"
+                      >Tóm tắt nội dung</label
+                    >
+                    <textarea
+                      name="abstract"
+                      rows="3"
+                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="Mô tả ngắn gọn mục đích và nội dung chính của dự thảo..."
+                    ></textarea>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Soạn thảo & File -->
+              <section class="grid gap-6 lg:grid-cols-2">
+                <!-- Soạn thảo nội dung -->
+                <article class="card p-5 space-y-4 fade-in">
+                  <header class="flex items-center justify-between gap-2">
+                    <div>
+                      <h3 class="text-[15px] font-semibold text-slate-800">
+                        Soạn thảo nội dung
+                      </h3>
+                      <p class="text-[12.5px] text-slate-500">
+                        Tải file dự thảo (Word/PDF) hoặc nhập nhanh nội dung
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      data-action="open-template"
+                    >
+                      📄 Chọn mẫu
+                    </button>
+                  </header>
+
+                  <div class="space-y-3">
+                    <div
+                      class="rounded-lg border border-dashed border-slate-300 p-4 text-center"
+                    >
+                      <input
+                        type="file"
+                        id="fileDraft"
+                        class="sr-only"
+                        accept=".doc,.docx,.pdf"
+                      />
+                      <label
+                        for="fileDraft"
+                        class="cursor-pointer text-[13px] text-slate-700"
+                      >
+                        Kéo thả hoặc
+                        <span class="text-blue-700 underline">chọn file</span>
+                        (.doc, .docx, .pdf)
+                      </label>
+                      <div class="text-[12px] text-slate-500 mt-1">
+                        Kích thước tối đa 20MB
+                      </div>
+                    </div>
+
+                    <div>
+                      <label
+                        class="block text-[13px] font-medium text-slate-700 mb-1"
+                        >Nội dung nhanh</label
+                      >
+                      <textarea
+                        rows="8"
+                        name="quick_content"
+                        class="w-full rounded-lg border border-slate-200 px-3 py-2 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        placeholder="Nhập nội dung chính, mục tiêu, căn cứ pháp lý... (tuỳ chọn nếu chưa có file)"
+                      ></textarea>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Phát hành (read-only cho CV) & Đính kèm -->
+                <article class="card p-5 space-y-4 fade-in">
+                  <header class="flex items-center justify-between gap-2">
+                    <div>
+                      <h3 class="text-[15px] font-semibold text-slate-800">
+                        Phát hành (chỉ xem)
+                      </h3>
+                      <p class="text-[12.5px] text-slate-500">
+                        Cấp số/đóng dấu do Văn thư • CV chỉ xem tiến độ phát
+                        hành
+                      </p>
+                    </div>
+                  </header>
+
+                  <div
+                    class="rounded-lg border border-slate-100 p-3 text-[13px] space-y-2"
+                  >
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-600">Số phát hành</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        data-field="issue-number"
+                        >—</span
+                      >
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-600">Ngày phát hành</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        data-field="dispatch-at"
+                        >—</span
+                      >
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-600">Hình thức gửi</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        data-field="dispatch-method"
+                        >—</span
+                      >
+                    </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-slate-600">Trạng thái gửi</span>
+                      <span class="chip chip--default">Chưa gửi</span>
+                    </div>
+                    <button
+                      type="button"
+                      class="w-full h-9 mt-2 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-400 cursor-not-allowed"
+                      title="Chỉ Văn thư được cập nhật phát hành"
+                      disabled
+                    >
+                      Cập nhật phát hành
+                    </button>
+                  </div>
+
+                  <div class="border-t border-slate-100 pt-4">
+                    <header
+                      class="flex items-center justify-between gap-2 mb-2"
+                    >
+                      <div>
+                        <h4 class="text-[14px] font-semibold text-slate-800">
+                          Tệp đính kèm dự thảo
+                        </h4>
+                        <p class="text-[12.5px] text-slate-500">
+                          CV có thể thêm/xoá tệp trong giai đoạn dự thảo
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-action="upload-attachment"
+                      >
+                        ⬆️ Thêm tệp
+                      </button>
+                    </header>
+
+                    <ul id="attachmentList" class="space-y-3 text-[13px]">
+                      <li
+                        class="rounded-lg border border-slate-100 p-3 flex items-center justify-between gap-3"
+                      >
+                        <div>
+                          <div class="font-medium text-slate-700">
+                            phu-luc-noi-nhan.xlsx
+                          </div>
+                          <div class="text-[12px] text-slate-500">
+                            2025-10-27 • Nguyễn Văn An
+                          </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <button
+                            class="btn-icon"
+                            title="Tải xuống"
+                            data-action="dl-attachment"
+                            type="button"
+                          >
+                            ⬇
+                          </button>
+                          <button
+                            class="btn-icon"
+                            title="Xóa tệp"
+                            data-action="rm-attachment"
+                            type="button"
+                          >
+                            ✖
+                          </button>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </article>
+              </section>
+
+              <!-- Luồng trình ký (CV được phép cấu hình & trình) -->
+              <section class="card p-5 space-y-4 fade-in">
+                <header class="flex items-center justify-between gap-2">
+                  <div>
+                    <h3 class="text-[15px] font-semibold text-slate-800">
+                      Luồng trình ký
+                    </h3>
+                    <p class="text-[12.5px] text-slate-500">
+                      Thiết lập các bước duyệt nhiều cấp (CV trình; LD ký số)
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    data-action="add-approver"
+                  >
+                    ➕ Thêm bước duyệt
+                  </button>
+                </header>
+
+                <ol id="approvalStepsEdit" class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3">
+                    <div
+                      class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                    >
+                      <div class="flex-1">
+                        <div class="font-medium text-slate-700">
+                          Bước 1 • Nguyễn Văn An
+                        </div>
+                        <div class="text-[12px] text-slate-500">
+                          Chủ biên xác nhận nội dung (Ký nháy)
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="chip chip--green">BẮT BUỘC</span>
+                        <button
+                          class="btn-icon"
+                          title="Xóa bước"
+                          data-action="rm-approver"
+                          type="button"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="rounded-lg border border-slate-100 p-3">
+                    <div
+                      class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                    >
+                      <div class="flex-1">
+                        <div class="font-medium text-slate-700">
+                          Bước 2 • Phòng chuyên môn
+                        </div>
+                        <div class="text-[12px] text-slate-500">
+                          Rà soát chuyên môn
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <label class="text-[12px] text-slate-600">Hạn:</label>
+                        <input
+                          type="date"
+                          class="h-8 rounded border border-slate-200 px-2 text-[12.5px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        />
+                        <button
+                          class="btn-icon"
+                          title="Xóa bước"
+                          data-action="rm-approver"
+                          type="button"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                  <li class="rounded-lg border border-slate-100 p-3">
+                    <div
+                      class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"
+                    >
+                      <div class="flex-1">
+                        <div class="font-medium text-slate-700">
+                          Bước 3 • Lãnh đạo ký số
+                        </div>
+                        <div class="text-[12px] text-slate-500">
+                          Phê duyệt/Ký số (LD)
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <span class="chip chip--amber">CUỐI CÙNG</span>
+                        <button
+                          class="btn-icon"
+                          title="Xóa bước"
+                          data-action="rm-approver"
+                          type="button"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                </ol>
+              </section>
+
+              <!-- Ghi chú & Nhật ký (CV: ✍️ thêm ghi chú, xem nhật ký) -->
+              <section class="grid gap-6 lg:grid-cols-2">
+                <article class="card p-5 space-y-4">
+                  <header>
+                    <h3 class="text-[15px] font-semibold text-slate-800">
+                      Ghi chú &amp; thảo luận
+                    </h3>
+                    <p class="text-[12.5px] text-slate-500">
+                      comments.entity='document'
+                    </p>
+                  </header>
+
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      class="flex-1 h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="Viết ghi chú..."
+                    />
+                    <button
+                      type="button"
+                      class="h-10 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700"
+                      data-action="add-note"
+                    >
+                      Thêm
+                    </button>
+                  </div>
+
+                  <ul id="noteList" class="space-y-3">
+                    <li class="rounded-lg border border-slate-100 p-3">
+                      <div
+                        class="flex items-center justify-between text-[13px]"
+                      >
+                        <span class="font-medium text-slate-700"
+                          >Nguyễn Văn An</span
+                        >
+                        <span class="text-[12px] text-slate-400"
+                          >2025-10-27 10:05</span
+                        >
+                      </div>
+                      <p class="mt-1 text-[12.5px] text-slate-600">
+                        Khởi tạo dự thảo, sẽ đính kèm phụ lục nơi nhận.
+                      </p>
+                    </li>
+                  </ul>
+                </article>
+
+                <article class="card p-5 space-y-4">
+                  <header class="flex items-center justify-between gap-2">
+                    <div>
+                      <h3 class="text-[15px] font-semibold text-slate-800">
+                        Nhật ký thao tác
+                      </h3>
+                      <p class="text-[12.5px] text-slate-500">
+                        Tự động ghi theo hành động lưu / trình / ký nháy
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      data-action="refresh-logs"
+                    >
+                      Làm mới
+                    </button>
+                  </header>
+
+                  <ul id="auditList" class="space-y-3 text-[13px]">
+                    <li class="rounded-lg border border-slate-100 p-3">
+                      <div class="flex items-center justify-between">
+                        <span class="font-semibold text-slate-700"
+                          >2025-10-27 10:00 • TẠO DỰ THẢO</span
+                        >
+                        <span class="text-[12px] text-slate-500"
+                          >Nguyễn Văn An</span
+                        >
+                      </div>
+                      <p class="mt-1 text-[12.5px] text-slate-600">
+                        Khởi tạo bản nháp ban đầu.
+                      </p>
+                    </li>
+                  </ul>
+                </article>
+              </section>
+            </form>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/vanthu.js' %}"></script>
+<script src="{% static 'js/chuyenvien.js' %}"></script>
+{% endblock %}

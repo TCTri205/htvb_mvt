@@ -1,0 +1,692 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Phân quyền{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- TOP KPIs -->
+            <section
+              class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              <div
+                class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div class="text-[13px] text-slate-600 font-semibold">
+                    Tổng vai trò
+                  </div>
+                  <div class="mt-2 text-3xl font-bold" id="kpi-roles">0</div>
+                </div>
+                <div
+                  class="w-10 h-10 rounded-lg bg-blue-50 grid place-items-center"
+                >
+                  <svg
+                    class="w-6 h-6 text-blue-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5Zm0 20.35C8.05 20.24 5 16.06 5 11V6.3L12 3.19ZM12 6a5 5 0 0 0-5 5h2a3 3 0 1 1 3 3 1 1 0 0 0-1 1v2h2v-1.17A5 5 0 0 0 12 6"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div class="text-[13px] text-slate-600 font-semibold">
+                    Tổng người dùng
+                  </div>
+                  <div class="mt-2 text-3xl font-bold" id="kpi-users">0</div>
+                </div>
+                <div
+                  class="w-10 h-10 rounded-lg bg-emerald-50 grid place-items-center"
+                >
+                  <svg
+                    class="w-6 h-6 text-emerald-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13Zm8 0c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div class="text-[13px] text-slate-600 font-semibold">
+                    Nhóm quyền
+                  </div>
+                  <div class="mt-2 text-3xl font-bold" id="kpi-groups">0</div>
+                </div>
+                <div
+                  class="w-10 h-10 rounded-lg bg-violet-50 grid place-items-center"
+                >
+                  <svg
+                    class="w-6 h-6 text-violet-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 2a7 7 0 0 0-7 7v4H3l2.3 3.3a5 5 0 0 0 4.1 2.1H14a5 5 0 0 0 4.1-2.1L20 13h-2V9a7 7 0 0 0-6-7"
+                    />
+                  </svg>
+                </div>
+              </div>
+              <div
+                class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div class="text-[13px] text-slate-600 font-semibold">
+                    Module hệ thống
+                  </div>
+                  <div class="mt-2 text-3xl font-bold text-amber-600" id="kpi-modules">0</div>
+                </div>
+                <div
+                  class="w-10 h-10 rounded-lg bg-amber-50 grid place-items-center"
+                >
+                  <svg
+                    class="w-6 h-6 text-amber-600"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 2 2 7v15h20V7Zm-5 18H4V9h3Zm6 0h-2v-6h2Zm7 0h-3V9h3Z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </section>
+
+            <!-- SEGMENTED TABS -->
+            <section class="mt-4">
+              <div
+                class="bg-white border border-slate-200 rounded-xl p-1 flex items-center text-[13px]"
+              >
+                <button class="tab-btn is-active" data-tab="matrix">
+                  Ma trận phân quyền
+                </button>
+                <button class="tab-btn" data-tab="groups">Nhóm quyền</button>
+                <button class="tab-btn" data-tab="userperm">
+                  Quyền người dùng
+                </button>
+              </div>
+            </section>
+
+            <!-- ========== MATRIX TAB ========== -->
+            <section
+              id="tab-matrix"
+              class="mt-4 bg-white border border-slate-200 rounded-xl"
+            >
+              <header
+                class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
+              >
+                <div class="flex flex-wrap items-center gap-2">
+                  <label class="text-[13px] text-slate-600"
+                    >Ma trận phân quyền chi tiết</label
+                  >
+                  <select
+                    id="role-select"
+                    class="h-9 rounded-md border border-slate-200 text-[13px] px-2 bg-white focus:outline-none"
+                  >
+                    <option selected>Đang tải...</option>
+                  </select>
+                </div>
+                <div class="flex items-center gap-2">
+                  <a
+                    href="phanquyen-detail.html"
+                    class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                    >Xem chi tiết</a
+                  >
+                </div>
+              </header>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-[13px]">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="px-4 py-3 text-left font-semibold">
+                        Chức năng
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="view"
+                        />
+                        Xem
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="create"
+                        />
+                        Tạo mới
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="edit"
+                        />
+                        Chỉnh sửa
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="delete"
+                        />
+                        Xóa
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="approve"
+                        />
+                        Duyệt
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="archive"
+                        />
+                        Lưu trữ
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="export"
+                        />
+                        Xuất dữ liệu
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="send"
+                        />
+                        Gửi
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="config"
+                        />
+                        Cấu hình
+                      </th>
+                      <th class="px-4 py-3 text-center font-semibold">
+                        <input
+                          type="checkbox"
+                          class="perm-checkall align-middle"
+                          data-col="backup"
+                        />
+                        Sao lưu
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100" id="perm-table">
+                    <tr>
+                      <td colspan="11" class="px-4 py-6 text-center text-[13px] text-slate-500">
+                        Đang tải ma trận phân quyền...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- ========== GROUPS TAB (đã chỉnh) ========== -->
+            <section
+              id="tab-groups"
+              class="mt-4 bg-white border border-slate-200 rounded-xl hidden"
+            >
+              <header
+                class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
+              >
+                <h3 class="text-[15px] font-semibold">Quản lý nhóm quyền</h3>
+                <button
+                  id="btn-create-group"
+                  class="h-9 rounded-lg bg-blue-600 text-white text-[13px] px-3 hover:bg-blue-600/90"
+                >
+                  + Tạo nhóm mới
+                </button>
+              </header>
+              <div class="p-4 space-y-3">
+                <!-- Nhóm Quản trị hệ thống (mới) -->
+                <article
+                  class="rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+                >
+                  <div>
+                    <h4 class="font-medium">Nhóm Quản trị hệ thống</h4>
+                    <p class="text-[12.5px] text-slate-500">
+                      Toàn quyền cấu hình, sao lưu, quản lý người dùng
+                    </p>
+                    <div
+                      class="mt-1 flex items-center gap-4 text-[12px] text-slate-500"
+                    >
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3m-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h9.2A6.6 6.6 0 0 1 7 17m9-2c2.33 0 8 1.17 8 3.5V19h-8.4A6.6 6.6 0 0 0 23 19c0-2.33-5.67-3.5-9-3.5"
+                          /></svg
+                        >1 quản trị viên
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M3 5h18v2H3m0 6h18v2H3m0 6h18v2H3" /></svg
+                        >4 quyền chính
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <a
+                      href="phanquyen-detail.html"
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                      >Xem chi tiết</a
+                    >
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-rose-50 text-rose-600"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </article>
+
+                <!-- Nhóm Xử lý văn bản -->
+                <article
+                  class="rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+                >
+                  <div>
+                    <h4 class="font-medium">Nhóm Xử lý văn bản</h4>
+                    <p class="text-[12.5px] text-slate-500">
+                      Tạo, chỉnh sửa, luân chuyển văn bản
+                    </p>
+                    <div
+                      class="mt-1 flex items-center gap-4 text-[12px] text-slate-500"
+                    >
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3m-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h9.2A6.6 6.6 0 0 1 7 17m9-2c2.33 0 8 1.17 8 3.5V19h-8.4A6.6 6.6 0 0 0 23 19c0-2.33-5.67-3.5-9-3.5"
+                          /></svg
+                        >3 thành viên
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M3 5h18v2H3m0 6h18v2H3m0 6h18v2H3" /></svg
+                        >3 quyền
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <a
+                      href="phanquyen-detail.html"
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                      >Xem chi tiết</a
+                    >
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-rose-50 text-rose-600"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </article>
+
+                <!-- Nhóm Báo cáo -->
+                <article
+                  class="rounded-xl border border-slate-200 p-4 flex items-center justify-between"
+                >
+                  <div>
+                    <h4 class="font-medium">Nhóm Báo cáo</h4>
+                    <p class="text-[12.5px] text-slate-500">
+                      Xem, tổng hợp và xuất báo cáo
+                    </p>
+                    <div
+                      class="mt-1 flex items-center gap-4 text-[12px] text-slate-500"
+                    >
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path
+                            d="M16 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3m-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3m0 2c-2.33 0-7 1.17-7 3.5V19h9.2A6.6 6.6 0 0 1 7 17m9-2c2.33 0 8 1.17 8 3.5V19h-8.4A6.6 6.6 0 0 0 23 19c0-2.33-5.67-3.5-9-3.5"
+                          /></svg
+                        >2 thành viên
+                      </span>
+                      <span class="flex items-center gap-1">
+                        <svg
+                          class="w-4 h-4"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                        >
+                          <path d="M3 5h18v2H3m0 6h18v2H3m0 6h18v2H3" /></svg
+                        >2 quyền
+                      </span>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <a
+                      href="phanquyen-detail.html"
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                      >Xem chi tiết</a
+                    >
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-slate-50"
+                    >
+                      Chỉnh sửa
+                    </button>
+                    <button
+                      class="h-9 rounded-lg border border-slate-200 px-3 text-[13px] hover:bg-rose-50 text-rose-600"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                </article>
+
+                <!-- ===== Danh sách vai trò, permissions, mapping (giữ nguyên, đồng nhất) ===== -->
+                <section class="rounded-xl border border-slate-200">
+                  <header
+                    class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
+                  >
+                    <h4 class="text-[14px] font-semibold">
+                      Danh sách vai trò hệ thống
+                    </h4>
+                    <span id="roleCountBadge" class="text-[12px] text-slate-500"
+                      >4 vai trò hoạt động</span
+                    >
+                  </header>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-[13px]">
+                      <thead class="bg-slate-50 text-slate-600">
+                        <tr>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mã vai trò
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Tên vai trò
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mô tả
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Người dùng
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Quyền chính
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Cập nhật
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="role-table-body" class="divide-y divide-slate-100">
+                        <tr>
+                          <td colspan="6" class="px-4 py-6 text-center text-[13px] text-slate-500">
+                            Đang tải danh sách vai trò...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section class="rounded-xl border border-slate-200">
+                  <header
+                    class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
+                  >
+                    <h4 class="text-[14px] font-semibold">
+                      Danh mục quyền (permissions)
+                    </h4>
+                    <span class="text-[12px] text-slate-500"
+                      >Mã quyền viết theo chuẩn DOMAIN.ACTION</span
+                    >
+                  </header>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-[13px]">
+                      <thead class="bg-slate-50 text-slate-600">
+                        <tr>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mã quyền
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Tên quyền
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mô tả
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Nhóm chức năng
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mặc định
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="permission-table-body" class="divide-y divide-slate-100">
+                        <tr>
+                          <td colspan="5" class="px-4 py-6 text-center text-[13px] text-slate-500">
+                            Đang tải danh sách quyền...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+
+                <section class="rounded-xl border border-slate-200">
+                  <header
+                    class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
+                  >
+                    <h4 class="text-[14px] font-semibold">
+                      Vai trò &amp; quyền chi tiết
+                    </h4>
+                    <span class="text-[12px] text-slate-500"
+                      >Trích mẫu từ bảng role_permissions</span
+                    >
+                  </header>
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full text-[13px]">
+                      <thead class="bg-slate-50 text-slate-600">
+                        <tr>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Vai trò
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Mã quyền
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Tên quyền
+                          </th>
+                          <th class="px-4 py-3 text-left font-semibold">
+                            Phạm vi/ghi chú
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody id="role-perm-table-body" class="divide-y divide-slate-100">
+                        <tr>
+                          <td colspan="4" class="px-4 py-6 text-center text-[13px] text-slate-500">
+                            Đang tải dữ liệu gán quyền...
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+            </section>
+
+            <!-- ========== USER PERMISSIONS TAB ========== -->
+            <section
+              id="tab-userperm"
+              class="mt-4 bg-white border border-slate-200 rounded-xl hidden"
+            >
+              <header class="px-4 py-3 border-b border-slate-100">
+                <h3 class="text-[15px] font-semibold mb-2">
+                  Quyền truy cập người dùng
+                </h3>
+                <div class="text-[12px] text-slate-500 mb-2" data-userperm-count>0 người dùng</div>
+                <label class="relative block max-w-md">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M12.9 14.32a8 8 0 1 1 1.414-1.414l3.387 3.386a1 1 0 0 1-1.414 1.415l-3.387-3.387ZM14 8a6 6 0 1 0-12 0 6 6 0 0 0 12 0Z"
+                      clip-rule="evenodd"
+                    />
+                  </svg>
+                  <input
+                    id="userperm-search"
+                    class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px]"
+                    placeholder="Tìm kiếm người dùng…"
+                  />
+                </label>
+              </header>
+              <div class="overflow-x-auto">
+                <table class="min-w-full text-[13px]">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th class="px-4 py-3 text-left font-semibold">Họ tên</th>
+                      <th class="px-4 py-3 text-left font-semibold">Vai trò</th>
+                      <th class="px-4 py-3 text-left font-semibold">
+                        Phòng ban
+                      </th>
+                      <th class="px-4 py-3 text-left font-semibold">
+                        Trạng thái
+                      </th>
+                      <th class="px-4 py-3 text-left font-semibold">
+                        Đăng nhập cuối
+                      </th>
+                      <th class="px-4 py-3 text-left font-semibold">
+                        Thao tác
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="userperm-table" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="6" class="px-4 py-6 text-center text-[13px] text-slate-500">
+                        Đang tải danh sách người dùng...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <!-- Modal: Gán quyền cho vai trò -->
+          <div
+            id="assignPermissionsModal"
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 px-4 py-8"
+            role="dialog"
+            aria-hidden="true"
+          >
+            <div class="absolute inset-0" data-close-modal="true"></div>
+            <div class="relative w-full max-w-3xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+              <div class="flex items-center justify-between pb-3">
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Cập nhật quyền vai trò
+                  </h3>
+                  <p class="text-sm text-slate-500">
+                    Chọn quyền để gán cho vai trò được chọn.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-close-modal="true"
+                  class="rounded-full border border-slate-200 p-1 text-slate-500 hover:text-slate-900"
+                >
+                  ✕
+                </button>
+              </div>
+              <form id="assignPermissionsForm" class="space-y-4">
+                <div>
+                  <p class="text-sm text-slate-500">
+                    Vai trò hiện tại:
+                    <strong id="assignPermissionsRoleName">—</strong>
+                  </p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <input
+                    id="assignPermissionsSearch"
+                    type="search"
+                    placeholder="Tìm quyền..."
+                    class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  />
+                </div>
+                <div id="assignPermissionsList" class="grid grid-cols-1 gap-2 max-h-72 overflow-y-auto md:grid-cols-2"></div>
+                <p id="assignPermissionsFeedback" class="text-sm text-rose-600"></p>
+                <div class="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    data-close-modal="true"
+                    class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Huỷ
+                  </button>
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Lưu phân quyền
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/quantri.js' %}" defer></script>
+{% endblock %}

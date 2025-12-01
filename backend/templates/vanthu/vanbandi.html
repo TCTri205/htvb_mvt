@@ -1,0 +1,327 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Văn bản đi (Văn thư){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ====== TITLE LINE ====== -->
+            <p class="text-[13px] text-slate-500 mb-3">
+              Soạn thảo, ký duyệt và phát hành văn bản đi
+            </p>
+
+            <!-- ====== TOP KPI CARDS ====== -->
+            <section
+              class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6"
+            >
+              <!-- Soạn thảo -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="grid place-items-center w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600"
+                  >
+                    📝
+                  </div>
+                  <div>
+                    <p class="text-[12.5px] text-slate-500">Soạn thảo</p>
+                    <p id="kpi-soanthao" class="text-3xl font-bold">1</p>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Chờ ký -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="grid place-items-center w-9 h-9 rounded-lg bg-blue-600/10 text-blue-700"
+                  >
+                    🕒
+                  </div>
+                  <div>
+                    <p class="text-[12.5px] text-slate-500">Chờ ký</p>
+                    <p id="kpi-choky" class="text-3xl font-bold">1</p>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Đã ký duyệt -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="grid place-items-center w-9 h-9 rounded-lg bg-emerald-600/10 text-emerald-700"
+                  >
+                    ✒️
+                  </div>
+                  <div>
+                    <p class="text-[12.5px] text-slate-500">Đã ký duyệt</p>
+                    <p id="kpi-dakyduyet" class="text-3xl font-bold">2</p>
+                  </div>
+                </div>
+              </article>
+
+              <!-- Đã phát hành -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="grid place-items-center w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600"
+                  >
+                    ✅
+                  </div>
+                  <div>
+                    <p class="text-[12.5px] text-slate-500">Đã phát hành</p>
+                    <p id="kpi-daphathanh" class="text-3xl font-bold">9</p>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ====== TOOLBAR ====== -->
+            <section
+              class="mt-4 flex flex-col gap-3 md:flex-row md:items-center"
+            >
+              <label class="relative flex-1" for="search-outbox">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8 4a4 4 0 102.83 6.83l3.44 3.44a1 1 0 001.41-1.41l-3.44-3.44A4 4 0 008 4zm-6 4a6 6 0 1110.89 3.476l3.817 3.817a3 3 0 11-4.243 4.243l-3.817-3.817A6 6 0 012 8z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <input
+                  id="search-outbox"
+                  class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px]"
+                  type="search"
+                  placeholder="Tìm kiếm theo tiêu đề, số văn bản, người ký…"
+                  autocomplete="off"
+                />
+              </label>
+
+              <div class="flex items-center gap-3">
+                <!-- Status filter -->
+                <div class="relative">
+                  <button
+                    id="btn-status"
+                    class="h-10 px-3 rounded-lg border border-slate-200 bg-white text-[14px] flex items-center gap-2"
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                  >
+                    <span id="status-label">Tất cả trạng thái</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-slate-500"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M5.5 7l4.5 4.5L14.5 7" />
+                    </svg>
+                  </button>
+                  <div
+                    id="menu-status"
+                    class="hidden absolute mt-1 w-48 bg-white rounded-lg border border-slate-200 shadow-lg z-10"
+                    role="menu"
+                    aria-labelledby="btn-status"
+                  >
+                    <ul class="py-1 text-[14px]">
+                      <li>
+                        <button
+                          data-status="all"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Tất cả trạng thái
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="DRAFT"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Dự thảo
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="SUBMITTED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Chờ ký
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="RETURNED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Trả lại
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="APPROVED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Đã ký duyệt
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="PENDING_CLERK_CHECK"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Chờ Văn thư kiểm tra
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="REGISTERED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Đã vào sổ
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="ISSUED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Đã phát hành
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-status="ARCHIVED"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Đã lưu trữ
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Level filter -->
+                <div class="relative">
+                  <button
+                    id="btn-level"
+                    class="h-10 px-3 rounded-lg border border-slate-200 bg-white text-[14px] flex items-center gap-2"
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded="false"
+                  >
+                    <span id="level-label">Tất cả mức độ</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-4 w-4 text-slate-500"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path d="M5.5 7l4.5 4.5L14.5 7" />
+                    </svg>
+                  </button>
+                  <div
+                    id="menu-level"
+                    class="hidden absolute mt-1 w-48 bg-white rounded-lg border border-slate-200 shadow-lg z-10"
+                    role="menu"
+                    aria-labelledby="btn-level"
+                  >
+                    <ul class="py-1 text-[14px]">
+                      <li>
+                        <button
+                          data-level="all"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Tất cả mức độ
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-level="thuong"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Thường
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-level="cao"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Cao
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          data-level="khan"
+                          class="menu-item w-full text-left px-3 py-2 hover:bg-slate-50"
+                          type="button"
+                        >
+                          Khẩn
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-4 py-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[13px] text-slate-600">
+                Văn thư chỉ tham gia xử lý các văn bản đã ký số và phê duyệt tại bước <strong>Ký số → Phát hành → Lưu trữ</strong>; hãy chọn văn bản đã có trạng thái phù hợp trong danh sách.
+              </div>
+            </section>
+
+            <!-- ====== LIST ====== -->
+            <section class="mt-6">
+              <header class="mb-3">
+                <h3 class="text-[15px] font-semibold">
+                  Danh sách văn bản đi (<span id="total-count">18</span>)
+                </h3>
+              </header>
+
+              <ul id="outbox-list" class="space-y-4">
+                <li class="bg-white border border-slate-200 rounded-xl p-4 text-[13px] text-slate-500 text-center">
+                  Đang tải dữ liệu văn bản đi…
+                </li>
+              </ul>
+
+              <!-- Pagination -->
+              <div class="mt-6 flex items-center justify-between">
+                <div class="text-[13px] text-slate-500">
+                  Hiển thị <span id="range-from">1</span>–<span id="range-to"
+                    >4</span
+                  >
+                  / <span id="range-total">18</span> văn bản
+                </div>
+                <div class="flex items-center gap-2">
+                  <button id="btn-prev" class="btn-outline" type="button">
+                    Trang trước
+                  </button>
+                  <button id="btn-next" class="btn-outline" type="button">
+                    Trang sau
+                  </button>
+                </div>
+              </div>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/vanthu-vanbandi.js' %}"></script>
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}

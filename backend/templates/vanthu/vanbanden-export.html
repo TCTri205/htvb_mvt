@@ -1,0 +1,123 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Văn thư • Xuất văn bản đến{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7 space-y-6">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p class="text-[13px] text-slate-500">Văn bản đến • Văn thư</p>
+                <h1 class="text-xl font-semibold text-slate-800">Xuất danh sách văn bản đến</h1>
+              </div>
+              <a
+                href="/vanthu/vanbanden.html"
+                class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                ← Quay lại danh sách
+              </a>
+            </div>
+
+            <section class="grid gap-6 lg:grid-cols-3">
+              <article class="card p-5 space-y-4 lg:col-span-1">
+                <header class="space-y-1">
+                  <h2 class="text-[15px] font-semibold text-slate-800">Bộ lọc xuất dữ liệu</h2>
+                  <p class="text-[12.5px] text-slate-500">
+                    Chọn phạm vi cần xuất và nhấn <strong>Xuất dữ liệu</strong>. Hệ thống sẽ trả về danh sách xem trước.
+                  </p>
+                </header>
+                <form id="export-form" class="space-y-4">
+                  <label class="block text-[13px]">
+                    <span class="font-medium text-slate-700">Trạng thái</span>
+                    <select
+                      id="exportStatus"
+                      class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option value="all">Tất cả</option>
+                      <option value="new">Chưa xử lý</option>
+                      <option value="processing">Đang xử lý</option>
+                      <option value="done">Đã xử lý</option>
+                      <option value="approved">Đã duyệt</option>
+                    </select>
+                  </label>
+
+                  <label class="block text-[13px]">
+                    <span class="font-medium text-slate-700">Độ khẩn</span>
+                    <select
+                      id="exportLevel"
+                      class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    >
+                      <option value="all">Tất cả</option>
+                      <option value="thuong">Thường</option>
+                      <option value="cao">Cao</option>
+                      <option value="khan">Khẩn</option>
+                      <option value="ratkhan">Rất khẩn</option>
+                    </select>
+                  </label>
+
+                  <label class="block text-[13px]">
+                    <span class="font-medium text-slate-700">Từ khóa</span>
+                    <input
+                      id="exportKeyword"
+                      type="text"
+                      class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      placeholder="Tìm theo tiêu đề, số đến, cơ quan gửi…"
+                    />
+                  </label>
+
+                  <button
+                    id="btn-run-export"
+                    type="submit"
+                    class="w-full h-10 rounded-md bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    Xuất dữ liệu
+                  </button>
+                </form>
+
+                <div id="export-alert" class="hidden text-[13px] rounded-md border px-3 py-2"></div>
+              </article>
+
+              <article class="card p-5 space-y-4 lg:col-span-2">
+                <header class="flex flex-col gap-1">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h2 class="text-[15px] font-semibold text-slate-800">Kết quả xem trước</h2>
+                      <p id="export-summary" class="text-[12.5px] text-slate-500">Chưa có dữ liệu. Chọn bộ lọc và chạy xuất.</p>
+                    </div>
+                    <button
+                      id="btn-export-download"
+                      type="button"
+                      class="h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled
+                    >
+                      Tải CSV
+                    </button>
+                  </div>
+                </header>
+
+                <div class="overflow-x-auto -mx-5">
+                  <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-5 py-3 text-left font-semibold">Số đến</th>
+                        <th class="px-5 py-3 text-left font-semibold">Tiêu đề</th>
+                        <th class="px-5 py-3 text-left font-semibold">Cơ quan gửi</th>
+                        <th class="px-5 py-3 text-left font-semibold">Ngày đến</th>
+                        <th class="px-5 py-3 text-left font-semibold">Trạng thái</th>
+                        <th class="px-5 py-3 text-left font-semibold">Độ khẩn</th>
+                      </tr>
+                    </thead>
+                    <tbody id="export-table-body" class="divide-y divide-slate-100">
+                      <tr>
+                        <td colspan="6" class="px-5 py-6 text-center text-slate-500">Chưa có dữ liệu.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/doc-helpers.js' %}" defer></script>
+<script src="{% static 'js/vanthu.js' %}" defer></script>
+{% endblock %}

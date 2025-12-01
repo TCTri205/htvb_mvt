@@ -1,0 +1,96 @@
+<div
+  id="modalChangePass"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 px-4 py-10"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="modalChangeTitle"
+>
+  <div class="w-full max-w-lg rounded-xl bg-white border border-slate-200 shadow-lg">
+    <header class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <div>
+        <h3 id="modalChangeTitle" class="text-lg font-semibold">Đổi mật khẩu</h3>
+        <p class="text-sm text-slate-500">Vui lòng nhập mật khẩu hiện tại và mật khẩu mới.</p>
+      </div>
+      <button type="button" class="text-slate-400 hover:text-slate-700" data-close-modal="true" aria-label="Đóng">
+        ✕
+      </button>
+    </header>
+    <form class="px-5 py-4 space-y-3">
+      <input
+        type="text"
+        name="username"
+        autocomplete="username"
+        class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
+      />
+      <label class="block text-sm text-slate-600">
+        Mật khẩu hiện tại
+        <input
+          name="current_password"
+          type="password"
+          autocomplete="current-password"
+          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+        />
+      </label>
+      <label class="block text-sm text-slate-600">
+        Mật khẩu mới
+        <input
+          name="new_password"
+          type="password"
+          autocomplete="new-password"
+          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+        />
+      </label>
+      <label class="block text-sm text-slate-600">
+        Xác nhận mật khẩu mới
+        <input
+          name="confirm_password"
+          type="password"
+          autocomplete="new-password"
+          class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+        />
+      </label>
+      <div class="text-xs text-slate-500">
+        Gợi ý: tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số.
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button type="button" class="rounded-md px-4 py-2 border border-slate-200 text-sm text-slate-600" data-close-modal="true">
+          Hủy
+        </button>
+        <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white">
+          Lưu mật khẩu
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div
+  id="modalLogout"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 px-4 py-10"
+  role="alertdialog"
+  aria-modal="true"
+  aria-labelledby="modalLogoutTitle"
+>
+  <div class="w-full max-w-md rounded-xl bg-white border border-slate-200 shadow-lg">
+    <header class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+      <h3 id="modalLogoutTitle" class="text-lg font-semibold">Đăng xuất khỏi thiết bị</h3>
+      <button type="button" class="text-slate-400 hover:text-slate-700" data-close-modal="true" aria-label="Đóng">
+        ✕
+      </button>
+    </header>
+    <form class="p-5 text-sm text-slate-600 space-y-3">
+      <p>Bạn sẽ được đăng xuất khỏi tất cả các thiết bị đang đăng nhập.</p>
+      <p class="text-xs text-slate-400">Phiên mới sẽ yêu cầu xác thực lại.</p>
+      <div class="px-5 py-4 border-t border-slate-100 flex items-center justify-end gap-2">
+        <button type="button" class="rounded-md px-4 py-2 border border-slate-200 text-sm" data-close-modal="true">
+          Hủy
+        </button>
+        <button type="submit" class="rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white">
+          Đồng ý đăng xuất
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

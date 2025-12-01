@@ -1,0 +1,412 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Thống kê &amp; Báo cáo{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7" data-page="thongkebaocao">
+            <!-- KPI Row -->
+            <section class="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6">
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tổng văn bản
+                  </h3>
+                  <span class="text-blue-600">🗎</span>
+                </div>
+                <div class="mt-2">
+                  <div class="text-2xl font-bold" id="kpiTotalDocs">--</div>
+                  <p class="text-[12.5px] text-slate-500 mt-1" id="kpiTotalDocsNote">
+                    Đang tải dữ liệu...
+                  </p>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Người dùng hoạt động
+                  </h3>
+                  <span class="text-emerald-600">👥</span>
+                </div>
+                <div class="mt-2">
+                  <div class="text-2xl font-bold" id="kpiActiveUsersValue">--</div>
+                  <p class="text-[12.5px] text-slate-500 mt-1" id="kpiActiveUsersNote">
+                    Đang tính toán...
+                  </p>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Hiệu suất xử lý
+                  </h3>
+                  <span>📈</span>
+                </div>
+                <div class="mt-2">
+                  <div class="text-2xl font-bold" id="kpiEfficiencyValue">--</div>
+                  <p class="text-[12.5px] text-slate-500 mt-1" id="kpiEfficiencyNote">
+                    Đang tính toán...
+                  </p>
+                </div>
+              </article>
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tỷ lệ quá hạn
+                  </h3>
+                  <span>⏱</span>
+                </div>
+                <div class="mt-2">
+                  <div class="text-2xl font-bold text-rose-600" id="kpiOverdueValue">--</div>
+                  <p class="text-[12.5px] text-slate-500 mt-1" id="kpiOverdueNote">
+                    Đang tính toán...
+                  </p>
+                </div>
+              </article>
+            </section>
+
+            <!-- Filters -->
+            <section class="mt-4 lg:mt-6 flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-2">
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-slate-400">📅</span>
+                  <input
+                    id="dateFrom"
+                    type="date"
+                    class="h-10 pl-9 pr-3 rounded-lg border border-slate-200 text-[14px]"
+                    placeholder="Từ ngày"
+                  />
+                </div>
+                <span class="text-slate-500 text-sm">đến</span>
+                <input
+                  id="dateTo"
+                  type="date"
+                  class="h-10 px-3 rounded-lg border border-slate-200 text-[14px]"
+                  placeholder="Đến ngày"
+                />
+              </div>
+              <select
+                id="filterDept"
+                class="h-10 px-3 rounded-lg border border-slate-200 text-[14px]"
+              >
+                <option value="all" selected>Tất cả phòng ban</option>
+              </select>
+              <div class="ml-auto flex items-center gap-2">
+                <button
+                  id="btnRefresh"
+                  class="px-3 h-10 rounded-lg border border-slate-200 hover:bg-slate-50 text-[14px] flex items-center gap-2"
+                  title="Làm mới dữ liệu"
+                >
+                  <span>🔄</span> Làm mới
+                </button>
+                <button
+                  id="btnFilter"
+                  class="px-3 h-10 rounded-lg border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 text-[14px] flex items-center gap-2"
+                >
+                  <span>🔎</span> Lọc dữ liệu
+                </button>
+              </div>
+            </section>
+
+            <!-- Tabs + Content -->
+            <section class="mt-4 lg:mt-6">
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <nav class="flex border-b border-slate-200">
+                  <button
+                    data-tab="tab-overview"
+                    class="tab-btn px-4 py-3 text-blue-700 border-b-2 border-blue-600 font-medium"
+                  >
+                    Tổng quan
+                  </button>
+                  <button
+                    data-tab="tab-docs"
+                    class="tab-btn px-4 py-3 text-slate-600 hover:text-slate-800"
+                  >
+                    Văn bản
+                  </button>
+                  <button
+                    data-tab="tab-perf"
+                    class="tab-btn px-4 py-3 text-slate-600 hover:text-slate-800"
+                  >
+                    Hiệu suất
+                  </button>
+                  <button
+                    data-tab="tab-users"
+                    class="tab-btn px-4 py-3 text-slate-600 hover:text-slate-800"
+                  >
+                    Người dùng
+                  </button>
+                  <button
+                    data-tab="tab-activity"
+                    class="tab-btn px-4 py-3 text-slate-600 hover:text-slate-800"
+                  >
+                    Hoạt động
+                  </button>
+                </nav>
+
+                <div class="p-4 lg:p-6">
+                  <!-- Overview Tab -->
+                  <div id="tab-overview" class="tab-panel">
+                    <!-- Charts Row - Full Width -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      <article class="bg-white border border-slate-200 rounded-xl p-4">
+                        <header class="mb-3">
+                          <h3 class="text-[15px] font-semibold">
+                            Lượng truy cập trong ngày
+                          </h3>
+                        </header>
+                        <canvas id="chAccessDay" height="120"></canvas>
+                      </article>
+                      <article class="bg-white border border-slate-200 rounded-xl p-4">
+                        <header class="mb-3 flex items-center justify-between">
+                          <h3 class="text-[15px] font-semibold">
+                            Hoạt động theo ngày trong tuần
+                          </h3>
+                          <div class="text-[12.5px] text-slate-500">
+                            ĐVT: lượt
+                          </div>
+                        </header>
+                        <canvas id="chWeekBars" height="120"></canvas>
+                      </article>
+                    </div>
+
+                    <!-- Stats Summary - Full Width -->
+                    <article class="bg-white border border-slate-200 rounded-xl p-4">
+                      <header class="mb-3">
+                        <h3 class="text-[15px] font-semibold">
+                          Thống kê tổng quát
+                        </h3>
+                      </header>
+                      <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div class="text-center">
+                          <div class="text-[12px] text-slate-500 mb-1">Số phiên đăng nhập hôm nay</div>
+                          <strong class="text-2xl font-bold text-blue-600" id="sumLogin">--</strong>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-[12px] text-slate-500 mb-1">Thời gian truy cập TB</div>
+                          <strong class="text-2xl font-bold text-emerald-600" id="avgSessionTime">--</strong>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-[12px] text-slate-500 mb-1">Văn bản xử lý hôm nay</div>
+                          <strong class="text-2xl font-bold text-violet-600" id="docsHandledToday">--</strong>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-[12px] text-slate-500 mb-1">Cuộc họp đã diễn ra</div>
+                          <strong class="text-2xl font-bold text-amber-600" id="meetingsCount">--</strong>
+                        </div>
+                        <div class="text-center">
+                          <div class="text-[12px] text-slate-500 mb-1">Thông báo đã gửi</div>
+                          <strong class="text-2xl font-bold text-rose-600" id="notificationsSent">--</strong>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+
+                  <!-- Documents Tab -->
+                  <div id="tab-docs" class="tab-panel hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      <article class="bg-white border border-slate-200 rounded-xl p-4">
+                        <header class="mb-3">
+                          <h3 class="text-[15px] font-semibold">
+                            Phân loại theo độ ưu tiên
+                          </h3>
+                        </header>
+                        <canvas id="chPriority" height="120"></canvas>
+                      </article>
+                      <article class="bg-white border border-slate-200 rounded-xl p-4">
+                        <header class="mb-3">
+                          <h3 class="text-[15px] font-semibold">
+                            Hoạt động trong ngày
+                          </h3>
+                        </header>
+                        <canvas id="chDayLine" height="120"></canvas>
+                      </article>
+                    </div>
+                    <article class="bg-white border border-slate-200 rounded-xl">
+                      <header class="px-4 py-3 border-b border-slate-100">
+                        <h3 class="text-[15px] font-semibold">
+                          Thống kê chi tiết theo loại văn bản
+                        </h3>
+                      </header>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                          <thead class="bg-slate-50 text-slate-600">
+                            <tr>
+                              <th class="text-left px-4 py-2">Loại văn bản</th>
+                              <th class="text-right px-4 py-2">Số lượng</th>
+                              <th class="text-right px-4 py-2">Đã xử lý</th>
+                              <th class="text-right px-4 py-2">Tỷ lệ (%)</th>
+                              <th class="text-right px-4 py-2">Thời gian TB</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-slate-100" id="docTypeTableBody">
+                            <tr>
+                              <td class="px-4 py-3 text-center text-slate-500" colspan="5">
+                                Đang tải dữ liệu loại văn bản...
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </article>
+                  </div>
+
+                  <!-- Performance Tab -->
+                  <div id="tab-perf" class="tab-panel hidden space-y-6">
+                    <article class="bg-white border border-slate-200 rounded-xl p-4">
+                      <header class="mb-3">
+                        <h3 class="text-[15px] font-semibold">
+                          Hiệu suất theo phòng ban
+                        </h3>
+                      </header>
+                      <canvas id="chPerfDept" height="120"></canvas>
+                    </article>
+                    <article class="bg-white border border-slate-200 rounded-xl">
+                      <header class="px-4 py-3 border-b border-slate-100">
+                        <h3 class="text-[15px] font-semibold">
+                          Chi tiết hiệu suất theo phòng ban
+                        </h3>
+                      </header>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                          <thead class="bg-slate-50 text-slate-600">
+                            <tr>
+                              <th class="text-left px-4 py-2">Phòng ban</th>
+                              <th class="text-right px-4 py-2">Số văn bản</th>
+                              <th class="text-right px-4 py-2">Hiệu suất (%)</th>
+                              <th class="text-right px-4 py-2">Thời gian TB (ngày)</th>
+                              <th class="text-right px-4 py-2">Xếp hạng</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-slate-100" id="deptPerfTableBody">
+                            <tr>
+                              <td class="px-4 py-3 text-center text-slate-500" colspan="5">
+                                Đang tải dữ liệu phòng ban...
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </article>
+                  </div>
+
+                  <!-- Users Tab -->
+                  <div id="tab-users" class="tab-panel hidden space-y-6">
+                    <article class="bg-white border border-slate-200 rounded-xl">
+                      <header class="px-4 py-3 border-b border-slate-100">
+                        <h3 class="text-[15px] font-semibold">
+                          Top người dùng hiệu suất cao
+                        </h3>
+                      </header>
+                      <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                          <thead class="bg-slate-50 text-slate-600">
+                            <tr>
+                              <th class="text-left px-4 py-2">Người dùng</th>
+                              <th class="text-left px-4 py-2">Vai trò</th>
+                              <th class="text-right px-4 py-2">Đã xử lý</th>
+                              <th class="text-right px-4 py-2">Hiệu suất (%)</th>
+                              <th class="text-right px-4 py-2">Thời gian TB</th>
+                              <th class="text-right px-4 py-2">Xếp hạng</th>
+                            </tr>
+                          </thead>
+                          <tbody class="divide-y divide-slate-100" id="userPerfTableBody">
+                            <tr>
+                              <td class="px-4 py-3 text-center text-slate-500" colspan="6">
+                                Đang tải dữ liệu người dùng...
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </article>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl">👥</div>
+                        <div class="text-sm text-slate-500">
+                          Người dùng hoạt động
+                        </div>
+                        <div class="text-2xl font-semibold mt-1" id="usersActiveSummary">--</div>
+                      </div>
+                      <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl">💚</div>
+                        <div class="text-sm text-slate-500">
+                          Hiệu suất trung bình
+                        </div>
+                        <div class="text-2xl font-semibold mt-1" id="avgEfficiencySummary">--</div>
+                      </div>
+                      <div class="bg-white border border-slate-200 rounded-xl p-4 text-center">
+                        <div class="text-3xl">🎯</div>
+                        <div class="text-sm text-slate-500">Đạt chỉ tiêu</div>
+                        <div class="text-2xl font-semibold mt-1" id="targetHitSummary">--</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Activity Tab -->
+                  <div id="tab-activity" class="tab-panel hidden space-y-6">
+                    <article class="bg-white border border-slate-200 rounded-xl p-4">
+                      <header class="mb-3">
+                        <h3 class="text-[15px] font-semibold">
+                          Lượng truy cập trong ngày
+                        </h3>
+                      </header>
+                      <canvas id="chAccessDay2" height="120"></canvas>
+                    </article>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <article class="bg-white border border-slate-200 rounded-xl p-4 lg:col-span-2">
+                        <header class="mb-3">
+                          <h3 class="text-[15px] font-semibold">
+                            Hoạt động theo ngày trong tuần
+                          </h3>
+                        </header>
+                        <canvas id="chWeekBars2" height="110"></canvas>
+                      </article>
+                      <article class="bg-white border border-slate-200 rounded-xl p-4">
+                        <header class="mb-3">
+                          <h3 class="text-[15px] font-semibold">
+                            Thống kê tổng quát
+                          </h3>
+                        </header>
+                        <ul class="text-[14px] space-y-2">
+                          <li class="flex justify-between">
+                            <span>Số phiên đăng nhập hôm nay</span>
+                            <strong id="sumLoginActivity">--</strong>
+                          </li>
+                          <li class="flex justify-between">
+                            <span>Thời gian truy cập trung bình</span>
+                            <strong id="avgSessionActivity">--</strong>
+                          </li>
+                          <li class="flex justify-between">
+                            <span>Văn bản xử lý hôm nay</span>
+                            <strong id="docsHandledActivity">--</strong>
+                          </li>
+                          <li class="flex justify-between">
+                            <span>Cuộc họp đã diễn ra</span>
+                            <strong id="meetingsActivity">--</strong>
+                          </li>
+                          <li class="flex justify-between">
+                            <span>Thông báo đã gửi</span>
+                            <strong id="notificationsActivity">--</strong>
+                          </li>
+                        </ul>
+                      </article>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <!-- Loading Overlay -->
+          <div id="analyticsLoading" class="hidden fixed inset-0 bg-black/20 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-lg p-6 shadow-xl flex flex-col items-center gap-4">
+              <div class="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-slate-700 font-medium">Đang tải dữ liệu...</p>
+            </div>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/quantri.js' %}"></script>
+<script src="{% static 'js/quantri-analytics.js' %}" defer></script>
+{% endblock %}

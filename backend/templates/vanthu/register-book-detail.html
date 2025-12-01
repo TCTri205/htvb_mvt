@@ -1,0 +1,124 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Sổ đăng ký • {{ register.name }}{% endblock %}
+{% block content %}
+
+          <div class="max-w-5xl px-6 lg:px-8 py-6 lg:py-7 space-y-6">
+            <header class="flex flex-col gap-2">
+              <div class="flex items-center justify-between gap-4">
+                <div>
+                  <p class="text-xs uppercase tracking-wide text-slate-500">Sổ đăng ký</p>
+                  <h1 class="text-2xl font-semibold text-slate-900">{{ register.name }}</h1>
+                </div>
+                <a
+                  href="/vanthu/sodangky/"
+                  class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  ← Trở lại danh sách
+                </a>
+              </div>
+              <p class="text-sm text-slate-500">
+                {{ register.description|default:"" }}
+              </p>
+            </header>
+
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <article class="card p-4">
+                <p class="text-xs uppercase text-slate-500">Hướng</p>
+                <p class="text-lg font-semibold text-slate-900">{{ register_direction_label }}</p>
+              </article>
+              <article class="card p-4">
+                <p class="text-xs uppercase text-slate-500">Năm áp dụng</p>
+                <p class="text-lg font-semibold text-slate-900">{{ register.year }}</p>
+              </article>
+              <article class="card p-4">
+                <p class="text-xs uppercase text-slate-500">Trạng thái</p>
+                <p class="text-lg font-semibold text-slate-900">{{ register_status_label }}</p>
+              </article>
+              <article class="card p-4 md:col-span-2">
+                <p class="text-xs uppercase text-slate-500">Tiền tố / Hậu tố</p>
+                <p class="text-lg font-semibold text-slate-900">
+                  {{ register.prefix|default:"—" }} / {{ register.suffix|default:"—" }}
+                </p>
+                <p class="text-xs text-slate-400">{{ register.description|default:"" }}</p>
+              </article>
+              <article class="card p-4">
+                <p class="text-xs uppercase text-slate-500">Reset</p>
+                <p class="text-lg font-semibold text-slate-900">{{ register_reset_label }}</p>
+              </article>
+              <article class="card p-4">
+                <p class="text-xs uppercase text-slate-500">Số tiếp theo</p>
+                <p class="text-lg font-semibold text-slate-900">{{ register.next_sequence }}</p>
+              </article>
+            </section>
+
+            <section class="bg-white border border-slate-200 rounded-xl p-0 overflow-hidden">
+              <header class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900">Văn bản đã ghi trong sổ</h2>
+                  <p class="text-xs text-slate-500">
+                    Đã ghi {{ register_documents_count }} văn bản theo sổ này (tối đa hiển thị 200 bản ghi mới nhất).
+                  </p>
+                </div>
+              </header>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                      <th class="px-4 py-3 text-left font-medium">Văn bản</th>
+                      <th class="px-4 py-3 text-left font-medium">Số đến</th>
+                      <th class="px-4 py-3 text-left font-medium">Ngày đến</th>
+                      <th class="px-4 py-3 text-left font-medium">Phòng ban</th>
+                      <th class="px-4 py-3 text-left font-medium">Trạng thái</th>
+                      <th class="px-4 py-3 text-left font-medium">Ngày vào sổ</th>
+                      <th class="px-4 py-3 text-left font-medium">Ghi chú</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100">
+                    {% if register_documents %}
+                      {% for entry in register_documents %}
+                        {% with doc=entry.document %}
+                          <tr>
+                            <td class="px-4 py-3">
+                              <a
+                                href="/vanthu/vanbanden/{{ doc.document_id }}/"
+                                class="font-medium text-slate-900 hover:text-slate-700"
+                              >
+                                {{ doc.title }}
+                              </a>
+                              <div class="text-xs text-slate-400">ID: {{ doc.document_id }}</div>
+                            </td>
+                            <td class="px-4 py-3">{{ doc.received_number|default:"—" }}</td>
+                            <td class="px-4 py-3">
+                              {{ doc.received_date|date:"d/m/Y"|default:"—" }}
+                            </td>
+                            <td class="px-4 py-3">
+                              {{ entry.department_label|default:"—" }}
+                            </td>
+                            <td class="px-4 py-3">
+                              {{ entry.status_label|default:"—" }}
+                            </td>
+                            <td class="px-4 py-3">
+                              {{ entry.registered_at|date:"d/m/Y H:i"|default:"—" }}
+                              <div class="text-xs text-slate-400">{{ entry.actor_name }}</div>
+                            </td>
+                            <td class="px-4 py-3">
+                              {{ entry.note|default:"—" }}
+                            </td>
+                          </tr>
+                        {% endwith %}
+                      {% endfor %}
+                    {% else %}
+                      <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-slate-500 text-sm">
+                          Chưa có văn bản nào được ghi trong sổ này.
+                        </td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+{% endblock %}

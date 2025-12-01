@@ -1,0 +1,217 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Thông báo - Nhắc việc (Văn thư){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ===== Top KPI ===== -->
+            <section
+              class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6"
+            >
+              <!-- Tổng nhắc việc -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tổng nhắc việc
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >⏰</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div id="kpi-total" class="text-3xl font-bold text-blue-700">
+                    0
+                  </div>
+                </div>
+              </article>
+              <!-- VB đến chưa xử lý -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    VB đến chưa xử lý
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📥</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div
+                    id="kpi-incoming"
+                    class="text-3xl font-bold text-rose-600"
+                  >
+                    0
+                  </div>
+                </div>
+              </article>
+              <!-- VB đi chưa phát hành -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    VB đi chưa phát hành
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📄</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div
+                    id="kpi-outgoing"
+                    class="text-3xl font-bold text-rose-600"
+                  >
+                    0
+                  </div>
+                </div>
+              </article>
+              <!-- Chưa đọc -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Chưa đọc
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >🔔</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div
+                    id="kpi-unread"
+                    class="text-3xl font-bold text-amber-600"
+                  >
+                    0
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ===== Tabs + Filters ===== -->
+            <section class="mt-5 bg-white border border-slate-200 rounded-xl">
+              <div class="px-4 pt-3 flex items-center gap-2">
+                <div
+                  class="inline-flex rounded-lg border border-slate-200 p-0.5"
+                >
+                  <button
+                    id="tab-noti"
+                    class="px-3 h-9 rounded-md text-sm bg-slate-900 text-white"
+                    type="button"
+                  >
+                    Thông báo
+                  </button>
+                  <button
+                    id="tab-remind"
+                    class="px-3 h-9 rounded-md text-sm"
+                    type="button"
+                  >
+                    Nhắc việc
+                  </button>
+                </div>
+              </div>
+              <div
+                class="p-4 border-t border-slate-100 grid grid-cols-1 xl:grid-cols-4 gap-3"
+              >
+                <label class="relative xl:col-span-2" for="searchBox">
+                  <input
+                    id="searchBox"
+                    class="w-full h-10 pl-3 pr-10 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px] placeholder-slate-400"
+                    placeholder="Tìm kiếm thông báo, nhắc việc…"
+                    autocomplete="off"
+                  />
+                  <span class="absolute right-3 top-2.5 text-slate-400">⌕</span>
+                </label>
+
+                <div class="relative">
+                  <select
+                    id="filterType"
+                    class="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  >
+                    <option value="all">Tất cả loại</option>
+                    <option value="vbd">Văn bản đến</option>
+                    <option value="vbd-xuly">Văn bản đến • chưa xử lý</option>
+                    <option value="vbd-hethan">
+                      Văn bản đến • sắp hết hạn
+                    </option>
+                    <option value="vbd-theodoi">Cập nhật sổ theo dõi</option>
+                    <option value="vbd-khac">Khác</option>
+                    <option value="di-chua-phat-hanh">
+                      Văn bản đi • chưa phát hành
+                    </option>
+                  </select>
+                  <span
+                    class="pointer-events-none absolute right-2 top-[7px] text-slate-400"
+                    >▾</span
+                  >
+                </div>
+
+                <div class="relative">
+                  <select
+                    id="filterPriority"
+                    class="w-full h-10 pl-3 pr-8 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                  >
+                    <option value="all">Tất cả mức độ</option>
+                    <option value="cao">Cao</option>
+                    <option value="khan">Khẩn</option>
+                    <option value="thuong">Thường</option>
+                  </select>
+                  <span
+                    class="pointer-events-none absolute right-2 top-[7px] text-slate-400"
+                    >▾</span
+                  >
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== Lists ===== -->
+            <section class="mt-6 space-y-6">
+              <!-- Thông báo từ Lãnh đạo -->
+              <article
+                id="block-noti"
+                class="bg-white border border-slate-200 rounded-xl"
+              >
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Danh sách thông báo từ Lãnh đạo
+                  </h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Hiển thị các thông báo quan trọng gửi tới Văn thư
+                  </p>
+                </header>
+                <ul id="list-noti" class="divide-y divide-slate-100"></ul>
+                <div
+                  id="noti-empty"
+                  class="hidden p-4 text-[13px] text-slate-500"
+                >
+                  Không có thông báo phù hợp bộ lọc.
+                </div>
+              </article>
+
+              <!-- Nhắc việc hệ thống -->
+              <article
+                id="block-remind"
+                class="bg-white border border-slate-200 rounded-xl hidden"
+              >
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Nhắc việc từ Hệ thống
+                  </h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Gợi ý xử lý dựa trên hạn xử lý, trạng thái văn bản
+                  </p>
+                </header>
+                <ul id="list-remind" class="divide-y divide-amber-100"></ul>
+                <div
+                  id="remind-empty"
+                  class="hidden p-4 text-[13px] text-slate-500"
+                >
+                  Không có nhắc việc phù hợp bộ lọc.
+                </div>
+              </article>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/notifications-common.js' %}"></script>
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,517 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Văn thư • Tiếp nhận văn bản đến{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- Top bar -->
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-2">
+                <a
+                  href="/vanthu/vanbanden.html"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  ← Danh sách văn bản
+                </a>
+                <span class="text-[13px] text-slate-500"
+                  >Tiếp nhận văn bản đến</span
+                >
+              </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                id="btnSaveDraft"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  type="button"
+                  title="Lưu nháp thông tin tiếp nhận"
+                >
+                  Lưu nháp
+                </button>
+
+                <button
+                  id="btnRegister"
+                  class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                  title="Tiếp nhận &amp; ghi số đến"
+                  disabled
+                >
+                  Tiếp nhận &amp; ghi số
+                </button>
+
+                <button
+                  id="btnAssign"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  type="button"
+                title="Chuyển xử lý"
+                disabled
+              >
+                Chuyển xử lý
+              </button>
+            </div>
+          </div>
+
+          <section id="recent-docs-panel" class="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-sm font-semibold text-slate-900">Văn bản đến gần đây</h2>
+              <span id="recent-docs-loading" class="text-xs text-slate-500">Đang tải...</span>
+            </div>
+            <ul
+              id="recent-docs-list"
+              class="grid gap-3"
+              data-empty-message="Chưa có dữ liệu."
+            ></ul>
+            <p id="recent-docs-empty" class="text-[13px] text-slate-500 hidden">
+              Chưa có văn bản nào được ghi nhận gần đây.
+            </p>
+          </section>
+
+            <!-- Form grid -->
+            <section class="grid gap-6 lg:grid-cols-3 mt-4">
+              <!-- LEFT: form sections -->
+              <div class="lg:col-span-2 space-y-6">
+                <!-- A. Thông tin văn bản -->
+                <article class="card p-5 space-y-4">
+                  <header>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Thông tin văn bản
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Nhập dữ liệu gốc của văn bản
+                    </p>
+                  </header>
+
+                  <div class="grid gap-3 md:grid-cols-2">
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Ký hiệu văn bản <span class="text-rose-600">*</span>
+                      </span>
+                      <input
+                        id="fldSoKyHieu"
+                        type="text"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        placeholder="VD: 008/TB-UBND"
+                        required
+                      />
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Ngày ban hành <span class="text-rose-600">*</span>
+                      </span>
+                      <input
+                        id="fldNgayBanHanh"
+                        type="date"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        required
+                      />
+                    </label>
+
+                    <label class="block md:col-span-2">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Cơ quan ban hành/gửi
+                        <span class="text-rose-600">*</span></span
+                      >
+                      <input
+                        id="fldCoQuan"
+                        type="text"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        placeholder="VD: Sở Y tế Đà Nẵng"
+                        required
+                      />
+                    </label>
+
+                    <label class="block md:col-span-2">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Trích yếu nội dung
+                        <span class="text-rose-600">*</span></span
+                      >
+                      <textarea
+                        id="fldTrichYeu"
+                        rows="3"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        placeholder="Nhập nội dung trích yếu ngắn gọn…"
+                        required
+                      ></textarea>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Số trang</span
+                      >
+                      <input
+                        id="fldSoTrang"
+                        type="number"
+                        min="1"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        placeholder="VD: 3"
+                      />
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Hình thức nhận</span
+                      >
+                      <select
+                        id="fldHinhThucNhan"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      >
+                        <option value="email">Thư điện tử</option>
+                        <option value="buu_chinh">Bưu chính</option>
+                        <option value="truc_tiep">Trực tiếp</option>
+                        <option value="he_thong_khac">
+                          Hệ thống liên thông
+                        </option>
+                      </select>
+                    </label>
+                  </div>
+                </article>
+
+                <!-- B. Tiếp nhận & đăng ký -->
+                <article class="card p-5 space-y-4">
+                  <header>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Tiếp nhận &amp; đăng ký
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Ghi số đến, ngày đến và phân loại
+                    </p>
+                  </header>
+
+                  <div class="grid gap-3 md:grid-cols-3">
+                    <label class="block md:col-span-2">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Sổ đăng ký <span class="text-rose-600">*</span></span
+                      >
+                      <select
+                        id="fldSoDangKy"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        required
+                      >
+                        <option value="">— Chọn sổ đăng ký —</option>
+                        <option value="so_chung_2024">
+                          Sổ văn bản đến (chung) 2024
+                        </option>
+                        <option value="so_y_te_2024">
+                          Sổ lĩnh vực Y tế 2024
+                        </option>
+                      </select>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Ngày đến <span class="text-rose-600">*</span></span
+                      >
+                      <input
+                        id="fldNgayDen"
+                        type="date"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        required
+                      />
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Số đến (sau khi ghi số)</span
+                      >
+                      <input
+                        id="fldSoDen"
+                        type="text"
+                        class="mt-1 w-full bg-slate-50 border border-slate-200 rounded-md px-3 py-2 text-sm text-slate-600"
+                        placeholder="—"
+                        readonly
+                        aria-readonly="true"
+                      />
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Lĩnh vực</span
+                      >
+                      <select
+                        id="fldLinhVuc"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      >
+                        <option value="">— Chọn lĩnh vực —</option>
+                        <option>Y tế</option>
+                        <option>Giáo dục</option>
+                        <option>Xây dựng</option>
+                        <option>Nội vụ</option>
+                      </select>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Độ khẩn</span
+                      >
+                      <select
+                        id="fldDoKhan"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      >
+                        <option>Thường</option>
+                        <option value="khan">Khẩn</option>
+                        <option value="hoa_toc">Hỏa tốc</option>
+                      </select>
+                    </label>
+
+                    <label class="block">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Độ mật</span
+                      >
+                      <select
+                        id="fldDoMat"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      >
+                        <option>Thường</option>
+                        <option value="mat">Mật</option>
+                        <option value="toi_mat">Tối mật</option>
+                      </select>
+                    </label>
+
+                    <label class="block md:col-span-2">
+                      <span class="text-[13px] font-medium text-slate-700"
+                        >Hạn xử lý</span
+                      >
+                      <input
+                        id="fldHanXuLy"
+                        type="date"
+                        class="mt-1 w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      />
+                    </label>
+
+                    <div class="flex items-end gap-2 md:col-span-1">
+                      <button
+                        id="btnLinkCase"
+                        type="button"
+                        class="w-full h-10 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        title="Gắn với hồ sơ công việc"
+                      >
+                        Gắn hồ sơ…
+                      </button>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- C. Tệp đính kèm -->
+                <article class="card p-5 space-y-4">
+                  <header class="flex items-center justify-between gap-2">
+                    <div>
+                      <h2 class="text-[15px] font-semibold text-slate-800">
+                        Tệp đính kèm
+                      </h2>
+                      <p class="text-[12.5px] text-slate-500">
+                        Scan/Upload văn bản gốc &amp; tài liệu liên quan
+                      </p>
+                    </div>
+                    <label
+                      for="fldUpload"
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50 grid place-items-center cursor-pointer"
+                      title="Thêm tệp"
+                      >Thêm tệp</label
+                    >
+                    <input id="fldUpload" type="file" class="hidden" multiple />
+                  </header>
+
+                  <ul id="lstFiles" class="space-y-3 text-[13px]">
+                    <li
+                      class="rounded-lg border border-slate-100 p-3 flex items-center justify-between gap-3 hidden empty:!hidden"
+                      data-empty-hint
+                    >
+                      <div class="text-slate-500">
+                        Chưa có tệp. Nhấn
+                        <span class="font-medium">Thêm tệp</span> để tải lên.
+                      </div>
+                    </li>
+                  </ul>
+                </article>
+
+                <!-- D. Phân công/chuyển xử lý -->
+                <article class="card p-5 space-y-4">
+                  <header class="flex items-center justify-between gap-2">
+                    <div>
+                      <h2 class="text-[15px] font-semibold text-slate-800">
+                        Phân công xử lý
+                      </h2>
+                      <p class="text-[12.5px] text-slate-500">
+                        Giao đơn vị/người xử lý sau khi ghi số
+                      </p>
+                    </div>
+                    <button
+                      id="btnAddAssignee"
+                      type="button"
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      disabled
+                      title="Thêm người được giao"
+                    >
+                      Thêm dòng
+                    </button>
+                  </header>
+
+                  <div class="overflow-x-auto -mx-5">
+                    <table class="min-w-full text-[13px]" id="tblAssign">
+                      <thead class="bg-slate-50 text-slate-600">
+                        <tr>
+                          <th class="px-5 py-3 text-left font-semibold w-[28%]">
+                            Đơn vị/Người nhận
+                          </th>
+                          <th class="px-5 py-3 text-left font-semibold w-[18%]">
+                            Vai trò
+                          </th>
+                          <th class="px-5 py-3 text-left font-semibold w-[18%]">
+                            Thời hạn
+                          </th>
+                          <th class="px-5 py-3 text-left font-semibold">
+                            Ghi chú
+                          </th>
+                          <th
+                            class="px-5 py-3 text-right font-semibold w-[50px]"
+                          >
+                            Xóa
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="divide-y divide-slate-100" id="assignBody">
+                        <tr class="text-slate-500" data-empty-row>
+                          <td class="px-5 py-4" colspan="5">
+                            Chưa có dòng phân công. Ghi số để kích hoạt chức
+                            năng và thêm người được giao.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </article>
+
+                <!-- E. Ghi chú nội bộ -->
+                <article class="card p-5 space-y-3">
+                  <header>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Ghi chú nội bộ
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Không gửi ra ngoài, dùng để nhắc việc trong nội bộ
+                    </p>
+                  </header>
+                  <textarea
+                    id="fldGhiChu"
+                    rows="3"
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    placeholder="Nhập ghi chú…"
+                  ></textarea>
+                </article>
+              </div>
+
+              <!-- RIGHT: Preview + validation -->
+              <aside class="space-y-6">
+                <article class="card p-5 space-y-4">
+                  <header>
+                    <h3 class="text-[15px] font-semibold text-slate-800">
+                      Tóm tắt tiếp nhận
+                    </h3>
+                    <p class="text-[12.5px] text-slate-500">
+                      Xem nhanh các trường chính
+                    </p>
+                  </header>
+
+                  <ul class="text-[13px] space-y-2">
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Số đến</span>
+                      <span id="pvSoDen" class="font-semibold text-slate-700"
+                        >—</span
+                      >
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Ngày đến</span>
+                      <span id="pvNgayDen" class="font-medium text-slate-700"
+                        >—</span
+                      >
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Sổ đăng ký</span>
+                      <span id="pvSoDangKy" class="font-medium text-slate-700"
+                        >—</span
+                      >
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Độ khẩn</span>
+                      <span id="pvDoKhan" class="chip chip--default"
+                        >Thường</span
+                      >
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Độ mật</span>
+                      <span id="pvDoMat" class="chip chip--default"
+                        >Thường</span
+                      >
+                    </li>
+                    <li class="flex items-center justify-between">
+                      <span class="text-slate-600">Tệp đính kèm</span>
+                      <span id="pvFiles" class="font-medium text-slate-700"
+                        >0</span
+                      >
+                    </li>
+                  </ul>
+                </article>
+
+                <article class="card p-5 space-y-4">
+                  <header>
+                    <h3 class="text-[15px] font-semibold text-slate-800">
+                      Kiểm tra hợp lệ
+                    </h3>
+                    <p class="text-[12.5px] text-slate-500">
+                      Các trường bắt buộc trước khi ghi số
+                    </p>
+                  </header>
+                  <ul id="validList" class="text-[13px] space-y-2">
+                    <li data-check="so_ky_hieu" class="flex items-center gap-2">
+                      <span class="status-dot">⛔</span> Ký hiệu văn bản
+                    </li>
+                    <li
+                      data-check="ngay_ban_hanh"
+                      class="flex items-center gap-2"
+                    >
+                      <span class="status-dot">⛔</span> Ngày ban hành
+                    </li>
+                    <li data-check="co_quan" class="flex items-center gap-2">
+                      <span class="status-dot">⛔</span> Cơ quan ban hành/gửi
+                    </li>
+                    <li data-check="trich_yeu" class="flex items-center gap-2">
+                      <span class="status-dot">⛔</span> Trích yếu nội dung
+                    </li>
+                    <li data-check="so_dang_ky" class="flex items-center gap-2">
+                      <span class="status-dot">⛔</span> Sổ đăng ký
+                    </li>
+                    <li data-check="ngay_den" class="flex items-center gap-2">
+                      <span class="status-dot">⛔</span> Ngày đến
+                    </li>
+                  </ul>
+                  <p class="text-[12px] text-slate-500">
+                    Khi tất cả điều kiện đạt, nút
+                    <span class="font-medium">“Tiếp nhận &amp; ghi số”</span>
+                    sẽ được kích hoạt.
+                  </p>
+                </article>
+              </aside>
+            </section>
+
+            <!-- Post actions hint -->
+            <div
+              class="mt-6 rounded-lg border border-slate-200 bg-white p-4 text-[13px]"
+            >
+              <p class="text-slate-600">
+                Sau khi ghi số thành công, bạn có thể
+                <span class="font-medium">Chuyển xử lý</span> cho đơn vị/người
+                liên quan và mở trang
+                <a
+                  href="/vanthu/vanbanden-detail.html"
+                  class="text-blue-700 hover:underline"
+                  >chi tiết văn bản</a
+                >.
+              </p>
+            </div>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}

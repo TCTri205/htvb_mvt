@@ -1,0 +1,215 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Quản trị • Chi tiết danh mục hệ thống{% endblock %}
+{% block content %}
+
+          <div class="max-w-6xl mx-auto px-6 lg:px-10 py-6 lg:py-8 space-y-6">
+            <!-- Top bar: back + actions -->
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-2">
+                <a
+                  href="danhmuchethong.html"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  aria-label="Quay lại danh sách danh mục"
+                >
+                  <span aria-hidden="true">&larr;</span>
+                  <span>Danh sách danh mục</span>
+                </a>
+                <span class="text-[13px] text-slate-500"
+                  >DM-LOAI-01 • Loại văn bản</span
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Nhân bản danh mục
+                </button>
+                <button
+                  class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                >
+                  Cập nhật danh mục
+                </button>
+              </div>
+            </div>
+
+            <!-- Catalog header -->
+            <article class="card p-5 space-y-4 mt-4 md:mt-5">
+              <header>
+                <h1 class="text-[18px] font-semibold text-slate-800">
+                  Danh mục loại văn bản
+                </h1>
+                <p class="text-[13px] text-slate-500">
+                  Danh mục chuẩn hoá các loại văn bản sử dụng trong hệ thống để
+                  thống nhất quy trình lưu chuyển và tra cứu tài liệu.
+                </p>
+              </header>
+              <dl class="grid gap-4 md:grid-cols-3 text-[13px] text-slate-600">
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Mã danh mục</dt>
+                  <dd>DM-LOAI-01</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Tên danh mục</dt>
+                  <dd>Loại văn bản hành chính</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Tổng số mục</dt>
+                  <dd>12 loại</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Ngày tạo</dt>
+                  <dd>2020-06-01</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">
+                    Cập nhật gần nhất
+                  </dt>
+                  <dd>2024-02-01</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Trạng thái</dt>
+                  <dd class="text-emerald-600 font-semibold">Đang sử dụng</dd>
+                </div>
+              </dl>
+            </article>
+
+            <!-- Values + Audit -->
+            <section class="grid gap-6 lg:grid-cols-2 mt-6">
+              <article class="card p-5 space-y-4">
+                <header
+                  class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                >
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Giá trị trong danh mục
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Chi tiết từng loại văn bản
+                    </p>
+                  </div>
+                  <button
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Thêm loại văn bản
+                  </button>
+                </header>
+                <ul class="space-y-3 text-[13px]">
+                  <li
+                    class="rounded-lg border border-slate-100 p-3 flex items-center justify-between"
+                  >
+                    <div>
+                      <div class="font-medium text-slate-700">Quyết định</div>
+                      <div class="text-[12px] text-slate-500">
+                        Mã: QD • Áp dụng cho văn bản ban hành quyết định
+                      </div>
+                    </div>
+                    <span class="chip chip--blue">Sử dụng</span>
+                  </li>
+                  <li
+                    class="rounded-lg border border-slate-100 p-3 flex items-center justify-between"
+                  >
+                    <div>
+                      <div class="font-medium text-slate-700">Thông báo</div>
+                      <div class="text-[12px] text-slate-500">
+                        Mã: TB • Dùng cho văn bản thông tin nội bộ/ngoại bộ
+                      </div>
+                    </div>
+                    <span class="chip chip--green">Sử dụng</span>
+                  </li>
+                  <li
+                    class="rounded-lg border border-slate-100 p-3 flex items-center justify-between"
+                  >
+                    <div>
+                      <div class="font-medium text-slate-700">Tờ trình</div>
+                      <div class="text-[12px] text-slate-500">
+                        Mã: TT • Sử dụng trong quy trình trình duyệt
+                      </div>
+                    </div>
+                    <span class="chip chip--default">Sử dụng</span>
+                  </li>
+                </ul>
+              </article>
+
+              <article class="card p-5 space-y-4">
+                <header
+                  class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                >
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Lịch sử thay đổi
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">Nhật ký giám sát</p>
+                  </div>
+                  <button
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Xuất lịch sử
+                  </button>
+                </header>
+                <ul class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3">
+                    <div class="flex items-center justify-between">
+                      <span class="font-semibold text-slate-700"
+                        >2024-02-01 10:05 • CậP nhật danh mục</span
+                      >
+                      <span class="text-[12px] text-slate-500">PTD</span>
+                    </div>
+                    <p class="mt-1 text-[12.5px] text-slate-600">
+                      Cập nhật tên loại văn bản "Thông báo nội bộ" thành "Thông
+                      báo".
+                    </p>
+                  </li>
+                  <li class="rounded-lg border border-slate-100 p-3">
+                    <div class="flex items-center justify-between">
+                      <span class="font-semibold text-slate-700"
+                        >2023-12-20 15:45 • Thêm giá trị danh mục</span
+                      >
+                      <span class="text-[12px] text-slate-500">PTD</span>
+                    </div>
+                    <p class="mt-1 text-[12.5px] text-slate-600">
+                      Thêm loại văn bản "Đề án" vào danh mục.
+                    </p>
+                  </li>
+                </ul>
+              </article>
+            </section>
+
+            <!-- Apply settings -->
+            <section class="card p-5 space-y-4 mt-6">
+              <header class="flex items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-[15px] font-semibold text-slate-800">
+                    Thiết lập áp dụng
+                  </h2>
+                  <p class="text-[12.5px] text-slate-500">
+                    Phạm vi và ràng buộc dữ liệu
+                  </p>
+                </div>
+                <button
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Chỉnh sửa thiết lập
+                </button>
+              </header>
+              <div class="grid gap-4 md:grid-cols-2 text-[13px]">
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <h3 class="font-medium text-slate-700">Phòng ban áp dụng</h3>
+                  <p class="text-[12px] text-slate-500 mt-1">
+                    Phòng Hành chính, Văn phòng UBND, Phòng Tư pháp
+                  </p>
+                </div>
+                <div class="rounded-lg border border-slate-100 p-3">
+                  <h3 class="font-medium text-slate-700">
+                    Tự động gợi ý số văn bản
+                  </h3>
+                  <p class="text-[12px] text-slate-500 mt-1">
+                    Sử dụng prefix QĐ cho Quyết định, TB cho Thông báo.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+{% endblock %}

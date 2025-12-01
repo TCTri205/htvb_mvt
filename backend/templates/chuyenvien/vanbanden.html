@@ -1,0 +1,733 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Văn bản đến • Hệ thống Quản lý Văn bản &amp; Điều hành{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- SHELL: LIST / DETAIL -->
+            <section id="cv-incoming-shell" class="space-y-6">
+              <!-- ========= LIST VIEW ========= -->
+              <div id="cv-incoming-list" data-view="list" class="space-y-6">
+                <header class="space-y-1">
+                  <h1 class="text-[17px] font-semibold text-slate-800">
+                    Văn bản đến được giao xử lý
+                  </h1>
+                  <p class="text-[13px] text-slate-500">
+                    Theo dõi văn bản đến và trạng thái xử lý hiện tại (dành cho
+                    Chuyên viên)
+                  </p>
+                </header>
+
+                <!-- ===== Search & Filters (page-level) ===== -->
+                <section class="card p-4 fade-in">
+                  <h3 class="text-[14px] font-semibold text-slate-700 mb-3">
+                    Tìm kiếm và lọc
+                  </h3>
+                  <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <!-- search -->
+                    <label class="md:col-span-5 relative">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M8 4a4 4 0 102.83 6.83l3.44 3.44a1 1 0 001.41-1.41l-3.44-3.44A4 4 0 008 4zm-6 4a6 6 0 1110.89 3.476l3.817 3.817a3 3 0 11-4.243 4.243l-3.817-3.817A6 6 0 012 8z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Tìm kiếm văn bản…"
+                        class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px] placeholder-slate-400"
+                        data-filter="q"
+                        id="pageSearch"
+                      />
+                    </label>
+
+                    <!-- status -->
+                    <select
+                      class="md:col-span-3 h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                      data-filter="status"
+                      id="statusFilter"
+                    >
+                      <option value="">Tất cả trạng thái</option>
+                      <option value="RECEIVED">Tiếp nhận</option>
+                      <option value="WAITING_ASSIGNMENT">Chờ phân công</option>
+                      <option value="PROCESSING">Đang xử lý</option>
+                      <option value="PENDING_LEADER_APPROVAL">Chờ lãnh đạo</option>
+                      <option value="PENDING_CLERK_CHECK">Chờ văn thư kiểm tra</option>
+                      <option value="REGISTERED">Đã vào sổ</option>
+                      <option value="DISPATCHED">Đã phát hành</option>
+                      <option value="ARCHIVED">Đã lưu trữ</option>
+                      <option value="THU_HOI">Thu hồi</option>
+                    </select>
+
+                    <!-- urgency -->
+                    <div class="md:col-span-2 relative">
+                      <select
+                        class="w-full h-10 rounded-lg border border-slate-200 px-3 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                        data-filter="urgency"
+                        id="urgencyFilter"
+                      >
+                        <option value="">Tất cả mức độ</option>
+                        <option value="thuong">Thường</option>
+                        <option value="cao">Cao</option>
+                        <option value="khan">Khẩn</option>
+                        <option value="hoatoc">Hỏa tốc</option>
+                      </select>
+                      <span
+                        class="pointer-events-none absolute right-3 top-2.5 text-slate-400"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-5 w-5"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+
+                    <!-- advanced -->
+                    <button
+                      type="button"
+                      class="md:col-span-2 h-10 rounded-lg border border-slate-200 px-3 text-[14px] flex items-center gap-2 hover:bg-slate-50"
+                      data-action="open-advanced-filter"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4 text-slate-500"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                      >
+                        <path d="M3 5h18v2H3zM6 11h12v2H6zM10 17h4v2h-4z" />
+                      </svg>
+                      Lọc nâng cao
+                    </button>
+                  </div>
+                </section>
+
+                <!-- ===== Table ===== -->
+                <section class="card overflow-hidden fade-in">
+                  <header class="px-5 py-3 border-b border-slate-100">
+                    <h3 class="text-[15px] font-semibold text-slate-700">
+                      Danh sách văn bản đến
+                    </h3>
+                    <p class="text-[12.5px] text-slate-500">
+                      Hiển thị <span data-count="rows">14</span> văn bản
+                    </p>
+                  </header>
+
+                  <div class="overflow-x-auto px-5 pb-5">
+                    <table class="min-w-full text-[14px]" id="vbDenTable">
+                      <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr class="text-left text-slate-600">
+                          <th class="py-3 pl-6 pr-3 font-semibold">
+                            Trích yếu
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Ký hiệu / Số đến
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Ngày ban hành / Ngày đến
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Lĩnh vực / Loại
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Độ khẩn / Độ mật
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Người gửi / Tiếp nhận
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Phân công xử lý
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Hạn xử lý
+                          </th>
+                          <th class="px-3 py-3 font-semibold whitespace-nowrap">
+                            Trạng thái
+                          </th>
+                          <th
+                            class="px-3 py-3 font-semibold whitespace-nowrap text-right pr-6"
+                          >
+                            Thao tác
+                          </th>
+                        </tr>
+                      </thead>
+
+                  <tbody class="divide-y divide-slate-100" id="vbDenBody">
+                    <tr><td colspan="10" class="px-4 py-8 text-center text-sm text-slate-500">Đang tải danh sách văn bản…</td></tr>
+                  </tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+
+              <!-- ========= DETAIL VIEW ========= -->
+              <section
+                id="cv-incoming-detail"
+                data-view="detail"
+                class="space-y-6 hidden"
+              >
+                <div
+                  class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+                >
+                  <div class="flex items-center gap-2">
+                    <button
+                      class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      data-action="back-to-list"
+                      type="button"
+                    >
+                      <span aria-hidden="true">←</span> Quay lại danh sách
+                    </button>
+                    <span
+                      class="text-[13px] text-slate-500"
+                      id="cvDocBreadcrumb"
+                      >Văn bản • Chi tiết &amp; xử lý</span
+                    >
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <!-- Phân công (CV được phép trong phạm vi tổ/nhóm) -->
+                    <button
+                      class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                      data-action="assign"
+                      type="button"
+                    >
+                      Phân công xử lý
+                    </button>
+
+                    <button
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      data-action="open-logs"
+                      type="button"
+                    >
+                      Nhật ký văn bản
+                    </button>
+
+                    <!-- Xuất hồ sơ: CV được phép Export (B5) -->
+                    <button
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                      data-action="export"
+                      type="button"
+                    >
+                      Xuất hồ sơ
+                    </button>
+                  </div>
+                </div>
+
+                <article class="card p-5 space-y-4">
+                  <header class="space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <span
+                        class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold"
+                        id="cvDocDirection"
+                        >Văn bản đến</span
+                      >
+                      <span
+                        id="cvDocStatus"
+                        class="px-2.5 py-1 rounded-full bg-slate-900 text-white text-xs font-semibold"
+                        >Chưa xử lý</span
+                      >
+                      <span
+                        id="cvDocUrgency"
+                        class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold"
+                        >Khẩn</span
+                      >
+                      <span
+                        id="cvDocSecurity"
+                        class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-xs font-semibold"
+                        >Mật</span
+                      >
+                    </div>
+
+                    <h2
+                      id="cvDocTitle"
+                      class="text-[18px] font-semibold text-slate-800"
+                    >
+                      Thông báo về việc tổ chức Đại hội Đảng bộ phường
+                    </h2>
+                    <p
+                      class="text-[13px] text-slate-500 leading-relaxed"
+                      id="cvDocAbstract"
+                    >
+                      Trích yếu thể hiện mục đích và nội dung chính của văn bản…
+                    </p>
+                  </header>
+
+                  <dl
+                    class="grid gap-4 md:grid-cols-2 text-[13px] text-slate-600"
+                    id="cvDocMetadata"
+                  >
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Ký hiệu</dt>
+                      <dd id="cvDocCode">001/TB-UBND</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Số đến</dt>
+                      <dd id="cvDocReceivedNumber">15/2024</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">
+                        Ngày ban hành
+                      </dt>
+                      <dd id="cvDocIssuedDate">2024-01-12</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Ngày đến</dt>
+                      <dd id="cvDocReceivedDate">2024-01-15</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Cơ quan gửi</dt>
+                      <dd id="cvDocSender">UBND Quận Thanh Khê</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">
+                        Người tiếp nhận
+                      </dt>
+                      <dd id="cvDocReceiver">Lê Văn Cường (Văn thư)</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Lĩnh vực</dt>
+                      <dd id="cvDocField">Hành chính - Tổng hợp</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Loại văn bản</dt>
+                      <dd id="cvDocType">Thông báo</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">
+                        Phòng phụ trách
+                      </dt>
+                      <dd id="cvDocDepartment">Phòng Hành chính</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <dt class="font-semibold text-slate-700">Hạn xử lý</dt>
+                      <dd id="cvDocDue">2024-01-20</dd>
+                    </div>
+                  </dl>
+                </article>
+
+                <section class="grid gap-6 lg:grid-cols-3">
+                  <!-- Phân công xử lý -->
+                  <article class="card p-5 lg:col-span-2">
+                    <header
+                      class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                    >
+                      <div>
+                        <h3 class="text-[15px] font-semibold text-slate-800">
+                          Phân công xử lý
+                        </h3>
+                        <p class="text-[12.5px] text-slate-500">
+                          Dữ liệu từ bảng phân công văn bản
+                        </p>
+                      </div>
+                      <button
+                        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-action="add-assignee"
+                        type="button"
+                        title="CV được phép phân công trong tổ/nhóm"
+                      >
+                        Thêm người tham gia
+                      </button>
+                    </header>
+
+                    <div class="overflow-x-auto -mx-5">
+                      <table
+                        class="min-w-full text-[13px]"
+                        id="cvAssignmentTable"
+                      >
+                        <thead class="bg-slate-50 text-slate-600">
+                          <tr>
+                            <th class="px-5 py-3 text-left font-semibold">
+                              Người được giao
+                            </th>
+                            <th class="px-5 py-3 text-left font-semibold">
+                              Vai trò
+                            </th>
+                            <th class="px-5 py-3 text-left font-semibold">
+                              Người giao
+                            </th>
+                            <th class="px-5 py-3 text-left font-semibold">
+                              Thời hạn
+                            </th>
+                            <th class="px-5 py-3 text-left font-semibold">
+                              Trạng thái
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody
+                          id="cvAssignmentBody"
+                          class="divide-y divide-slate-100"
+                        >
+                          <tr>
+                            <td class="px-5 py-3">
+                              Nguyễn Văn An
+                              <div class="text-[12px] text-slate-500">
+                                Chủ trì xử lý
+                              </div>
+                            </td>
+                            <td class="px-5 py-3">
+                              <span class="chip chip--blue">Chủ trì</span>
+                            </td>
+                            <td class="px-5 py-3">Trần Thị Bình</td>
+                            <td class="px-5 py-3">2024-01-20</td>
+                            <td class="px-5 py-3">
+                              <span class="chip chip--amber">Đang xử lý</span>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td class="px-5 py-3">
+                              Phòng Kinh tế
+                              <div class="text-[12px] text-slate-500">
+                                Đồng xử lý
+                              </div>
+                            </td>
+                            <td class="px-5 py-3">
+                              <span class="chip chip--default"
+                                >Người được giao</span
+                              >
+                            </td>
+                            <td class="px-5 py-3">Nguyễn Văn An</td>
+                            <td class="px-5 py-3">2024-01-18</td>
+                            <td class="px-5 py-3">
+                              <span class="chip chip--green">Hoàn thành</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </article>
+
+                  <!-- Ghi chú nội bộ (CV được ✍️) -->
+                  <aside class="card p-5 space-y-4">
+                    <header>
+                      <h3 class="text-[15px] font-semibold text-slate-800">
+                        Ghi chú nội bộ
+                      </h3>
+                      <p class="text-[12.5px] text-slate-500">
+                        Liên kết bảng bình luận (đối tượng = văn bản)
+                      </p>
+                    </header>
+                    <ul id="cvDocNotes" class="space-y-3">
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div
+                          class="flex items-center justify-between text-[13px]"
+                        >
+                          <span class="font-medium text-slate-700"
+                            >Nguyễn Văn An</span
+                          >
+                          <span class="text-[12px] text-slate-400"
+                            >2024-01-16 09:30</span
+                          >
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-600">
+                          Đề nghị Phòng Kinh tế chuẩn bị số liệu hỗ trợ triển
+                          khai hội nghị.
+                        </p>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div
+                          class="flex items-center justify-between text-[13px]"
+                        >
+                          <span class="font-medium text-slate-700"
+                            >Lê Văn Cường</span
+                          >
+                          <span class="text-[12px] text-slate-400"
+                            >2024-01-15 15:12</span
+                          >
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-600">
+                          Đã cập nhật bản scan văn bản và chuyển cho chuyên viên
+                          xử lý.
+                        </p>
+                      </li>
+                    </ul>
+                    <div class="flex gap-2">
+                      <input
+                        id="noteInput"
+                        class="flex-1 h-9 rounded-md border border-slate-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                        placeholder="Thêm ghi chú..."
+                      />
+                      <button
+                        class="h-9 px-3 rounded-md bg-slate-900 text-white text-[13px]"
+                        data-action="add-note"
+                        type="button"
+                      >
+                        Thêm
+                      </button>
+                    </div>
+                  </aside>
+                </section>
+
+                <section class="grid gap-6 lg:grid-cols-2">
+                  <!-- Quy trình phê duyệt (CV xem/nhận nhiệm vụ trong bước) -->
+                  <article class="card p-5 space-y-4">
+                    <header class="flex items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-[15px] font-semibold text-slate-800">
+                          Quy trình phê duyệt
+                        </h3>
+                        <p class="text-[12.5px] text-slate-500">
+                          Ánh xạ bảng Lịch sử phê duyệt văn bản
+                        </p>
+                      </div>
+                      <span
+                        class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"
+                        data-steps-count
+                        >3 bước</span
+                      >
+                    </header>
+
+                    <ol
+                      class="space-y-3 text-[13px] text-slate-600"
+                      id="cvApprovalSteps"
+                    >
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-medium text-slate-700"
+                            >Bước 1 • Trần Thị Bình</span
+                          >
+                          <span class="chip chip--green">ĐÃ DUYỆT</span>
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-500">
+                          Duyệt nội dung dự thảo, ký số 2024-01-16 10:15.
+                        </p>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-medium text-slate-700"
+                            >Bước 2 • Nguyễn Văn An</span
+                          >
+                          <span class="chip chip--amber">ĐANG XỬ LÝ</span>
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-500">
+                          Đang rà soát tài liệu đính kèm trước khi xác nhận xử
+                          lý.
+                        </p>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-medium text-slate-700"
+                            >Bước 3 • Văn phòng Chủ tịch</span
+                          >
+                          <span class="chip chip--default">CHƯA TỚI HẠN</span>
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-500">
+                          Sẽ tiếp nhận sau khi bước 2 hoàn thành.
+                        </p>
+                      </li>
+                    </ol>
+                  </article>
+
+                  <!-- Nhật ký xử lý -->
+                  <article class="card p-5 space-y-4">
+                    <header class="flex items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-[15px] font-semibold text-slate-800">
+                          Nhật ký xử lý
+                        </h3>
+                        <p class="text-[12.5px] text-slate-500">
+                          Tương ứng bảng Nhật ký xử lý văn bản
+                        </p>
+                      </div>
+                      <button
+                        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-action="add-log"
+                        type="button"
+                        title="CV được ✍️ cập nhật log xử lý"
+                      >
+                        Thêm nhật ký
+                      </button>
+                    </header>
+
+                    <ul id="cvWorkflowLogs" class="space-y-3 text-[13px]">
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-semibold text-slate-700"
+                            >2024-01-15 15:12 • ĐÃ TIẾP NHẬN</span
+                          >
+                          <span class="text-[12px] text-slate-500"
+                            >Văn thư (Lê Văn Cường)</span
+                          >
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-600">
+                          Tiếp nhận văn bản, cập nhật số đến 15/2024.
+                        </p>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-semibold text-slate-700"
+                            >2024-01-16 08:05 • ĐÃ PHÂN CÔNG</span
+                          >
+                          <span class="text-[12px] text-slate-500"
+                            >Trần Thị Bình</span
+                          >
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-600">
+                          Phân công Nguyễn Văn An chủ trì xử lý, hạn ngày 20/01.
+                        </p>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between">
+                          <span class="font-semibold text-slate-700"
+                            >2024-01-18 09:45 • ĐÃ GỬI</span
+                          >
+                          <span class="text-[12px] text-slate-500"
+                            >Nguyễn Văn An</span
+                          >
+                        </div>
+                        <p class="mt-1 text-[12.5px] text-slate-600">
+                          Đã tổng hợp báo cáo trình lãnh đạo phê duyệt.
+                        </p>
+                      </li>
+                    </ul>
+                  </article>
+                </section>
+
+                <section class="grid gap-6 lg:grid-cols-2">
+                  <!-- Tệp đính kèm -->
+                  <article class="card p-5 space-y-4">
+                    <header class="flex items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-[15px] font-semibold text-slate-800">
+                          Tệp đính kèm
+                        </h3>
+                        <p class="text-[12.5px] text-slate-500">
+                          Liên kết bảng Tệp đính kèm văn bản
+                        </p>
+                      </div>
+                      <button
+                        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-action="upload-attachment"
+                        type="button"
+                        title="CV được ✍️ thêm tệp trong phạm vi hồ sơ xử lý"
+                      >
+                        Tải thêm tệp
+                      </button>
+                    </header>
+
+                    <ul id="cvAttachmentList" class="space-y-3 text-[13px]">
+                      <li
+                        class="rounded-lg border border-slate-100 p-3 flex items-center justify-between gap-3"
+                      >
+                        <div>
+                          <div class="font-medium text-slate-700">
+                            Thong-bao-dai-hoi.pdf
+                          </div>
+                          <div class="text-[12px] text-slate-500">
+                            Loại: tệp_kèm_theo • 1.2 MB • Tải lên bởi Lê Văn
+                            Cường
+                          </div>
+                        </div>
+                        <button
+                          class="btn-icon"
+                          title="Tải xuống"
+                          type="button"
+                        >
+                          ⬇
+                        </button>
+                      </li>
+                      <li
+                        class="rounded-lg border border-slate-100 p-3 flex items-center justify-between gap-3"
+                      >
+                        <div>
+                          <div class="font-medium text-slate-700">
+                            Bien-ban-hop.docx
+                          </div>
+                          <div class="text-[12px] text-slate-500">
+                            Loại: tệp_ban_hanh • 320 KB • Tải lên bởi Nguyễn Văn
+                            An
+                          </div>
+                        </div>
+                        <button
+                          class="btn-icon"
+                          title="Tải xuống"
+                          type="button"
+                        >
+                          ⬇
+                        </button>
+                      </li>
+                    </ul>
+                  </article>
+
+                  <!-- Hồ sơ liên quan -->
+                  <article class="card p-5 space-y-4">
+                    <header class="flex items-center justify-between gap-2">
+                      <div>
+                        <h3 class="text-[15px] font-semibold text-slate-800">
+                          Hồ sơ liên quan
+                        </h3>
+                        <p class="text-[12.5px] text-slate-500">
+                          Dữ liệu từ bảng liên kết văn bản ↔ hồ sơ
+                        </p>
+                      </div>
+                      <button
+                        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        data-action="link-case"
+                        type="button"
+                      >
+                        Gắn vào hồ sơ
+                      </button>
+                    </header>
+
+                    <ul id="cvRelatedCases" class="space-y-3 text-[13px]">
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between gap-2">
+                          <div>
+                            <div class="font-medium text-slate-700">
+                              HS-2024-15 • Đề án đại hội Đảng bộ phường
+                            </div>
+                            <div class="text-[12px] text-slate-500">
+                              Trạng thái: Đang triển khai • Hạn: 2024-02-10
+                            </div>
+                          </div>
+                          <a
+                            href="/chuyenvien/hosocongviec.html"
+                            class="text-sm font-medium text-blue-600 hover:underline"
+                            >Mở hồ sơ</a
+                          >
+                        </div>
+                      </li>
+                      <li class="rounded-lg border border-slate-100 p-3">
+                        <div class="flex items-center justify-between gap-2">
+                          <div>
+                            <div class="font-medium text-slate-700">
+                              HS-2024-22 • Chương trình công tác quý I
+                            </div>
+                            <div class="text-[12px] text-slate-500">
+                              Trạng thái: Đã hoàn thành • Hạn: 2024-01-31
+                            </div>
+                          </div>
+                          <a
+                            href="/chuyenvien/hosocongviec.html"
+                            class="text-sm font-medium text-blue-600 hover:underline"
+                            >Xem chi tiết</a
+                          >
+                        </div>
+                      </li>
+                    </ul>
+                  </article>
+                </section>
+              </section>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/doc-helpers.js' %}"></script>
+<script src="{% static 'js/chuyenvien-vanbanden.js' %}"></script>
+<script src="{% static 'js/chuyenvien.js' %}"></script>
+{% endblock %}

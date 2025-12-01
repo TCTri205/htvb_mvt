@@ -1,0 +1,443 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản • Sổ đăng ký (Văn thư){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7 space-y-6">
+            <header class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              <div>
+                <h1 class="text-2xl font-semibold text-slate-900">Sổ đăng ký văn bản</h1>
+                <p class="text-sm text-slate-500">
+                  Quản lý sổ đăng ký văn bản đến/đi, nhập liệu hàng loạt và theo dõi quy tắc đánh số phát hành.
+                </p>
+              </div>
+              <div class="flex items-center gap-3">
+                <button
+                  id="btn-export-register"
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                >
+                  <span>Xuất sổ</span>
+                </button>
+                <button
+                  id="btn-import-register"
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  <span>Nhập sổ</span>
+                </button>
+              </div>
+            </header>
+
+            <!-- Bộ lọc -->
+            <section class="bg-white border border-slate-200 rounded-xl p-4 space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <label class="block text-sm">
+                  <span class="text-slate-600 font-medium">Năm</span>
+                  <input
+                    id="register-filter-year"
+                    type="number"
+                    min="2010"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                    placeholder="Tất cả"
+                  />
+                </label>
+                <label class="block text-sm">
+                  <span class="text-slate-600 font-medium">Hướng văn bản</span>
+                  <select
+                    id="register-filter-direction"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="den">Văn bản đến</option>
+                    <option value="di">Văn bản đi</option>
+                  </select>
+                </label>
+                <label class="block text-sm">
+                  <span class="text-slate-600 font-medium">Trạng thái</span>
+                  <select
+                    id="register-filter-status"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Đã khóa</option>
+                  </select>
+                </label>
+                <label class="block text-sm">
+                  <span class="text-slate-600 font-medium">Phòng ban phụ trách</span>
+                  <input
+                    id="register-filter-dept"
+                    type="text"
+                    placeholder="Nhập tên/phòng ban"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+              </div>
+              <div class="flex items-center gap-3 text-sm">
+                <button
+                  id="register-filter-apply"
+                  class="rounded-lg bg-blue-600 px-3 py-2 text-white font-medium hover:bg-blue-700"
+                >
+                  Lọc sổ
+                </button>
+                <button
+                  id="register-filter-reset"
+                  class="rounded-lg border border-slate-300 bg-white px-3 py-2 font-medium text-slate-600 hover:bg-slate-100"
+                >
+                  Bỏ lọc
+                </button>
+                <span id="register-summary" class="text-slate-500 ms-auto"></span>
+              </div>
+            </section>
+
+            <!-- Bảng sổ đăng ký -->
+            <section class="bg-white border border-slate-200 rounded-xl p-0 overflow-hidden">
+              <header class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h2 class="text-base font-semibold text-slate-900">Danh sách sổ đăng ký</h2>
+                  <p class="text-xs text-slate-500">Hiển thị tối đa 20 mục mỗi trang theo bộ lọc hiện tại.</p>
+                </div>
+                <button
+                  id="btn-open-register-form"
+                  class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                  type="button"
+                >
+                  + Tạo sổ mới
+                </button>
+              </header>
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                      <th class="px-4 py-3 text-left font-medium">Tên sổ</th>
+                      <th class="px-4 py-3 text-left font-medium">Hướng</th>
+                      <th class="px-4 py-3 text-left font-medium">Năm</th>
+                      <th class="px-4 py-3 text-left font-medium">Tiền tố/Hậu tố</th>
+                      <th class="px-4 py-3 text-left font-medium">Số tiếp theo</th>
+                      <th class="px-4 py-3 text-left font-medium">Reset</th>
+                      <th class="px-4 py-3 text-left font-medium">Trạng thái</th>
+                      <th class="px-4 py-3 text-right font-medium">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="register-table-body" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="8" class="px-4 py-6 text-center text-slate-400 text-sm">
+                        Đang tải dữ liệu...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <footer class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-5 py-4 border-t border-slate-200">
+                <p id="register-pagination" class="text-xs text-slate-500"></p>
+                <div class="flex items-center gap-2">
+                  <button id="register-prev" class="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-100">
+                    Trang trước
+                  </button>
+                  <button id="register-next" class="rounded-lg border border-slate-300 bg-white px-3 py-1 text-sm hover:bg-slate-100">
+                    Trang sau
+                  </button>
+                </div>
+              </footer>
+            </section>
+
+            <!-- Form tạo/cập nhật sổ -->
+            <section
+              id="register-form-panel"
+              class="hidden bg-white border border-blue-200 rounded-xl p-5 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900">Thông tin sổ đăng ký</h3>
+                  <p class="text-xs text-slate-500">
+                    Các trường * là bắt buộc. Văn thư và Quản trị có thể cập nhật.
+                  </p>
+                </div>
+                <button
+                  id="register-form-close"
+                  type="button"
+                  class="rounded-full border border-slate-300 p-1 text-slate-500 hover:bg-slate-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form id="register-form" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <input type="hidden" id="register-id" />
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Tên sổ *</span>
+                  <input
+                    id="register-name"
+                    type="text"
+                    required
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Hướng văn bản *</span>
+                  <select
+                    id="register-direction"
+                    required
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="den">Văn bản đến</option>
+                    <option value="di">Văn bản đi</option>
+                  </select>
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Năm áp dụng *</span>
+                  <input
+                    id="register-year"
+                    type="number"
+                    min="2010"
+                    required
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Tiền tố</span>
+                  <input
+                    id="register-prefix"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Hậu tố</span>
+                  <input
+                    id="register-suffix"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Độ dài số</span>
+                  <input
+                    id="register-padding"
+                    type="number"
+                    min="2"
+                    max="8"
+                    value="4"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Chính sách reset</span>
+                  <select
+                    id="register-reset"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="yearly">Hằng năm</option>
+                    <option value="quarterly">Theo quý</option>
+                    <option value="monthly">Hằng tháng</option>
+                    <option value="never">Không reset</option>
+                  </select>
+                </label>
+                <label class="text-sm lg:col-span-2">
+                  <span class="font-medium text-slate-700">Ghi chú</span>
+                  <textarea
+                    id="register-description"
+                    rows="2"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  ></textarea>
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm mt-6">
+                  <input id="register-active" type="checkbox" class="rounded border-slate-300 text-blue-600" checked />
+                  <span>Bật hoạt động ngay</span>
+                </label>
+                <div class="lg:col-span-3 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Lưu sổ
+                  </button>
+                  <button
+                    type="button"
+                    id="register-form-reset"
+                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                  >
+                    Nhập lại
+                  </button>
+                  <span id="register-form-feedback" class="text-sm text-slate-500"></span>
+                </div>
+              </form>
+            </section>
+
+            <!-- Quy tắc đánh số -->
+            <section class="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                <div>
+                  <h2 class="text-lg font-semibold text-slate-900">Quy tắc đánh số văn bản đi</h2>
+                  <p class="text-xs text-slate-500">
+                    Quy định tiền tố/hậu tố và bộ đếm phát hành. Văn thư và Quản trị có thể điều chỉnh.
+                  </p>
+                </div>
+                <button
+                  id="btn-open-numbering-form"
+                  type="button"
+                  class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                >
+                  + Thêm quy tắc
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                      <th class="px-4 py-3 text-left font-medium">Mã</th>
+                      <th class="px-4 py-3 text-left font-medium">Tên quy tắc</th>
+                      <th class="px-4 py-3 text-left font-medium">Hướng</th>
+                      <th class="px-4 py-3 text-left font-medium">Tiền tố/Hậu tố</th>
+                      <th class="px-4 py-3 text-left font-medium">Padding</th>
+                      <th class="px-4 py-3 text-left font-medium">Số hiện tại</th>
+                      <th class="px-4 py-3 text-left font-medium">Reset</th>
+                      <th class="px-4 py-3 text-left font-medium">Trạng thái</th>
+                      <th class="px-4 py-3 text-right font-medium">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody id="numbering-table-body" class="divide-y divide-slate-100">
+                    <tr>
+                      <td colspan="9" class="px-4 py-6 text-center text-slate-400 text-sm">
+                        Đang tải dữ liệu...
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Form quy tắc đánh số -->
+            <section
+              id="numbering-form-panel"
+              class="hidden bg-white border border-blue-200 rounded-xl p-5 shadow-sm"
+            >
+              <div class="flex items-center justify-between mb-4">
+                <div>
+                  <h3 class="text-base font-semibold text-slate-900">Thông tin quy tắc đánh số</h3>
+                  <p class="text-xs text-slate-500">Áp dụng cho văn bản đi phát hành trong năm hiện tại.</p>
+                </div>
+                <button
+                  id="numbering-form-close"
+                  type="button"
+                  class="rounded-full border border-slate-300 p-1 text-slate-500 hover:bg-slate-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form id="numbering-form" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <input type="hidden" id="numbering-id" />
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Mã quy tắc *</span>
+                  <input
+                    id="numbering-code"
+                    type="text"
+                    required
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 uppercase"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Tên quy tắc *</span>
+                  <input
+                    id="numbering-name"
+                    type="text"
+                    required
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Hướng *</span>
+                  <select
+                    id="numbering-target"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="incoming">Văn bản đến</option>
+                    <option value="outgoing" selected>Văn bản đi</option>
+                  </select>
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Tiền tố</span>
+                  <input
+                    id="numbering-prefix"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Hậu tố</span>
+                  <input
+                    id="numbering-suffix"
+                    type="text"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Padding</span>
+                  <input
+                    id="numbering-padding"
+                    type="number"
+                    min="2"
+                    max="8"
+                    value="4"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Giá trị khởi đầu</span>
+                  <input
+                    id="numbering-start"
+                    type="number"
+                    min="1"
+                    value="1"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  />
+                </label>
+                <label class="text-sm">
+                  <span class="font-medium text-slate-700">Reset</span>
+                  <select
+                    id="numbering-reset"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  >
+                    <option value="yearly">Hằng năm</option>
+                    <option value="monthly">Hằng tháng</option>
+                    <option value="manual">Thủ công</option>
+                  </select>
+                </label>
+                <label class="text-sm lg:col-span-2">
+                  <span class="font-medium text-slate-700">Ghi chú</span>
+                  <textarea
+                    id="numbering-description"
+                    rows="2"
+                    class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                  ></textarea>
+                </label>
+                <label class="inline-flex items-center gap-2 text-sm mt-6">
+                  <input id="numbering-active" type="checkbox" class="rounded border-slate-300 text-blue-600" checked />
+                  <span>Kích hoạt</span>
+                </label>
+                <div class="lg:col-span-3 flex items-center gap-3">
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Lưu quy tắc
+                  </button>
+                  <button
+                    type="button"
+                    id="numbering-form-reset"
+                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100"
+                  >
+                    Nhập lại
+                  </button>
+                  <span id="numbering-form-feedback" class="text-sm text-slate-500"></span>
+                </div>
+              </form>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}

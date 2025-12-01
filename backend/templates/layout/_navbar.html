@@ -1,0 +1,87 @@
+<header class="fixed inset-x-0 top-0 z-50 bg-white border-b border-slate-200" data-partial="header">
+  <div class="h-14 flex items-center px-4 md:px-6">
+    <button
+      id="btnSidebar"
+      class="md:hidden grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100"
+      aria-label="Mở/đóng điều hướng"
+      aria-expanded="false"
+      type="button"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-700" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z" />
+      </svg>
+    </button>
+
+    <div class="flex items-center gap-3">
+      <div class="shrink-0 w-8 h-8 rounded-md bg-blue-600/90 grid place-items-center text-white text-sm font-bold">
+        UB
+      </div>
+      <div class="leading-tight">
+        <p class="text-[13px] font-semibold uppercase tracking-wide">Hệ thống quản lý văn bản & điều hành</p>
+        <p class="text-[12px] text-slate-500 -mt-0.5">Phường Thanh Khê Đông</p>
+      </div>
+    </div>
+
+    <div class="flex-1 hidden md:flex justify-center pl-6 pr-4">
+      <label class="relative w-full max-w-2xl">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M8 4a4 4 0 102.83 6.83l3.44 3.44a1 1 0 001.41-1.41l-3.44-3.44A4 4 0 008 4zm-6 4a6 6 0 1110.89 3.476l3.817 3.817a3 3 0 11-4.243 4.243l-3.817-3.817A6 6 0 012 8z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        <input
+          id="globalSearch"
+          type="search"
+          class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px] placeholder-slate-400"
+          placeholder="Tìm kiếm văn bản, hồ sơ..."
+          aria-label="Tìm kiếm"
+        />
+      </label>
+    </div>
+
+    <div class="ml-auto flex items-center gap-2 md:gap-4">
+      <button
+        id="notifBtn"
+        type="button"
+        class="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100"
+        aria-label="Thông báo"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2a6 6 0 00-6 6v2.586l-.707 1.414A1 1 0 006.172 14H18a1 1 0 00.879-1.476L18 10.586V8a6 6 0 00-6-6z" />
+          <path d="M8 16a4 4 0 008 0H8z" />
+        </svg>
+        <span class="absolute -top-0.5 -right-0.5 px-1.5 text-[11px] leading-5 rounded-full bg-rose-600 text-white font-medium" data-counter="notifications">0</span>
+      </button>
+
+      <button
+        id="msgBtn"
+        type="button"
+        class="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100"
+        aria-label="Tin nhắn"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 3C6.477 3 2 6.686 2 11c0 1.982.842 3.81 2.26 5.23-.13.94-.51 2.346-1.572 3.408a.75.75 0 00.53 1.282c2.15-.119 3.63-.74 4.59-1.297A11.79 11.79 0 0012 19c5.523 0 10-3.686 10-8s-4.477-8-10-8z"
+          />
+        </svg>
+        <span class="absolute -top-0.5 -right-0.5 px-1.5 text-[11px] leading-5 rounded-full bg-rose-600 text-white font-medium" data-counter="messages">0</span>
+      </button>
+
+      <div class="hidden md:flex items-center gap-3 pl-2">
+        <div class="w-9 h-9 rounded-full bg-blue-600 text-white grid place-items-center text-xs font-semibold" data-user-field="initials">--</div>
+        <div class="leading-tight text-right">
+          <div class="text-[13px] font-medium" data-user-field="name">--</div>
+          <div class="text-[12px] text-slate-500" data-user-field="roleName">--</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

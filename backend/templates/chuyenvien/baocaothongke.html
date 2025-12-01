@@ -1,0 +1,320 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Báo cáo & Thống kê{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ====== FILTER BAR ====== -->
+            <section class="bg-white border border-slate-200 rounded-xl p-4">
+              <h3 class="text-sm font-semibold text-slate-700 mb-3">
+                Tùy chọn báo cáo
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-5">
+                  <select
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    aria-label="Loại báo cáo"
+                    data-filter="scope"
+                  >
+                    <option value="personal">Báo cáo cá nhân</option>
+                    <option value="department">Báo cáo phòng ban</option>
+                    <option value="unit">Báo cáo đơn vị</option>
+                  </select>
+                </div>
+                <div class="md:col-span-3">
+                  <select
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                    aria-label="Khoảng thời gian"
+                    data-filter="period"
+                  >
+                    <option value="month">Tháng này</option>
+                    <option value="quarter">Quý này</option>
+                    <option value="year">Năm nay</option>
+                    <option value="last6">6 tháng gần đây</option>
+                  </select>
+                </div>
+                <div class="md:col-span-4">
+                  <button
+                    type="button"
+                    class="w-full flex items-center justify-center gap-2 border border-slate-200 rounded-md px-3 py-2 text-sm hover:bg-slate-50"
+                    data-action="pick-range"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path d="M3 5h18M6 12h12M10 19h4" />
+                    </svg>
+                    Chọn khoảng thời gian
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- ====== TOP KPIs ====== -->
+            <section
+              class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6"
+            >
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tỷ lệ hoàn thành
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >✔️</span
+                  >
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold text-emerald-600">19%</div>
+                  <div class="text-[13px] text-slate-500">
+                    Văn bản &amp; công việc
+                  </div>
+                </div>
+              </article>
+
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Hiệu suất xử lý
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >⏱</span
+                  >
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold text-blue-700">73%</div>
+                  <div class="text-[13px] text-slate-500">Đúng thời hạn</div>
+                </div>
+              </article>
+
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Văn bản xử lý
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📄</span
+                  >
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold">4/15</div>
+                  <div class="text-[13px] text-slate-500">Đã hoàn thành</div>
+                </div>
+              </article>
+
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Công việc trễ hạn
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >⚠️</span
+                  >
+                </div>
+                <div class="pt-2">
+                  <div class="text-3xl font-bold text-rose-600">6</div>
+                  <div class="text-[13px] text-slate-500">Cần xử lý gấp</div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ====== CHARTS ROW 1 ====== -->
+            <section class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Bar chart -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <header class="mb-2">
+                  <h3 class="text-sm font-semibold">
+                    Thống kê văn bản theo tháng
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    Số lượng văn bản đến, đi và đã xử lý trong 6 tháng gần đây
+                  </p>
+                </header>
+                <div class="h-[320px]">
+                  <canvas id="barDocs"></canvas>
+                </div>
+              </article>
+
+              <!-- Pie chart -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <header class="mb-2">
+                  <h3 class="text-sm font-semibold">
+                    Phân bố trạng thái công việc
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    Tỷ lệ các công việc theo trạng thái hiện tại
+                  </p>
+                </header>
+                <div class="grid place-items-center h-[320px]">
+                  <div class="w-[88%] max-w-sm">
+                    <canvas id="pieTasks"></canvas>
+                  </div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ====== CHARTS ROW 2 + DETAILS ====== -->
+            <section class="mt-6">
+              <!-- Line -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <header class="mb-2">
+                  <h3 class="text-sm font-semibold">
+                    Xu hướng hiệu suất làm việc
+                  </h3>
+                  <p class="text-xs text-slate-500">
+                    Theo dõi hiệu suất và chất lượng công việc qua các tuần
+                  </p>
+                </header>
+                <div class="h-[340px]">
+                  <canvas id="linePerf"></canvas>
+                </div>
+              </article>
+
+              <!-- Detail panels -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+                <!-- Documents detail -->
+                <article
+                  class="bg-white border border-slate-200 rounded-xl p-4"
+                >
+                  <h3 class="text-sm font-semibold mb-3">
+                    Chi tiết thống kê văn bản
+                  </h3>
+                  <p class="text-xs text-slate-500 mb-3">
+                    Phân tích chi tiết về xử lý văn bản
+                  </p>
+
+                  <div class="space-y-3">
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Văn bản đã xử lý</span><span>4/15</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[27%]"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Văn bản đang xử lý</span><span>5/15</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[33%]"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Văn bản chưa xử lý</span><span>6/15</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[40%]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-3 mt-5">
+                    <div class="text-center rounded-lg bg-emerald-50 py-3">
+                      <div class="text-emerald-700 font-bold text-xl">11</div>
+                      <div class="text-xs text-emerald-700">Đúng hạn</div>
+                    </div>
+                    <div class="text-center rounded-lg bg-rose-50 py-3">
+                      <div class="text-rose-600 font-bold text-xl">4</div>
+                      <div class="text-xs text-rose-600">Trễ hạn</div>
+                    </div>
+                    <div class="text-center rounded-lg bg-blue-50 py-3">
+                      <div class="text-blue-700 font-bold text-xl">A</div>
+                      <div class="text-xs text-blue-700">Xếp hạng</div>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Tasks detail -->
+                <article
+                  class="bg-white border border-slate-200 rounded-xl p-4"
+                >
+                  <h3 class="text-sm font-semibold mb-3">
+                    Chi tiết thống kê công việc
+                  </h3>
+                  <p class="text-xs text-slate-500 mb-3">
+                    Phân tích chi tiết về thực hiện công việc
+                  </p>
+
+                  <div class="space-y-3">
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Công việc hoàn thành</span><span>0/6</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[0%]"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Đang thực hiện</span><span>1/6</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[17%]"></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div
+                        class="flex items-center justify-between text-xs mb-1"
+                      >
+                        <span>Chưa bắt đầu</span><span>3/6</span>
+                      </div>
+                      <div
+                        class="h-2 rounded-full bg-slate-200 overflow-hidden"
+                      >
+                        <div class="h-full bg-slate-800 w-[50%]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-3 gap-3 mt-5">
+                    <div class="text-center rounded-lg bg-blue-50 py-3">
+                      <div class="text-blue-700 font-bold text-xl">0%</div>
+                      <div class="text-xs text-blue-700">Tỷ lệ hoàn thành</div>
+                    </div>
+                    <div class="text-center rounded-lg bg-amber-50 py-3">
+                      <div class="text-amber-700 font-bold text-xl">6</div>
+                      <div class="text-xs text-amber-700">Trễ hạn</div>
+                    </div>
+                    <div class="text-center rounded-lg bg-emerald-50 py-3">
+                      <div class="text-emerald-700 font-bold text-xl">A</div>
+                      <div class="text-xs text-emerald-700">Xếp hạng</div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/chuyenvien-analytics.js' %}" defer></script>
+<script src="{% static 'js/chuyenvien.js' %}"></script>
+{% endblock %}

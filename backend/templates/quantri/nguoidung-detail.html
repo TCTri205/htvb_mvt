@@ -1,0 +1,254 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Quản trị • Chi tiết người dùng{% endblock %}
+{% block content %}
+
+          <div class="max-w-6xl mx-auto px-6 lg:px-10 py-6 lg:py-8 space-y-6">
+            <!-- Top bar: back + actions -->
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-2">
+                <a
+                  href="/quantri/nguoidung.html"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  aria-label="Quay lại danh sách người dùng"
+                >
+                  <span aria-hidden="true">&larr;</span>
+                  <span>Danh sách người dùng</span>
+                </a>
+                <span class="text-[13px] text-slate-500" id="detailBreadcrumb"
+                  >— • Chi tiết người dùng</span
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <button
+                  id="btnResetPass"
+                  class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Đặt lại mật khẩu
+                </button>
+                <button
+                  id="btnEditUser"
+                  class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                >
+                  Chỉnh sửa
+                </button>
+              </div>
+            </div>
+
+            <!-- Profile -->
+            <article class="card p-5 space-y-4">
+                <header class="flex items-center gap-4">
+                <div
+                  id="detailAvatar"
+                  class="w-14 h-14 rounded-full bg-blue-600 text-white grid place-items-center text-lg font-semibold"
+                ></div>
+                <div>
+                  <h1 id="detailFullName" class="text-[18px] font-semibold text-slate-800">
+                    Đang tải...
+                  </h1>
+                  <p id="detailRoleLine" class="text-[13px] text-slate-500">
+                    Đang tải thông tin vai trò, phòng ban...
+                  </p>
+                </div>
+              </header>
+
+              <dl class="grid gap-4 md:grid-cols-2 text-[13px] text-slate-600">
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Mã người dùng</dt>
+                  <dd id="detailUserCode">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Mã đăng nhập</dt>
+                  <dd id="detailLogin">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Thư điện tử</dt>
+                  <dd id="detailEmail">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Điện thoại</dt>
+                  <dd id="detailPhone">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Phòng ban</dt>
+                  <dd id="detailDepartment">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Trạng thái</dt>
+                  <dd id="detailStatus" class="text-slate-500 font-semibold">Đang tải...</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Ngày tạo</dt>
+                  <dd id="detailCreatedAt">—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">
+                    Đăng nhập gần nhất
+                  </dt>
+                  <dd id="detailLastLogin">—</dd>
+                </div>
+              </dl>
+            </article>
+
+            <!-- Roles & Sessions -->
+            <section class="grid gap-6 lg:grid-cols-2">
+              <article class="card p-5 space-y-4">
+                <header
+                  class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                >
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Vai trò &amp; quyền hạn
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      user_roles • role_permissions
+                    </p>
+                  </div>
+                  <button
+                    id="btnAssignRoles"
+                    type="button"
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Gán vai trò
+                  </button>
+                </header>
+                <ul id="userRolesList" class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3 text-[13px] text-slate-500">
+                    Đang tải vai trò từ hệ thống...
+                  </li>
+                </ul>
+              </article>
+
+              <article class="card p-5 space-y-4">
+                <header
+                  class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                >
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Lịch sử đăng nhập
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">Phiên xác thực</p>
+                  </div>
+                  <button
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                >
+                  Xuất CSV
+                </button>
+              </header>
+                <ul id="loginHistoryList" class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3 text-[13px] text-slate-500">
+                    Đang tải lịch sử đăng nhập...
+                  </li>
+                </ul>
+              </article>
+            </section>
+
+            <!-- Participation & Audit -->
+            <section class="grid gap-6 lg:grid-cols-2">
+              <article class="card p-5 space-y-4">
+                <header class="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Hồ sơ &amp; văn bản tham gia
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Thành viên tham gia hồ sơ • Dữ liệu phân công văn bản
+                    </p>
+                  </div>
+                  <a
+                    href="../chuyenvien/hosocongviec.html"
+                    class="h-9 rounded-md border border-slate-200 px-3 inline-flex items-center text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Xem chi tiết
+                  </a>
+                </header>
+                <ul id="userParticipationList" class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3 text-[13px] text-slate-500">
+                    Đang tải danh sách tham gia...
+                  </li>
+                </ul>
+              </article>
+
+              <article class="card p-5 space-y-4">
+                <header class="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Nhật ký thao tác
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">Nhật ký giám sát</p>
+                  </div>
+                  <button
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Phát hiện bất thường
+                  </button>
+                </header>
+                <ul id="userAuditList" class="space-y-3 text-[13px]">
+                  <li class="rounded-lg border border-slate-100 p-3 text-[13px] text-slate-500">
+                    Đang tải nhật ký...
+                  </li>
+                </ul>
+              </article>
+            </section>
+          </div>
+
+          <!-- Modal: Gán vai trò người dùng -->
+          <div
+            id="assignRolesModal"
+            class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 px-4 py-8"
+            role="dialog"
+            aria-hidden="true"
+          >
+            <div class="absolute inset-0" data-close-modal="true"></div>
+            <div class="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-xl">
+              <div class="flex items-center justify-between pb-3">
+                <div>
+                  <h3 class="text-lg font-semibold text-slate-900">
+                    Gán vai trò
+                  </h3>
+                  <p class="text-sm text-slate-500">
+                    Chọn vai trò phù hợp để cấp quyền cho người dùng.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  data-close-modal="true"
+                  class="rounded-full border border-slate-200 p-1 text-slate-500 hover:text-slate-900"
+                >
+                  ✕
+                </button>
+              </div>
+              <form id="assignRolesForm" class="space-y-4">
+                <div>
+                  <p class="text-sm text-slate-500">
+                    Vai trò hiện tại:
+                    <strong id="assignRolesCurrent">—</strong>
+                  </p>
+                </div>
+                <div id="assignRolesList" class="grid grid-cols-1 gap-2 md:grid-cols-2"></div>
+                <p id="assignRolesFeedback" class="text-sm text-rose-600"></p>
+                <div class="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    data-close-modal="true"
+                    class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                  >
+                    Huỷ
+                  </button>
+                  <button
+                    type="submit"
+                    class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Cập nhật vai trò
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/quantri.js' %}" defer></script>
+{% endblock %}

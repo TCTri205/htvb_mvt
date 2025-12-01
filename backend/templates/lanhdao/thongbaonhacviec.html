@@ -1,0 +1,93 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Thông báo - Nhắc việc (Lãnh đạo){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ====== FILTER BAR ====== -->
+            <section class="bg-white border border-slate-200 rounded-xl p-4">
+              <h3 class="text-sm font-semibold text-slate-700 mb-3">
+                Tìm kiếm và lọc
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-5">
+                  <input
+                    id="q"
+                    type="text"
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm"
+                    placeholder="Tìm kiếm thông báo…"
+                    autocomplete="off"
+                  />
+                </div>
+                <div class="md:col-span-3">
+                  <select
+                    id="type"
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="notification">Thông báo</option>
+                    <option value="reminder">Nhắc việc</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
+                  <select
+                    id="status"
+                    class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm"
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="unread">Chưa đọc</option>
+                    <option value="read">Đã đọc</option>
+                    <option value="PENDING">Đang chờ</option>
+                    <option value="SENT">Đã gửi</option>
+                    <option value="CLEARED">Đã kết thúc</option>
+                  </select>
+                </div>
+                <div class="md:col-span-2">
+                  <button
+                    type="button"
+                    class="w-full flex items-center justify-center gap-2 border border-slate-200 rounded-md px-3 py-2 text-sm hover:bg-slate-50"
+                    title="Lọc nâng cao"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      aria-hidden="true"
+                    >
+                      <path d="M3 5h18M6 12h12M10 19h4" />
+                    </svg>
+                    Lọc nâng cao
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- ====== LIST ====== -->
+            <section class="mt-6">
+              <h2 class="text-base font-semibold mb-2">Danh sách thông báo</h2>
+              <p class="text-sm text-slate-500 mb-4">
+                Hiển thị <span id="count">0</span> thông báo
+              </p>
+
+              <ul id="notifList" class="space-y-3"></ul>
+
+              <!-- Empty state -->
+              <div id="emptyState" class="hidden text-center py-12">
+                <div class="text-4xl mb-2">📭</div>
+                <p class="text-slate-600 font-medium">
+                  Không có thông báo phù hợp bộ lọc
+                </p>
+                <p class="text-slate-500 text-sm mt-1">
+                  Hãy thay đổi điều kiện tìm kiếm/lọc để xem thêm.
+                </p>
+              </div>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/notifications-common.js' %}"></script>
+<script src="{% static 'js/lanhdao.js' %}"></script>
+{% endblock %}

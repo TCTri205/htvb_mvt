@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Hệ thống quản lý văn bản{% endblock %}</title>
+
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+  </head>
+  <body
+    class="{{ body_class|default:'bg-slate-100 text-slate-800' }}"
+    {% if body_role %}data-role="{{ body_role }}"{% endif %}
+    {% if body_page %}data-page="{{ body_page }}"{% endif %}
+    data-doc-id="{{ doc_id|default:'' }}"
+    {% if login_path %}data-login-path="{{ login_path }}"{% endif %}
+  >
+    {% include "layout/_navbar.html" %}
+
+    <div class="pt-14 min-h-screen flex flex-col">
+      <div class="flex flex-1">
+        {% if body_role == "quantri" %}
+          {% include "layout/_sidebar_quantri.html" %}
+        {% elif body_role == "lanhdao" %}
+          {% include "layout/_sidebar_lanhdao.html" %}
+        {% elif body_role == "chuyenvien" %}
+          {% include "layout/_sidebar_chuyenvien.html" %}
+        {% else %}
+          {% include "layout/_sidebar_vanthu.html" %}
+        {% endif %}
+
+        <main class="w-full">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+
+      {% include "layout/_messages.html" %}
+    </div>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+    {% include "_partials/documents/_workflow_action_form.html" %}
+    {% include "layout/_dm_modal.html" %}
+
+    <script src="{% static 'js/workflow-actions.js' %}"></script>
+    <script src="{% static 'js/document-ui-workflow.js' %}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'js/api.js' %}"></script>
+    <script src="{% static 'js/layout.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

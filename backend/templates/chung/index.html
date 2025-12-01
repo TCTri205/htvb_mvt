@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng nhập • Hệ thống Quản lý Văn bản</title>
+
+
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+    <meta
+      name="description"
+      content="Trang đăng nhập Hệ thống Quản lý Văn Bản &amp; Điều hành"
+    />
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-sky-50 via-blue-50 to-blue-100 text-slate-800"
+  >
+    <header class="sr-only" aria-hidden="true">
+      <div class="h-14"></div>
+    </header>
+
+    <main class="min-h-screen flex items-center justify-center px-4">
+      <section class="w-full max-w-md">
+        <div class="text-center mb-6">
+          <div
+            class="mx-auto mb-3 w-12 h-12 rounded-2xl bg-blue-600 text-white grid place-items-center shadow-sm"
+          >
+            <svg
+              class="w-6 h-6"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h9.5a2 2 0 001.414-.586l2.5-2.5A2 2 0 0020 17.5V4a2 2 0 00-2-2H6zm0 2h12v13.5L15.5 20H6V4z"
+              />
+              <path d="M8 7.5h8v1.5H8zM8 11h8v1.5H8zM8 14.5h5v1.5H8z" />
+            </svg>
+          </div>
+          <h1 class="text-xl font-semibold tracking-wide text-slate-800">
+            HỆ THỐNG QUẢN LÝ VĂN BẢN
+          </h1>
+          <p class="text-[13px] text-slate-500">
+            Phường Thanh Khê Đông - Quận Thanh Khê
+          </p>
+        </div>
+
+        <article
+          class="bg-white rounded-xl shadow-md border border-slate-200 p-5"
+        >
+          <header class="text-center mb-4">
+            <h2 class="text-[15px] font-semibold text-slate-800">
+              Đăng nhập hệ thống
+            </h2>
+            <p class="text-[13px] text-slate-500">
+              Vui lòng nhập thông tin đăng nhập của bạn
+            </p>
+          </header>
+
+          <form id="loginForm" class="space-y-4" autocomplete="on" novalidate>
+            <div>
+              <label
+                for="username"
+                class="block text-[13px] font-medium text-slate-700 mb-1"
+                >Tên đăng nhập</label
+              >
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-slate-400">
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 12a5 5 0 100-10 5 5 0 000 10zm-6 8a6 6 0 0112 0v1H6v-1z"
+                    />
+                  </svg>
+                </span>
+                <input
+                  id="username"
+                  name="username"
+                  type="text"
+                  required
+                  placeholder="Nhập tên đăng nhập"
+                  class="w-full h-10 rounded-lg border border-slate-200 pl-9 pr-3 text-[14px] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                for="password"
+                class="block text-[13px] font-medium text-slate-700 mb-1"
+                >Mật khẩu</label
+              >
+              <div class="relative">
+                <span class="absolute left-3 top-2.5 text-slate-400">
+                  <svg
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M17 8h-1V6a4 4 0 10-8 0v2H7a2 2 0 00-2 2v9a2 2 0 002 2h10a2 2 0 002-2v-9a2 2 0 00-2-2zm-7-2a2 2 0 114 0v2h-4V6z"
+                    />
+                  </svg>
+                </span>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                  placeholder="Nhập mật khẩu"
+                  class="w-full h-10 rounded-lg border border-slate-200 pl-9 pr-10 text-[14px] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+                />
+                <button
+                  type="button"
+                  id="togglePwd"
+                  class="absolute right-2 top-1.5 h-7 w-7 grid place-items-center rounded-md text-slate-500 hover:bg-slate-100"
+                  aria-label="Hiển thị/ẩn mật khẩu"
+                >
+                  <svg
+                    id="eyeIcon"
+                    class="w-4 h-4"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <label
+                class="inline-flex items-center gap-2 select-none text-[13px] text-slate-600"
+              >
+                <input
+                  id="remember"
+                  name="remember"
+                  type="checkbox"
+                  class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                Ghi nhớ đăng nhập
+              </label>
+              <a href="#" class="text-[13px] text-blue-600 hover:underline"
+                >Quên mật khẩu?</a
+              >
+            </div>
+
+            <button
+              id="submitBtn"
+              type="submit"
+              class="w-full h-10 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Đăng nhập
+            </button>
+          </form>
+        </article>
+
+        <p class="text-center text-[12.5px] text-slate-500 mt-6">
+          © 2024 UBND Phường Thanh Khê Đông — Hệ thống Quản lý Văn bản •
+          <span class="text-slate-400">v1.0</span>
+        </p>
+      </section>
+    </main>
+
+    <footer class="sr-only" aria-hidden="true"></footer>
+
+    <script src="{% static 'js/api.js' %}"></script>
+    <script>
+      (function () {
+        const api = window.ApiClient;
+        if (!api) {
+          console.error("[login] ApiClient chưa được nạp.");
+          return;
+        }
+
+        const params = new URLSearchParams(window.location.search || "");
+        const sanitizedNext = sanitizeNext(params.get("next"));
+        const ROLE_REDIRECT = {
+          CHUYEN_VIEN: "/chuyenvien/dashboard/",
+          CV: "/chuyenvien/dashboard/",
+          LANH_DAO: "/lanhdao/dashboard/",
+          LD: "/lanhdao/dashboard/",
+          VAN_THU: "/vanthu/dashboard/",
+          VT: "/vanthu/dashboard/",
+          QUAN_TRI: "/quantri/dashboard/",
+          QT: "/quantri/dashboard/",
+        };
+        const DEFAULT_REDIRECT = sanitizedNext || ROLE_REDIRECT.CHUYEN_VIEN;
+
+        if (sanitizedNext) {
+          history.replaceState(null, "", window.location.pathname);
+        }
+
+        api.init();
+
+        const form = document.getElementById("loginForm");
+        const submitBtn = document.getElementById("submitBtn");
+        const username = document.getElementById("username");
+        const password = document.getElementById("password");
+        const togglePwd = document.getElementById("togglePwd");
+        const eyeIcon = document.getElementById("eyeIcon");
+
+        togglePwd.addEventListener("click", () => {
+          const isPwd = password.type === "password";
+          password.type = isPwd ? "text" : "password";
+          eyeIcon.innerHTML = isPwd
+            ? '<path d="M3.28 2.22 2.22 3.28l3.02 3.02C3.6 7.59 2.09 9.54 1 12c1.73 3.89 6 7 11 7 2.06 0 3.98-.5 5.67-1.36l3.05 3.05 1.06-1.06-18.5-18.41zM12 6.5c3.86 0 7.33 2.23 9 5.5a12.1 12.1 0 01-4.13 4.23l-1.73-1.73A5 5 0 009.5 9.86L7.1 7.47C8.54 6.86 10.21 6.5 12 6.5zM9.88 12.06a2.12 2.12 0 102.06 2.06l-2.06-2.06z"/>'
+            : '<path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 110-10 5 5 0 010 10z"/>';
+        });
+
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          if (!username.value.trim() || !password.value) {
+            alert("Vui lòng nhập đầy đủ Tên đăng nhập và Mật khẩu.");
+            return;
+          }
+
+          const payload = {
+            username: username.value.trim(),
+            password: password.value,
+            remember: document.getElementById("remember").checked,
+          };
+
+          const originalText = submitBtn.textContent;
+          submitBtn.textContent = "Đang xử lý...";
+          submitBtn.disabled = true;
+
+          try {
+            const data = await api.login(payload.username, payload.password, payload.remember);
+            let user = data?.user || null;
+            if (!user) {
+              try {
+                user = await api.getMe();
+              } catch (err) {
+                console.warn("[login] Không thể lấy thông tin người dùng ngay sau khi đăng nhập:", err);
+              }
+            }
+            const target = determineRedirect(user);
+            redirectTo(target);
+          } catch (err) {
+            alert(resolveErrorMessage(err));
+          } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+          }
+        });
+
+        [username, password].forEach((input) => {
+          input.addEventListener("keyup", (event) => {
+            if (event.key === "Enter") {
+              form.requestSubmit();
+            }
+          });
+        });
+
+        (async function autoRedirectIfAuthenticated() {
+          if (!api.getAccessToken()) return;
+          try {
+            const user = await api.getMe();
+            const target = determineRedirect(user);
+            redirectTo(target);
+          } catch (err) {
+            console.warn("[login] Phiên đăng nhập không còn hợp lệ, yêu cầu đăng nhập lại.", err);
+            api.clearAuth();
+          }
+        })();
+
+        function determineRedirect(user) {
+          if (sanitizedNext) {
+            return sanitizedNext;
+          }
+          if (user && user.default_redirect) {
+            return user.default_redirect;
+          }
+          return DEFAULT_REDIRECT;
+        }
+
+        function redirectTo(target) {
+          if (!target || target === "index.html" || target === "./" || target === ".") {
+            window.location.href = "chuyenvien/dashboard/";
+            return;
+          }
+          window.location.href = target;
+        }
+
+        function resolveErrorMessage(error) {
+          if (!error) return "Không thể đăng nhập. Vui lòng thử lại.";
+          if (error.data) {
+            if (typeof error.data === "string") return error.data;
+            if (error.data.detail) return String(error.data.detail);
+            if (error.data.message) return String(error.data.message);
+          }
+          if (error.message) return String(error.message);
+          return "Không thể đăng nhập. Vui lòng thử lại.";
+        }
+
+        function sanitizeNext(raw) {
+          if (!raw) return null;
+          let value = raw;
+          try {
+            value = decodeURIComponent(raw);
+          } catch (err) {
+            value = raw;
+          }
+          const trimmed = value.trim();
+          if (!trimmed) return null;
+          if (/^https?:\/\//i.test(trimmed)) return null;
+          if (trimmed === "." || trimmed === "./") return null;
+          const leading = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+          let normalized = leading.replace(/\/{2,}/g, "/");
+          normalized = normalized.replace(/^\/login(\/|$)/i, "/");
+          normalized = normalized.replace(/\.html$/i, "/");
+          if (normalized === "/login/" || normalized === "/") {
+            return null;
+          }
+          if (!normalized.endsWith("/")) {
+            normalized = `${normalized}/`;
+          }
+          if (/\/login\/(?:index|login)\/?$/i.test(normalized)) {
+            return null;
+          }
+          return normalized;
+        }
+      })();
+    </script>
+
+    <noscript>
+      <div
+        class="fixed inset-x-0 bottom-0 mx-auto max-w-md bg-amber-100 text-amber-800 border border-amber-200 rounded-t-lg p-3 text-sm shadow"
+      >
+        Trình duyệt của bạn đang tắt JavaScript. Vui lòng bật JavaScript để sử
+        dụng đầy đủ chức năng.
+      </div>
+    </noscript>
+  </body>
+</html>

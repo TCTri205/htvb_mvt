@@ -1,0 +1,631 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hồ sơ công việc • Chi tiết (Lãnh đạo){% endblock %}
+{% block content %}
+
+          <div id="case-detail-root" class="max-w-none px-6 lg:px-8 py-6 lg:py-7 space-y-6" data-case-id="{{ case.case_id }}">
+            <!-- Breadcrumb (LD chỉ nhìn và hành động workflow) -->
+            <div
+              class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+            >
+              <div class="flex items-center gap-2 flex-shrink-0 min-w-0">
+                <a
+                  href="/lanhdao/hosocongviec/"
+                  class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 flex-shrink-0"
+                >
+                  ← Danh sách hồ sơ
+                </a>
+                <span class="text-[13px] text-slate-500 truncate" data-case-code>
+                  {{ case.case_code }}
+                </span>
+              </div>
+              
+              <!-- Workflow Actions -->
+              <div class="flex items-center gap-2 flex-shrink-0 flex-wrap" id="actionButtons" style="display:flex !important; visibility:visible !important; opacity:1 !important;">
+                  <button
+                    type="button"
+                    id="btnAssign"
+                    data-action="assign"
+                    data-assign-button
+                    class="relative z-10 h-9 px-3 rounded-md border border-slate-200 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 whitespace-nowrap flex-shrink-0"
+                    style="display:inline-flex !important; visibility:visible !important; opacity:1 !important;"
+                  >
+                    Phân công
+                  </button>
+                <button
+                  type="button"
+                  data-action="pause"
+                  class="hidden relative z-10 h-9 px-3 rounded-md border border-amber-200 bg-amber-50 text-sm font-medium text-amber-700 hover:bg-amber-100 whitespace-nowrap flex-shrink-0"
+                >
+                  Tạm dừng
+                </button>
+                <button
+                  type="button"
+                  data-action="resume"
+                  class="hidden relative z-10 h-9 px-3 rounded-md border border-emerald-200 bg-emerald-50 text-sm font-medium text-emerald-700 hover:bg-emerald-100 whitespace-nowrap flex-shrink-0"
+                >
+                  Tiếp tục
+                </button>
+                <button
+                  type="button"
+                  data-action="approve_close"
+                  class="hidden relative z-10 h-9 px-3 rounded-md border border-blue-200 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 whitespace-nowrap flex-shrink-0"
+                >
+                  Duyệt đóng
+                </button>
+                <button
+                  type="button"
+                  data-action="reject_close"
+                  class="hidden relative z-10 h-9 px-3 rounded-md border border-rose-200 bg-rose-50 text-sm font-medium text-rose-700 hover:bg-rose-100 whitespace-nowrap flex-shrink-0"
+                >
+                  Từ chối đóng
+                </button>
+              </div>
+            </div>
+
+            <article class="card p-5 space-y-4">
+              <header class="space-y-2">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span
+                    class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold"
+                    data-case-status-chip
+                    >{{ case.status.case_status_name|default:"—" }}</span
+                  >
+                  <span
+                    class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-semibold"
+                    data-case-priority-chip
+                    >{{ case.priority|default:"—" }}</span
+                  >
+                </div>
+
+                <h1 class="text-[19px] font-semibold text-slate-800" data-case-title>
+                  {{ case.title }}
+                </h1>
+
+                <p class="text-[13px] text-slate-500 leading-relaxed" data-case-description>
+                  {{ case.description|default:"" }}
+                </p>
+              </header>
+
+              <dl class="grid gap-4 md:grid-cols-3 text-[13px] text-slate-600">
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Mã hồ sơ</dt>
+                  <dd data-case-code>{{ case.case_code }}</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Phòng phụ trách</dt>
+                  <dd data-case-department>{{ case.department.name|default:"—" }}</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Người chủ trì</dt>
+                  <dd data-case-leader>
+                    {% if case.leader %}
+                      {{ case.leader.full_name|default:case.leader.username|default:"—" }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">
+                    Người phụ trách
+                  </dt>
+                  <dd data-case-assignee data-case-assignee-list>—</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Hạn hoàn thành</dt>
+                  <dd class="text-rose-600 font-medium" data-case-deadline>{{ case.due_date|date:"Y-m-d"|default:"—" }}</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Ngày tạo</dt>
+                  <dd data-case-created>{{ case.created_at|date:"Y-m-d"|default:"—" }}</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Số nhiệm vụ</dt>
+                  <dd data-case-task-count>—</dd>
+                </div>
+              </dl>
+            </article>
+            <div class="text-sm text-rose-600 hidden" data-case-error role="status"></div>
+
+            <!-- Members -->
+            <section class="grid gap-6 lg:grid-cols-3">
+              <article class="card p-5 lg:col-span-2">
+                <header
+                  class="flex items-center justify-between gap-2 border-b border-slate-100 pb-3"
+                >
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Thành viên tham gia
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Thành viên tham gia hồ sơ
+                    </p>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <!-- Assignment workflow button (CHO_PHAN_CONG only) -->
+                    <button
+                      type="button"
+                      id="btnAssignMember"
+                      data-action="assign"
+                      data-assign-button
+                      class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Phân công
+                    </button>
+                    <!-- Add member button (for TAM_DUNG, DANG_THUC_HIEN, etc.) -->
+                    <button
+                      type="button"
+                      id="btnAddMemberSimple"
+                      data-action="add-member"
+                      class="hidden h-9 rounded-md border border-blue-200 bg-blue-50 px-3 text-sm font-medium text-blue-700 hover:bg-blue-100"
+                    >
+                      + Thêm thành viên
+                    </button>
+                  </div>
+                </header>
+
+                <div class="overflow-x-auto -mx-5">
+                  <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Thành viên
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Vai trò
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Đơn vị
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Hạn xử lý
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Tham gia
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Thao tác
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100" data-case-members>
+                      <tr data-case-members-placeholder>
+                        <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-500">
+                          Đang tải thành viên...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div id="ld-assign-wrapper" class="border-t border-slate-100 pt-4 hidden">
+                  <p class="text-xs text-slate-500 mb-3">
+                    Chỉ hồ sơ ở trạng thái Chờ phân công mới được phân công thêm thành viên chuyên viên.
+                  </p>
+                  
+                  <form id="ld-assign-form" class="space-y-4">
+                    <!-- Specialist Selection -->
+                    <div class="space-y-2">
+                      <label class="text-[13px] font-medium text-slate-700" for="ld-assign-assignee">
+                        Chọn chuyên viên
+                      </label>
+                      <div class="flex gap-2">
+                        <select
+                          id="ld-assign-assignee"
+                          class="flex-1 h-10 rounded-md border border-slate-200 px-3 text-sm"
+                        >
+                          <option value="">Chọn chuyên viên</option>
+                        </select>
+                        <button
+                          type="submit"
+                          id="ld-assign-submit"
+                          class="h-10 rounded-md bg-blue-600 px-4 text-sm font-medium text-white hover:bg-blue-700 shadow-sm whitespace-nowrap"
+                        >
+                          Thêm vào danh sách
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Pending Specialists List -->
+                    <div class="border-t border-slate-200 pt-4">
+                      <h4 class="text-sm font-semibold text-slate-700 mb-3">Danh sách chuyên viên đã chọn</h4>
+                      <div id="pending-specialists-list" class="space-y-3">
+                        <div class="text-sm text-slate-500 text-center py-3">
+                          Chưa có chuyên viên nào được chọn. Vui lòng chọn chuyên viên và nhấn "Thêm vào danh sách".
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Shared Instruction -->
+                    <div class="border-t border-slate-200 pt-4">
+                      <label class="text-[13px] font-medium text-slate-700" for="ld-assign-instruction">
+                        Ghi chú/Yêu cầu chung
+                      </label>
+                      <textarea
+                        id="ld-assign-instruction"
+                        rows="2"
+                        class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+                        placeholder="Ghi rõ yêu cầu hoặc lưu ý chung cho tất cả chuyên viên."
+                      ></textarea>
+                    </div>
+
+                    <!-- Final Confirmation -->
+                    <div class="flex items-center gap-3 border-t border-slate-200 pt-4">
+                      <button
+                        type="button"
+                        id="btn-final-confirm"
+                        class="h-10 rounded-md bg-emerald-600 px-6 text-sm font-medium text-white hover:bg-emerald-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled
+                      >
+                        Xác nhận phân công
+                      </button>
+                      <p id="ld-assign-message" class="text-xs"></p>
+                    </div>
+                  </form>
+                </div>
+              </article>
+
+              <aside class="card p-5 space-y-4">
+                <header>
+                  <h2 class="text-[15px] font-semibold text-slate-800">
+                    Chỉ số tiến độ
+                  </h2>
+                  <p class="text-[12.5px] text-slate-500">
+                    Tổng hợp từ nhiệm vụ
+                  </p>
+                </header>
+                <ul class="space-y-3 text-[13px]">
+                  <li class="flex items-center justify-between">
+                    <span class="text-slate-600">Nhiệm vụ hoàn thành</span>
+                    <span class="font-semibold text-emerald-600" data-case-metric="tasks-completed">3 / 6</span>
+                  </li>
+                  <li class="flex items-center justify-between">
+                    <span class="text-slate-600">Nhiệm vụ quá hạn</span>
+                    <span class="font-semibold text-rose-600" data-case-metric="tasks-overdue">2</span>
+                  </li>
+                  <li class="flex items-center justify-between">
+                    <span class="text-slate-600">Văn bản liên quan</span>
+                    <span class="font-semibold text-slate-700" data-case-metric="docs-count">5</span>
+                  </li>
+                  <li class="flex items-center justify-between">
+                    <span class="text-slate-600">Nhắc việc đang mở</span>
+                    <span class="font-semibold text-amber-600" data-case-metric="tasks-open">4</span>
+                  </li>
+                </ul>
+              </aside>
+            </section>
+
+            <!-- Tasks (CV được cập nhật file) + Activity (CV được ghi nhật ký) -->
+            <section class="grid gap-6 lg:grid-cols-2">
+              <!-- Tasks -->
+              <article class="card p-5 space-y-4">
+                <header class="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Nhiệm vụ trong hồ sơ
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Nhiệm vụ trong hồ sơ
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    data-action="add-task"
+                    class="h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                  >
+                    Thêm nhiệm vụ
+                  </button>
+                </header>
+
+                <ul class="space-y-3 text-[13px]" data-case-tasks>
+                  <li
+                    class="rounded-lg border border-slate-100 p-3 text-center text-sm text-slate-500"
+                    data-case-tasks-placeholder
+                  >
+                    Đang tải nhiệm vụ...
+                  </li>
+                </ul>
+              </article>
+
+              <!-- Activity / Log -->
+              <article class="card p-5 space-y-4">
+                <header class="flex items-center justify-between gap-2">
+                  <div>
+                    <h2 class="text-[15px] font-semibold text-slate-800">
+                      Nhật ký hồ sơ
+                    </h2>
+                    <p class="text-[12.5px] text-slate-500">
+                      Nhật ký hoạt động hồ sơ
+                    </p>
+                  </div>
+                  <!-- CV: được ghi nhật ký -->
+                  <button
+                    class="h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/20"
+                    data-action="add-activity"
+                    type="button"
+                  >
+                    Ghi nhật ký
+                  </button>
+                </header>
+
+                <ul class="space-y-3 text-[13px]" data-case-activity>
+                  <li
+                    class="rounded-lg border border-slate-100 p-3 text-center text-sm text-slate-500"
+                    data-case-activity-placeholder
+                  >
+                    Đang tải nhật ký hoạt động...
+                  </li>
+                </ul>
+              </article>
+            </section>
+
+            <!-- Related documents -->
+            <article class="card p-5 space-y-4">
+              <header class="flex items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-[15px] font-semibold text-slate-800">
+                    Văn bản liên quan
+                  </h2>
+                  <p class="text-[12.5px] text-slate-500">
+                    Văn bản liên quan trong hồ sơ
+                  </p>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <a
+                    href="/lanhdao/vanbanden.html"
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >Văn bản đến</a
+                  >
+                  <a
+                    href="/lanhdao/vanbandi.html"
+                    class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >Văn bản đi</a
+                  >
+                </div>
+              </header>
+
+              <ul class="space-y-3 text-[13px]" data-case-docs>
+                <li
+                  class="rounded-lg border border-slate-100 p-3 text-center text-sm text-slate-500"
+                  data-case-docs-placeholder
+                >
+                  Đang tải văn bản liên quan...
+                </li>
+              </ul>
+            </article>
+
+            <article class="card p-5 space-y-4">
+              <header class="flex items-center justify-between gap-2">
+                <div>
+                  <h2 class="text-[15px] font-semibold text-slate-800">Tệp đính kèm</h2>
+                  <p class="text-[12.5px] text-slate-500">Các tệp đính kèm trong hồ sơ</p>
+                </div>
+                <button
+                  type="button"
+                  data-action="upload-file"
+                  class="h-9 px-3 rounded-md bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                >
+                  Tải lên tệp
+                </button>
+              </header>
+              
+              <ul class="space-y-3 text-[13px]" data-case-attachments>
+                <li class="rounded-lg border border-slate-100 p-3 text-center text-sm text-slate-500"
+                    data-case-attachments-placeholder>
+                  Đang tải tệp đính kèm...
+                </li>
+              </ul>
+            </article>
+            <!-- Modals -->
+            <dialog id="modalPause" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form method="POST" class="p-6" data-form="pause">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="pause">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Tạm dừng hồ sơ</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Lý do tạm dừng</label>
+                    <textarea name="reason" rows="3" class="w-full rounded-md border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500" required placeholder="Nhập lý do..."></textarea>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalPause').close()" class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2" style="background-color: #ea580c; color: white;">Xác nhận tạm dừng</button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+
+            <dialog id="modalApproveClose" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form method="POST" class="p-6" data-form="approve-close">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="approve_close">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Duyệt đóng hồ sơ</h3>
+                <p class="text-sm text-slate-600 mb-6">Bạn có chắc chắn muốn duyệt đóng hồ sơ này? Hồ sơ sẽ được chuyển sang trạng thái Đóng và Lưu trữ.</p>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú (tùy chọn)</label>
+                    <textarea name="note" rows="2" class="w-full rounded-md border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalApproveClose').close()" class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">Đồng ý duyệt</button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+
+            <dialog id="modalRejectClose" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form method="POST" class="p-6" data-form="reject-close">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="reject_close">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Từ chối đóng hồ sơ</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Lý do từ chối *</label>
+                    <textarea name="reason" rows="3" required class="w-full rounded-md border-slate-300 text-sm focus:border-blue-500 focus:ring-blue-500" placeholder="Nhập lý do từ chối..."></textarea>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalRejectClose').close()" class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-md shadow-sm">Từ chối</button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+
+            <dialog id="modalResume" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form method="POST" class="p-6">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="resume">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Tiếp tục hồ sơ</h3>
+                <p class="text-sm text-slate-600 mb-6">Hồ sơ đang tạm dừng. Bạn có muốn kích hoạt lại để tiếp tục xử lý?</p>
+                <div class="flex justify-end gap-3">
+                  <button type="button" onclick="document.getElementById('modalResume').close()" class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                  <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md shadow-sm">Tiếp tục</button>
+                </div>
+              </form>
+            </dialog>
+
+            <!-- Upload File Modal -->
+            <dialog id="modalUploadFile" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form class="p-6" data-form="upload-file">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Tải lên tệp đính kèm</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Chọn tệp *</label>
+                    <input type="file" name="file" required 
+                           class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Loại tệp (tùy chọn)</label>
+                    <input type="text" name="attachment_type" placeholder="VD: tep_ban_hanh"
+                           class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalUploadFile').close()" 
+                            class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+                      Tải lên
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+
+            <!-- Add Task Modal -->
+            <dialog id="modalAddTask" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form class="p-6" data-form="add-task">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Thêm nhiệm vụ mới</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tên nhiệm vụ *</label>
+                    <input type="text" name="title" required 
+                           class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Người phụ trách</label>
+                    <select name="assignee_id" 
+                            class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                            data-task-assignees>
+                      <option value="">-- Chọn người phụ trách --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Hạn hoàn thành</label>
+                    <input type="datetime-local" name="due_at" 
+                           class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú</label>
+                    <textarea name="note" rows="2" 
+                              class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500"></textarea>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalAddTask').close()" 
+                            class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+                      Thêm nhiệm vụ
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+
+            <!-- Edit Task Modal -->
+            <dialog id="modalEditTask" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form class="p-6" data-form="edit-task">
+                <input type="hidden" name="task_id">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Chỉnh sửa nhiệm vụ</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Tên nhiệm vụ</label>
+                    <input type="text" name="title" 
+                           class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Trạng thái</label>
+                    <select name="status" 
+                            class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                      <option value="OPEN">Chưa bắt đầu</option>
+                      <option value="IN_PROGRESS">Đang làm</option>
+                      <option value="DONE">Hoàn thành</option>
+                      <option value="CANCELLED">Đã hủy</option>
+                    </select>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalEditTask').close()" 
+                            class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+                      Lưu thay đổi
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+            
+            <!-- Add Member Modal (Simple) -->
+            <dialog id="modalAddMember" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+              <form class="p-6" data-form="add-member-simple">
+                <h3 class="text-lg font-semibold text-slate-800 mb-4">Thêm thành viên</h3>
+                <div class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Chọn chuyên viên *</label>
+                    <select name="user_id" required 
+                            class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                            data-add-member-users>
+                      <option value="">-- Chọn chuyên viên --</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Vai trò *</label>
+                    <select name="role_on_case" required 
+                            class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                      <option value="assignee" selected>Phụ trách</option>
+                      <option value="watcher">Theo dõi</option>
+                    </select>
+                  </div>
+                  <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="document.getElementById('modalAddMember').close()" 
+                            class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md">Hủy</button>
+                    <button type="submit" 
+                            class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+                      Thêm thành viên
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </dialog>
+          </div>
+          
+          {% include "lanhdao/_workflow_modals.html" %}
+          
+{{ case_json|json_script:"case-data" }}
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/doc-helpers.js' %}"></script>
+<script src="{% static 'js/lanhdao.js' %}"></script>
+<script src="{% static 'js/lanhdao-hosocongviec-detail.js' %}?v=20251129153000"></script>
+{% endblock %}

@@ -1,0 +1,585 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Tài khoản quản trị{% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <header class="space-y-1">
+              <h1 class="text-[17px] font-semibold text-slate-800">
+                Quản lý tài khoản cá nhân
+              </h1>
+              <p class="text-[13px] text-slate-500">
+                Cập nhật thông tin và thiết lập bảo mật cho tài khoản quản trị
+              </p>
+            </header>
+
+            <section class="space-y-6">
+              <!-- Thông tin cá nhân -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div
+                  class="px-5 py-4 border-b border-slate-200 flex items-start sm:items-center justify-between gap-3"
+                >
+                  <div class="flex items-center gap-4">
+                    <div
+                      id="avatarInitials"
+                      data-avatar-initials="PTD"
+                      aria-label="Ảnh đại diện"
+                      class="grid place-items-center w-[72px] h-[72px] rounded-full bg-rose-100 text-rose-600 text-xl font-semibold"
+                    >
+                      PTD
+                    </div>
+                    <div class="space-y-2">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <h2
+                          id="displayName"
+                          class="text-lg font-semibold leading-tight"
+                        >
+                          Phạm Thị Dung
+                        </h2>
+                        <span class="chip chip--red">Quản trị</span>
+                        <span class="chip chip--purple">Lãnh đạo</span>
+                      </div>
+                      <div
+                        class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-slate-500"
+                      >
+                        <span>
+                          Tên đăng nhập:
+                          <span
+                            id="displayUsername"
+                            class="text-slate-700 font-medium"
+                            >@admin01</span
+                          ></span
+                        >
+                        <span>
+                          Mã cán bộ:
+                          <span class="text-slate-700 font-medium"
+                            >QT-000</span
+                          ></span
+                        >
+                        <span>
+                          Tình trạng:
+                          <span class="text-emerald-600 font-semibold"
+                            >Hoạt động</span
+                          ></span
+                        >
+                      </div>
+                      <div
+                        class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-[12.5px]"
+                      >
+                        <div>
+                          <span
+                            class="text-[11px] uppercase tracking-wide text-slate-400"
+                            >Phòng ban</span
+                          >
+                         <div id="displayDepartment" class="text-slate-700 font-medium">
+                            Phòng Tin học
+                          </div>
+                        </div>
+                        <div>
+                          <span
+                            class="text-[11px] uppercase tracking-wide text-slate-400"
+                            >Ngày tạo</span
+                          >
+                           <div id="displayCreatedAt" class="text-slate-700 font-medium">
+                             01/11/2022 08:00
+                           </div>
+                        </div>
+                        <div>
+                          <span
+                            class="text-[11px] uppercase tracking-wide text-slate-400"
+                            >Đăng nhập gần nhất</span
+                          >
+                           <div id="displayLastLogin" class="text-slate-700 font-medium">
+                             20/01/2024 08:05
+                           </div>
+                        </div>
+                      </div>
+                      <p class="text-[12px] text-slate-400">
+                        2FA: OTP qua ứng dụng Authy • Liên kết chữ ký số:
+                        Viettel-CA Serial 0A9C-FF32
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      id="btnEdit"
+                      type="button"
+                      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-slate-200 hover:bg-slate-50"
+                    >
+                      <i data-feather="edit-2" class="w-4 h-4"></i>
+                      <span>Chỉnh sửa</span>
+                    </button>
+                    <button
+                      id="btnSave"
+                      type="button"
+                      class="hidden inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-indigo-600 text-white hover:bg-indigo-700"
+                    >
+                      <i data-feather="check" class="w-4 h-4"></i>
+                      <span>Lưu thay đổi</span>
+                    </button>
+                    <button
+                      id="btnCancel"
+                      type="button"
+                      class="hidden inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-slate-200 hover:bg-slate-50"
+                    >
+                      <i data-feather="x" class="w-4 h-4"></i>
+                      <span>Huỷ</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="p-5 space-y-5">
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500">Họ và tên</label>
+                      <input
+                        id="inpFullname"
+                        type="text"
+                        value="Phạm Thị Dung"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 disabled:cursor-not-allowed px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500">Thư điện tử</label>
+                      <input
+                        id="inpEmail"
+                        type="email"
+                        value="phamthidung@thanhkhe.gov.vn"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500"
+                        >Tên đăng nhập</label
+                      >
+                      <input
+                        id="inpUsername"
+                        type="text"
+                        value="@admin01"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500">Mã cán bộ</label>
+                      <input
+                        id="inpCode"
+                        type="text"
+                        value="QT-000"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500"
+                        >Số điện thoại</label
+                      >
+                      <input
+                        id="inpPhone"
+                        type="text"
+                        value="0934567890"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500">Phòng ban</label>
+                      <input
+                        id="inpDept"
+                        type="text"
+                        value="Phòng Tin học"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500">Ngày tạo</label>
+                      <input
+                        id="inpCreatedAt"
+                        type="text"
+                        value="01/11/2022 08:00"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs text-slate-500"
+                        >Đăng nhập gần nhất</label
+                      >
+                      <input
+                        id="inpLastLogin"
+                        type="text"
+                        value="20/01/2024 08:05"
+                        disabled
+                        class="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm"
+                      />
+                    </div>
+
+                    <div class="lg:col-span-2">
+                      <label class="text-xs text-slate-500"
+                        >Trạng thái hoạt động</label
+                      >
+                      <div
+                        class="mt-1 flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+                      >
+                        <span class="text-sm text-slate-600"
+                          >Tài khoản đang hoạt động</span
+                        >
+                        <label class="inline-flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked
+                            class="toggle"
+                            aria-label="Bật/tắt tài khoản"
+                          />
+                          <span class="badge badge--green">Bật</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pt-4 space-y-2">
+                    <label class="text-xs text-slate-500">Vai trò đã gán</label>
+                    <div class="flex flex-wrap gap-2">
+                      <span class="chip chip--red">Quản trị hệ thống</span>
+                      <span class="chip chip--purple">Lãnh đạo điều hành</span>
+                      <span class="chip chip--green">Giám sát hồ sơ</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bảo mật tài khoản -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div
+                  class="px-5 py-4 border-b border-slate-200 flex items-center justify-between"
+                >
+                  <h3 class="text-[15px] font-semibold text-slate-800">
+                    Bảo mật tài khoản
+                  </h3>
+                  <button
+                    id="btnChangePass"
+                    class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-slate-900 text-white hover:bg-black"
+                  >
+                    <i data-feather="key" class="w-4 h-4"></i> Đổi mật khẩu
+                  </button>
+                </div>
+                <div class="p-5 space-y-5">
+                  <div
+                    class="rounded-md border border-rose-200 bg-rose-50 text-rose-700 p-4 text-sm"
+                  >
+                    <div class="flex items-start gap-2">
+                      <i
+                        data-feather="alert-triangle"
+                        class="w-4 h-4 mt-0.5"
+                      ></i>
+                      <div>
+                        <p class="font-medium">
+                          Tài khoản quản trị được bảo mật cao
+                        </p>
+                        <p class="text-[13px] mt-0.5">
+                          Mật khẩu được cập nhật lần cuối: <b>15/12/2023</b>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <p class="text-sm font-medium text-slate-700">
+                        Trạng thái bảo mật
+                      </p>
+                      <ul class="mt-2 space-y-2 text-sm text-slate-600">
+                        <li class="flex items-start gap-2">
+                          <span
+                            class="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500"
+                          ></span
+                          ><span>Mật khẩu đủ mạnh (12 ký tự)</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                          <span
+                            class="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500"
+                          ></span
+                          ><span>Đăng nhập đa lớp đã kích hoạt</span>
+                        </li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="text-sm font-medium text-slate-700">
+                        Lịch sử đăng nhập gần đây
+                      </p>
+                      <div
+                        class="rounded-md border border-slate-200 divide-y divide-slate-200"
+                      >
+                        <div
+                          class="px-4 py-3 text-sm bg-white flex justify-between"
+                        >
+                          <span
+                            >Chrome - Windows (Bảng điều khiển quản trị)</span
+                          >
+                          <span class="text-slate-500">20/01/2024 14:30</span>
+                        </div>
+                        <div
+                          class="px-4 py-3 text-sm bg-white flex justify-between"
+                        >
+                          <span>Edge - Windows (Bảng điều khiển quản trị)</span>
+                          <span class="text-slate-500">19/01/2024 08:15</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="rounded-md border border-indigo-200 bg-indigo-50 p-4"
+                  >
+                    <div class="flex items-start gap-3">
+                      <i
+                        data-feather="info"
+                        class="w-4 h-4 text-indigo-600 mt-0.5"
+                      ></i>
+                      <div>
+                        <p class="font-medium text-sm text-indigo-900">
+                          Khuyến nghị bảo mật
+                        </p>
+                        <ul class="mt-2 space-y-1.5 text-sm text-indigo-900">
+                          <li class="flex items-start gap-2">
+                            <span
+                              class="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500"
+                            ></span
+                            >Thay đổi mật khẩu định kỳ (3-6 tháng)
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span
+                              class="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500"
+                            ></span
+                            >Sử dụng xác thực 2 lớp khi có thể
+                          </li>
+                          <li class="flex items-start gap-2">
+                            <span
+                              class="mt-1 w-1.5 h-1.5 rounded-full bg-indigo-500"
+                            ></span
+                            >Đăng xuất khi không sử dụng
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Phiên đăng nhập -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div
+                  class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2"
+                >
+                  <h3 class="text-[15px] font-semibold text-slate-800">
+                    Phiên đăng nhập (Phiên xác thực)
+                  </h3>
+                  <button
+                    id="btnLogoutAll"
+                    class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md border border-slate-200 hover:bg-slate-50"
+                  >
+                    <i data-feather="shield-off" class="w-4 h-4"></i> Đăng xuất
+                    mọi phiên
+                  </button>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Mã phiên
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Thiết bị
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">IP</th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Khởi tạo
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Hết hạn
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Chuỗi tác nhân trình duyệt
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Trạng thái
+                        </th>
+                      </tr>
+                    </thead>
+                                        <tbody id="sessionTableBody" class="divide-y divide-slate-100">
+                      <tr>
+                        <td colspan="7" class="py-6 text-center text-[13px] text-slate-500">
+                          Đang tải lịch sử phiên đăng nhập...
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Password reset requests -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div
+                  class="px-5 py-4 border-b border-slate-200 flex items-center justify-between"
+                >
+                  <h3 class="text-[15px] font-semibold text-slate-800">
+                    Yêu cầu đặt lại mật khẩu (password_resets)
+                  </h3>
+                  <span class="text-[12px] text-slate-500"
+                    >Token có hiệu lực 30 phút</span
+                  >
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Thời điểm
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Mã token (băm)
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Hết hạn
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Đã dùng lúc
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Trạng thái
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      <tr class="hover:bg-slate-50/60">
+                        <td class="px-5 py-3">05/01/2024 09:12</td>
+                        <td class="px-5 py-3 font-mono text-[12px]">
+                          9f8a…b1d2
+                        </td>
+                        <td class="px-5 py-3">05/01/2024 09:42</td>
+                        <td class="px-5 py-3">05/01/2024 09:35</td>
+                        <td class="px-5 py-3">
+                          <span class="badge badge--green">Đã sử dụng</span>
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-slate-50/60">
+                        <td class="px-5 py-3">12/12/2023 08:30</td>
+                        <td class="px-5 py-3 font-mono text-[12px]">
+                          6c45…aa90
+                        </td>
+                        <td class="px-5 py-3">12/12/2023 09:00</td>
+                        <td class="px-5 py-3 text-slate-400">Chưa dùng</td>
+                        <td class="px-5 py-3">
+                          <span class="badge">Hết hạn</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Security events -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div
+                  class="px-5 py-4 border-b border-slate-200 flex items-center justify-between"
+                >
+                  <h3 class="text-[15px] font-semibold text-slate-800">
+                    Sự kiện bảo mật (security_events)
+                  </h3>
+                  <span class="text-[12px] text-slate-500"
+                    >Lưu trữ 90 ngày gần nhất</span
+                  >
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-[13px]">
+                    <thead class="bg-slate-50 text-slate-600">
+                      <tr>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Thời gian
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Loại sự kiện
+                        </th>
+                        <th class="px-5 py-3 text-left font-semibold">IP</th>
+                        <th class="px-5 py-3 text-left font-semibold">
+                          Ghi chú
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                      <tr class="hover:bg-slate-50/60">
+                        <td class="px-5 py-3">20/01/2024 08:05</td>
+                        <td class="px-5 py-3">
+                          <span class="chip chip--green"
+                            >ĐĂNG NHẬP THÀNH CÔNG</span
+                          >
+                        </td>
+                        <td class="px-5 py-3">10.10.1.12</td>
+                        <td class="px-5 py-3 text-slate-600">
+                          Đăng nhập thành công qua 2FA
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-slate-50/60">
+                        <td class="px-5 py-3">18/01/2024 21:12</td>
+                        <td class="px-5 py-3">
+                          <span class="chip chip--red">ĐĂNG NHẬP THẤT BẠI</span>
+                        </td>
+                        <td class="px-5 py-3">171.244.33.17</td>
+                        <td class="px-5 py-3 text-slate-600">
+                          Sai mật khẩu 2 lần liên tiếp (Edge)
+                        </td>
+                      </tr>
+                      <tr class="hover:bg-slate-50/60">
+                        <td class="px-5 py-3">15/01/2024 09:45</td>
+                        <td class="px-5 py-3">
+                          <span class="chip chip--purple"
+                            >ĐÃ CẬP NHẬT VAI TRÒ</span
+                          >
+                        </td>
+                        <td class="px-5 py-3">10.10.1.12</td>
+                        <td class="px-5 py-3 text-slate-600">
+                          Gán thêm vai trò "Giám sát hồ sơ"
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Đăng xuất -->
+              <div class="bg-white border border-slate-200 rounded-xl">
+                <div class="px-5 py-4 border-b border-slate-200">
+                  <h3 class="text-[15px] font-semibold text-slate-800">
+                    Đăng xuất
+                  </h3>
+                </div>
+                <div class="p-5">
+                  <p class="text-sm text-slate-600">
+                    Đăng xuất khỏi tài khoản quản trị. Bạn sẽ cần đăng nhập lại
+                    để tiếp tục quản trị hệ thống.
+                  </p>
+                  <div class="mt-4 flex justify-end">
+                    <button
+                      id="btnLogout" data-action="logout" data-logout-confirm="Bạn có chắc muốn đăng xuất?"
+                      class="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-rose-600 text-white hover:bg-rose-700"
+                    >
+                      <i data-feather="log-out" class="w-4 h-4"></i> Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <footer class="pt-2 text-xs text-slate-400 text-center">
+              © UBND Phường Thanh Khê Đông — Hệ thống phiên bản 1.0
+            </footer>
+          </div>
+{% include "_partials/auth/_quantri_modals.html" %}
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/quantri.js' %}" defer></script>
+{% endblock %}

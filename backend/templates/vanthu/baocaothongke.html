@@ -1,0 +1,349 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Báo cáo & Thống kê (Văn thư){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ===== KPI ===== -->
+            <section
+              class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6"
+            >
+              <!-- Tổng văn bản -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tổng văn bản
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📄</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div id="kpi-total" class="text-3xl font-bold text-blue-700">
+                    0
+                  </div>
+                  <div id="kpi-total-trend" class="text-[12px] mt-0.5">—</div>
+                </div>
+              </article>
+
+              <!-- Văn bản đến -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Văn bản đến
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📬</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div id="kpi-in" class="text-3xl font-bold text-emerald-700">
+                    0
+                  </div>
+                  <div id="kpi-in-trend" class="text-[12px] mt-0.5">—</div>
+                </div>
+              </article>
+
+              <!-- Văn bản đi -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Văn bản đi
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📤</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div id="kpi-out" class="text-3xl font-bold text-rose-700">
+                    0
+                  </div>
+                  <div id="kpi-out-trend" class="text-[12px] mt-0.5">—</div>
+                </div>
+              </article>
+
+              <!-- Tỷ lệ đúng hạn -->
+              <article class="bg-white border border-slate-200 rounded-xl p-4">
+                <div class="flex items-start justify-between">
+                  <h3 class="text-[13px] font-semibold text-slate-600">
+                    Tỷ lệ xử lý đúng hạn
+                  </h3>
+                  <span
+                    class="inline-grid w-7 h-7 rounded-full place-items-center border border-slate-200"
+                    >📈</span
+                  >
+                </div>
+                <div class="pt-1">
+                  <div id="kpi-ontime" class="text-3xl font-bold">0%</div>
+                  <div id="kpi-ontime-trend" class="text-[12px] mt-0.5">—</div>
+                </div>
+              </article>
+            </section>
+
+            <!-- ===== FILTER BAR ===== -->
+            <section
+              class="mt-5 bg-white border border-slate-200 rounded-xl p-4"
+            >
+              <div
+                class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+              >
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-[13px] text-slate-600"
+                    >Báo cáo tổng quan</span
+                  >
+
+                  <div class="relative">
+                    <input
+                      id="dateFrom"
+                      type="date"
+                      class="h-9 pl-3 pr-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    />
+                  </div>
+
+                  <span class="text-slate-400 text-sm">đến</span>
+
+                  <div class="relative">
+                    <input
+                      id="dateTo"
+                      type="date"
+                      class="h-9 pl-3 pr-3 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    />
+                  </div>
+
+                  <div class="relative">
+                    <select
+                      id="selDept"
+                      class="h-9 pl-3 pr-8 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20"
+                    >
+                      <option value="">Tất cả phòng ban</option>
+                      <option value="Văn phòng UBND">Văn phòng UBND</option>
+                      <option value="Phòng Kinh tế">Phòng Kinh tế</option>
+                      <option value="Phòng Tài chính">Phòng Tài chính</option>
+                      <option value="Phòng Quản lý đô thị">
+                        Phòng Quản lý đô thị
+                      </option>
+                    </select>
+                    <span
+                      class="pointer-events-none absolute right-2 top-[6px] text-slate-400"
+                      >▾</span
+                    >
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button
+                    id="btnMakeReport"
+                    class="px-3 h-9 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium"
+                    type="button"
+                  >
+                    Tạo báo cáo
+                  </button>
+                  <button
+                    id="btnExportExcel"
+                    class="px-3 h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+                    type="button"
+                  >
+                    Xuất Excel
+                  </button>
+                  <button
+                    id="btnExportPDF"
+                    class="px-3 h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-sm font-medium"
+                    type="button"
+                  >
+                    Xuất PDF
+                  </button>
+                </div>
+              </div>
+            </section>
+
+            <!-- ===== CHARTS ROW 1 ===== -->
+            <section class="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <article class="bg-white border border-slate-200 rounded-xl">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Thống kê văn bản theo tháng
+                  </h3>
+                </header>
+                <div class="p-4">
+                  <canvas
+                    id="chartMonthly"
+                    height="140"
+                    aria-label="Biểu đồ theo tháng"
+                  ></canvas>
+                </div>
+              </article>
+
+              <article class="bg-white border border-slate-200 rounded-xl">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Tỷ lệ trạng thái xử lý
+                  </h3>
+                </header>
+                <div class="p-4">
+                  <canvas
+                    id="chartStatus"
+                    height="140"
+                    aria-label="Biểu đồ trạng thái"
+                  ></canvas>
+                </div>
+              </article>
+            </section>
+
+            <!-- ===== CHARTS ROW 2 ===== -->
+            <section class="mt-6 grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <article class="bg-white border border-slate-200 rounded-xl">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Thống kê theo phòng ban
+                  </h3>
+                </header>
+                <div class="p-4">
+                  <canvas
+                    id="chartDept"
+                    height="160"
+                    aria-label="Biểu đồ theo phòng ban"
+                  ></canvas>
+                </div>
+              </article>
+
+              <article class="bg-white border border-slate-200 rounded-xl">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Phân bổ theo độ ưu tiên
+                  </h3>
+                </header>
+                <div class="p-4">
+                  <canvas
+                    id="chartPriority"
+                    height="160"
+                    aria-label="Biểu đồ ưu tiên"
+                  ></canvas>
+                </div>
+              </article>
+            </section>
+
+            <!-- ===== TABLE OVERVIEW ===== -->
+            <section class="mt-6 bg-white border border-slate-200 rounded-xl">
+              <header class="px-4 py-3 border-b border-slate-100">
+                <h3 class="text-[15px] font-semibold">
+                  Báo cáo chi tiết - overview
+                </h3>
+              </header>
+              <div class="overflow-auto">
+                <table class="min-w-full text-[13px]">
+                  <thead class="bg-slate-50 text-slate-600">
+                    <tr>
+                      <th
+                        class="text-left font-semibold px-4 py-2 border-b border-slate-200 w-16"
+                      >
+                        STT
+                      </th>
+                      <th
+                        class="text-left font-semibold px-4 py-2 border-b border-slate-200"
+                      >
+                        Chỉ tiêu
+                      </th>
+                      <th
+                        class="text-center font-semibold px-4 py-2 border-b border-slate-200 w-40"
+                      >
+                        Số lượng
+                      </th>
+                      <th
+                        class="text-center font-semibold px-4 py-2 border-b border-slate-200 w-40"
+                      >
+                        Tỷ lệ (%)
+                      </th>
+                      <th
+                        class="text-center font-semibold px-4 py-2 border-b border-slate-200 w-56"
+                      >
+                        So với kỳ trước
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody id="reportTable" class="divide-y divide-slate-100">
+                    <!-- Hàng mẫu sẽ được cập nhật bởi script -->
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- ===== SCHEDULED REPORTS ===== -->
+            <section class="mt-6 bg-white border border-slate-200 rounded-xl">
+              <header class="px-4 py-3 border-b border-slate-100">
+                <h3 class="text-[15px] font-semibold">Báo cáo định kỳ</h3>
+              </header>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
+                <!-- Tuần -->
+                <article class="rounded-xl border border-slate-200 p-4">
+                  <h4 class="font-semibold mb-1">Báo cáo tuần</h4>
+                  <p class="text-[13px] text-slate-500">
+                    Báo cáo tình hình xử lý văn bản trong tuần
+                  </p>
+                  <div class="mt-3 flex items-center gap-2">
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-sm"
+                      type="button"
+                    >
+                      Xem
+                    </button>
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-sm"
+                      type="button"
+                    >
+                      Tạo mới
+                    </button>
+                  </div>
+                </article>
+                <!-- Tháng -->
+                <article class="rounded-xl border border-slate-200 p-4">
+                  <h4 class="font-semibold mb-1">Báo cáo tháng</h4>
+                  <p class="text-[13px] text-slate-500">
+                    Báo cáo tổng hợp hoạt động văn thư trong tháng
+                  </p>
+                  <div class="mt-3 flex items-center gap-2">
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-sm"
+                      type="button"
+                    >
+                      Xem
+                    </button>
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-sm"
+                      type="button"
+                    >
+                      Tạo mới
+                    </button>
+                  </div>
+                </article>
+                <!-- Quý -->
+                <article class="rounded-xl border border-slate-200 p-4">
+                  <h4 class="font-semibold mb-1">Báo cáo quý</h4>
+                  <p class="text-[13px] text-slate-500">
+                    Báo cáo tình hình hoạt động theo quý
+                  </p>
+                  <div class="mt-3 flex items-center gap-2">
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-100 hover:bg-slate-200 text-sm"
+                      type="button"
+                    >
+                      Xem
+                    </button>
+                    <button
+                      class="px-3 h-9 rounded-md bg-slate-900 hover:bg-slate-800 text-white text-sm"
+                      type="button"
+                    >
+                      Tạo mới
+                    </button>
+                  </div>
+                </article>
+              </div>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/vanthu-analytics.js' %}" defer></script>
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}

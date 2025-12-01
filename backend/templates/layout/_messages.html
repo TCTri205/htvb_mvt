@@ -1,0 +1,12 @@
+{% if messages %}
+  <div class="px-6 lg:px-8 py-3 space-y-2">
+    {% for message in messages %}
+      <div
+        class="rounded-lg border px-4 py-2 text-sm leading-tight"
+        role="status"
+      >
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

@@ -1,0 +1,382 @@
+{% extends "layout/base.html" %} {% load static %} {% block title %}Tạo hồ sơ
+công việc (Văn thư){% endblock %} {% block content %}
+
+<div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+  <!-- Top bar -->
+  <div
+    class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
+  >
+    <div class="flex items-center gap-2">
+      <a
+        href="/vanthu/hosocongviec.html"
+        class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+        aria-label="Quay lại danh sách hồ sơ"
+      >
+        <span aria-hidden="true">&larr;</span>
+        <span>Danh sách hồ sơ</span>
+      </a>
+      <span class="text-[13px] text-slate-500">Tạo hồ sơ công việc</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button
+        id="btnSaveDraft"
+        class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Lưu nháp
+      </button>
+      <button
+        id="btnCreateCase"
+        type="submit"
+        class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+      >
+        Tạo hồ sơ
+      </button>
+    </div>
+  </div>
+
+  <!-- Form: Thông tin hồ sơ -->
+  <form
+    id="createCaseForm"
+    method="post"
+    action=""
+    class="card p-5 space-y-5 mt-4 md:mt-5"
+    novalidate
+  >
+    {% csrf_token %}
+    <header class="space-y-1">
+      <h1 class="text-[18px] font-semibold text-slate-800">Thông tin hồ sơ</h1>
+      <p class="text-[12.5px] text-slate-500">
+        Nhập thông tin chung về hồ sơ công việc.
+      </p>
+    </header>
+
+    <div class="grid gap-4 md:grid-cols-3 text-[13px]">
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700"
+          >Tiêu đề hồ sơ <span class="text-rose-600">*</span></span
+        >
+        <input
+          id="caseTitle"
+          name="title"
+          type="text"
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+          placeholder="Nhập tiêu đề hồ sơ"
+          required
+        />
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700">Mã hồ sơ</span>
+        <input
+          id="caseCode"
+          name="case_code"
+          type="text"
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+          placeholder="VD: HS-2024-07"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700">Loại hồ sơ</span>
+        <select
+          id="caseType"
+          name="case_type"
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        >
+          {% if case_types %} {% for case_type in case_types %}
+          <option value="{{ case_type.case_type_name }}">
+            {{ case_type.case_type_name }}
+          </option>
+          {% endfor %} {% else %}
+          <option value="Xử lý văn bản">Xử lý văn bản</option>
+          <option value="Báo cáo tổng kết">Báo cáo tổng kết</option>
+          <option value="Họp Ban chỉ đạo">Họp Ban chỉ đạo</option>
+          <option value="Nghiên cứu văn bản">Nghiên cứu văn bản</option>
+          {% endif %}
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700"
+          >Phòng phụ trách <span class="text-rose-600">*</span></span
+        >
+        <select
+          id="caseDept"
+          name="department"
+          required
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        >
+          <option value="">-- Chọn đơn vị phụ trách --</option>
+          {% if departments %} {% for department in departments %}
+          <option
+            value="{{ department.name }}"
+            data-department-id="{{ department.department_id }}"
+          >
+            {{ department.name }}
+          </option>
+          {% endfor %} {% else %}
+          <option value="Phòng Hành chính">Phòng Hành chính</option>
+          <option value="Văn phòng UBND">Văn phòng UBND</option>
+          <option value="Phòng Y tế">Phòng Y tế</option>
+          <option value="Phòng Tư pháp">Phòng Tư pháp</option>
+          {% endif %}
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700">Mức độ ưu tiên</span>
+        <select
+          id="casePriority"
+          name="priority"
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        >
+          <option value="Thường">Thường</option>
+          <option value="Cao">Cao</option>
+          <option value="Khẩn">Khẩn</option>
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700"
+          >Hạn hoàn thành <span class="text-rose-600">*</span></span
+        >
+        <input
+          id="caseDue"
+          name="due_date"
+          type="date"
+          required
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1">
+        <span class="font-semibold text-slate-700">Ngày tạo</span>
+        <input
+          id="caseCreatedAt"
+          type="date"
+          class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        />
+      </label>
+
+    </div>
+
+    <label class="flex flex-col gap-1 text-[13px]">
+      <span class="font-semibold text-slate-700">Mô tả</span>
+      <textarea
+        id="caseDesc"
+        name="description"
+        rows="3"
+        class="w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        placeholder="Tóm tắt nội dung, phạm vi, mục tiêu…"
+      ></textarea>
+    </label>
+  </form>
+
+  <!-- Tasks + Activity -->
+  <section class="grid gap-6 lg:grid-cols-2 mt-6">
+    <!-- Nhiệm vụ -->
+    <article class="card p-5 space-y-4">
+      <header class="flex items-center justify-between gap-2">
+        <div>
+          <h2 class="text-[15px] font-semibold text-slate-800">
+            Nhiệm vụ trong hồ sơ
+          </h2>
+          <p class="text-[12.5px] text-slate-500">Thêm nhiệm vụ cần thực hiện</p>
+        </div>
+        <button
+          id="btnAddTask"
+          class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Thêm nhiệm vụ
+        </button>
+      </header>
+
+      <!-- Task mini form (NO assignee for VT) -->
+      <div class="grid gap-3 md:grid-cols-3 text-[13px]">
+        <input
+          id="taskTitle"
+          type="text"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+          placeholder="Tên nhiệm vụ"
+        />
+        <input
+          id="taskDue"
+          type="date"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        />
+        <select
+          id="taskStatus"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        >
+          <option>Chưa bắt đầu</option>
+          <option>Đang làm</option>
+          <option>Hoàn thành</option>
+        </select>
+      </div>
+
+      <ul id="taskList" class="space-y-3 text-[13px]">
+        <li
+          id="taskEmpty"
+          class="rounded-lg border border-dashed border-slate-200 p-3 text-slate-500"
+        >
+          Chưa có nhiệm vụ nào. Thêm nhiệm vụ để bắt đầu theo dõi tiến độ.
+        </li>
+      </ul>
+    </article>
+
+    <!-- Nhật ký -->
+    <article class="card p-5 space-y-4">
+      <header class="flex items-center justify-between gap-2">
+        <div>
+          <h2 class="text-[15px] font-semibold text-slate-800">
+            Nhật ký hoạt động
+          </h2>
+          <p class="text-[12.5px] text-slate-500">
+            Ghi chú trong quá trình tạo hồ sơ (không bắt buộc)
+          </p>
+        </div>
+        <button
+          id="btnAddLog"
+          class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Ghi nhận
+        </button>
+      </header>
+
+      <!-- Log mini form -->
+      <div class="grid gap-3 md:grid-cols-[1fr,auto] text-[13px]">
+        <input
+          id="logContent"
+          type="text"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+          placeholder="Nội dung nhật ký / ghi chú"
+        />
+        <input
+          id="logWhen"
+          type="datetime-local"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        />
+      </div>
+
+      <ul id="logList" class="space-y-3 text-[13px]">
+        <li
+          id="logEmpty"
+          class="rounded-lg border border-dashed border-slate-200 p-3 text-slate-500"
+        >
+          Chưa có ghi chú nào.
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- Attachments + Related documents -->
+  <section class="grid gap-6 lg:grid-cols-2 mt-6">
+    <!-- Files -->
+    <article class="card p-5 space-y-4">
+      <header class="flex items-center justify-between gap-2">
+        <div>
+          <h2 class="text-[15px] font-semibold text-slate-800">
+            Tài liệu đính kèm
+          </h2>
+          <p class="text-[12.5px] text-slate-500">
+            Thêm tệp đính kèm liên quan
+          </p>
+        </div>
+        <label
+          class="h-9 rounded-md border border-slate-200 px-3 inline-flex items-center text-sm font-medium text-slate-700 hover:bg-slate-50 cursor-pointer"
+        >
+          Chọn tệp
+          <input id="fileInput" type="file" class="hidden" multiple />
+        </label>
+      </header>
+
+      <ul id="fileList" class="space-y-3 text-[13px]">
+        <li
+          id="fileEmpty"
+          class="rounded-lg border border-dashed border-slate-200 p-3 text-slate-500"
+        >
+          Chưa có tệp nào được đính kèm.
+        </li>
+      </ul>
+    </article>
+
+    <!-- Docs -->
+    <article class="card p-5 space-y-4">
+      <header class="flex items-center justify-between gap-2">
+        <div>
+          <h2 class="text-[15px] font-semibold text-slate-800">
+            Văn bản liên quan
+          </h2>
+          <p class="text-[12.5px] text-slate-500">
+            Gắn văn bản đến/đi vào hồ sơ
+          </p>
+        </div>
+        <a
+          href="/vanthu/vanbanden.html"
+          class="h-9 rounded-md border border-slate-200 px-3 inline-flex items-center text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >Quản lý văn bản</a
+        >
+      </header>
+
+      <div class="grid gap-3 md:grid-cols-3 text-[13px]">
+        <input
+          id="docCode"
+          type="text"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+          placeholder="Số / Ký hiệu"
+        />
+        <select
+          id="docType"
+          class="rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
+        >
+          <option value="Văn bản đến">Văn bản đến</option>
+          <option value="Văn bản đi">Văn bản đi</option>
+        </select>
+        <button
+          id="btnAddDoc"
+          class="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+        >
+          Gắn văn bản
+        </button>
+      </div>
+
+      <ul id="docList" class="space-y-3 text-[13px]">
+        <li
+          id="docEmpty"
+          class="rounded-lg border border-dashed border-slate-200 p-3 text-slate-500"
+        >
+          Chưa có văn bản nào được gắn.
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <!-- KPI Sidebar -->
+  <aside class="card p-5 space-y-4 mt-6 max-w-md">
+    <header>
+      <h2 class="text-[15px] font-semibold text-slate-800">Chỉ số tiến độ</h2>
+      <p class="text-[12.5px] text-slate-500">Tổng hợp từ Nhiệm vụ</p>
+    </header>
+    <ul class="space-y-3 text-[13px]">
+      <li class="flex items-center justify-between">
+        <span class="text-slate-600">Nhiệm vụ hoàn thành</span>
+        <span id="kpiDone" class="font-semibold text-emerald-600">0 / 0</span>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-slate-600">Nhiệm vụ quá hạn</span>
+        <span id="kpiLate" class="font-semibold text-rose-600">0</span>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-slate-600">Văn bản liên quan</span>
+        <span id="kpiDocs" class="font-semibold text-slate-700">0</span>
+      </li>
+      <li class="flex items-center justify-between">
+        <span class="text-slate-600">Tệp đính kèm</span>
+        <span id="kpiFiles" class="font-semibold text-slate-700">0</span>
+      </li>
+    </ul>
+  </aside>
+</div>
+{% endblock %} {% block extra_js %}
+<script src="{% static 'js/vanthu-hosocongviec-taomoi.js' %}"></script>
+{% endblock %}

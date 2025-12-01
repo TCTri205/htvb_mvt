@@ -1,0 +1,356 @@
+{% extends "layout/base.html" %} {% load static %} {% block title %}Lãnh đạo •
+Chi tiết văn bản đi{% endblock %} {% block content %}
+
+<div class="doc-detail-page max-w-none px-6 lg:px-8 py-6 lg:py-7 space-y-6">
+  <div
+    class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+  >
+    <div class="flex items-center gap-2">
+      <a
+        href="{% url 'ui_lanhdao:vanbandi_list' %}"
+        class="inline-flex items-center gap-2 h-9 px-3 rounded-md border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        ← Danh sách văn bản đi
+      </a>
+    </div>
+    <div class="text-[12.5px] text-slate-500">
+      Thao tác ở khối "Luồng xử lý" phía dưới (tự động theo trạng thái & phân quyền).
+    </div>
+  </div>
+
+  <div
+    id="doc-detail-error"
+    class="hidden rounded-md border border-rose-200 bg-rose-50 px-4 py-2 text-sm text-rose-600"
+  ></div>
+  <div
+    id="doc-detail-meta"
+    data-doc-id="{{ doc.document_id|default:'' }}"
+  ></div>
+
+  {% include "_partials/documents/_outbound_detail_metadata.html" %}
+
+  <section class="grid doc-grid doc-grid--balanced">
+    <article class="card doc-card doc-card--span">
+      <header class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-800">Nhóm soạn thảo</h2>
+          <p class="text-xs text-slate-500">Danh sách phân công</p>
+        </div>
+      </header>
+      <div class="overflow-x-auto -mx-5">
+        <table class="min-w-full text-sm">
+          <thead class="bg-slate-50 text-slate-600">
+            <tr>
+              <th class="px-5 py-3 text-left font-semibold">Thành viên</th>
+              <th class="px-5 py-3 text-left font-semibold">Vai trò</th>
+              <th class="px-5 py-3 text-left font-semibold">Người giao</th>
+              <th class="px-5 py-3 text-left font-semibold">Thời hạn</th>
+              <th class="px-5 py-3 text-left font-semibold">Trạng thái</th>
+              <th class="px-5 py-3 text-left font-semibold">Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody id="doc-assignments-body" class="divide-y divide-slate-100">
+            <tr>
+              <td
+                colspan="6"
+                class="px-5 py-6 text-center text-xs text-slate-500"
+              >
+                Đang tải phân công…
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div id="ld-assign-wrapper" class="border-t border-slate-100 pt-4 hidden">
+        <form id="ld-assign-form" class="space-y-3">
+          <div class="grid gap-3 md:grid-cols-2">
+            <div>
+              <label
+                class="text-[13px] font-medium text-slate-700"
+                for="ld-assign-assignee"
+                >Chuyên viên</label
+              >
+              <select
+                id="ld-assign-assignee"
+                class="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm"
+              >
+                <option value="">Chọn chuyên viên</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="text-[13px] font-medium text-slate-700"
+                for="ld-assign-role"
+                >Vai trò</label
+              >
+              <select
+                id="ld-assign-role"
+                class="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm"
+              >
+                <option value="assignee">Chủ trì</option>
+                <option value="owner">Chủ trì (owner)</option>
+                <option value="watcher">Phối hợp</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label
+              class="text-[13px] font-medium text-slate-700"
+              for="ld-assign-due"
+              >Hạn xử lý</label
+            >
+            <input
+              type="datetime-local"
+              id="ld-assign-due"
+              class="mt-1 h-10 w-full rounded-md border border-slate-200 px-3 text-sm"
+            />
+          </div>
+          <div>
+            <label
+              class="text-[13px] font-medium text-slate-700"
+              for="ld-assign-instruction"
+              >Yêu cầu/Ghi chú</label
+            >
+            <textarea
+              id="ld-assign-instruction"
+              rows="2"
+              class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm"
+            ></textarea>
+          </div>
+          <div class="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              id="ld-assign-submit"
+              class="h-10 rounded-md bg-slate-900 px-4 text-sm font-medium text-white"
+            >
+              Phân công
+            </button>
+            <p id="ld-assign-message" class="text-xs"></p>
+          </div>
+        </form>
+      </div>
+    </article>
+
+    <aside
+      class="card doc-card"
+      id="doc-workflow-panel"
+      data-direction="OUTBOUND"
+      data-role="LD"
+      data-route="vanbandi"
+      data-allow-withdraw="1"
+    >
+      <header>
+        <h2 class="text-sm font-semibold text-slate-800">Luồng xử lý</h2>
+      <p class="text-[12.5px] text-slate-500">
+        DRAFT → SUBMITTED → RETURNED / APPROVED → PENDING_CLERK_CHECK → REGISTERED → ISSUED → ARCHIVED (+ HUY_PHAT_HANH)
+      </p>
+      </header>
+      <ol data-wf="steps" class="space-y-2 text-[13px] text-slate-500">
+        <li>Đang tải trạng thái workflow…</li>
+      </ol>
+      <div class="space-y-2">
+        <label
+          class="text-[13px] font-medium text-slate-700"
+          for="ld-workflow-action"
+          >Hành động được phép</label
+        >
+        <select
+          id="ld-workflow-action"
+          data-wf="action-select"
+          class="w-full h-10 rounded-md border border-slate-200 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 disabled:bg-slate-50"
+        ></select>
+      </div>
+      <div data-wf="fields" class="space-y-3 hidden"></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          data-wf="submit"
+          class="h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          Thực hiện
+        </button>
+        <button
+          type="button"
+          data-wf="withdraw"
+          class="h-9 rounded-md border border-slate-200 px-3 text-sm font-medium text-rose-600 hover:bg-rose-50"
+        >
+          Thu hồi
+        </button>
+      </div>
+      <p data-wf="message" class="text-[12px] text-slate-500"></p>
+    </aside>
+  </section>
+
+  <section class="grid doc-grid">
+    <article class="card doc-card">
+      <header class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800">Trình ký</h3>
+        <span id="doc-approval-count" class="text-xs text-slate-500"
+          >0 bước</span
+        >
+      </header>
+      <ul id="doc-approvals" class="space-y-2 text-[13px] text-slate-500">
+        <li>Đang tải...</li>
+      </ul>
+    </article>
+
+    <article class="card doc-card">
+      <header class="flex items-center justify-between">
+        <h3 class="text-sm font-semibold text-slate-800">Tệp đính kèm</h3>
+      </header>
+      <ul id="doc-attachment-list" class="space-y-2 text-sm text-slate-500">
+        <li>Đang tải...</li>
+      </ul>
+    </article>
+
+    <article class="card doc-card">
+      <header>
+        <h2 class="text-sm font-semibold text-slate-800">Nhật ký xử lý</h2>
+        <p class="text-xs text-slate-500">
+          Lịch sử trạng thái và người thực hiện
+        </p>
+      </header>
+      <ul id="doc-log-list" class="space-y-3 text-sm text-slate-500">
+        <li>Đang tải nhật ký…</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="grid doc-grid doc-grid--balanced">
+    <article class="card doc-card">
+      <header>
+        <h3 class="text-sm font-semibold text-slate-800">Lịch gửi</h3>
+        <div class="text-xs text-slate-500">
+          <div>Số tracking: <span id="doc-dispatch-number">—</span></div>
+          <div>Ngày gửi: <span id="doc-dispatch-date">—</span></div>
+          <div>Phương thức: <span id="doc-dispatch-methods">—</span></div>
+        </div>
+      </header>
+      <ul id="doc-dispatch-list" class="space-y-2 text-sm text-slate-500">
+        <li>Đang tải...</li>
+      </ul>
+    </article>
+
+    <article class="card doc-card doc-card--span">
+      <header class="flex items-center justify-between">
+        <div>
+          <h2 class="text-sm font-semibold text-slate-800">
+            Phiên bản văn bản
+          </h2>
+          <p class="text-xs text-slate-500">Theo dõi lịch sử tài liệu</p>
+        </div>
+      </header>
+      <ul id="doc-versions-list" class="space-y-3 text-sm text-slate-500">
+        <li>Đang tải...</li>
+      </ul>
+    </article>
+  </section>
+
+  <article class="card doc-card space-y-3">
+    <header class="flex items-center justify-between gap-2">
+      <div>
+        <h2 class="text-sm font-semibold text-slate-800">
+          Trao đổi &amp; ghi chú
+        </h2>
+        <p class="text-xs text-slate-500">Bình luận gắn với văn bản</p>
+      </div>
+    </header>
+    <form id="ld-comment-form" class="space-y-3">
+      <div>
+        <label class="text-[13px] font-medium text-slate-700" for="ld-comment-content">
+          Nội dung
+        </label>
+        <textarea
+          id="ld-comment-content"
+          name="comment"
+          rows="2"
+          class="mt-1 w-full rounded-md border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20"
+          placeholder="Nhập nội dung trao đổi..."
+        ></textarea>
+      </div>
+      <div class="flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          class="h-9 rounded-md bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-800 shadow-sm"
+        >
+          Gửi bình luận
+        </button>
+        <p id="ld-comment-message" class="text-xs text-rose-500"></p>
+      </div>
+    </form>
+    <ul id="doc-comment-list" class="space-y-3 text-[13px]">
+      <li class="text-slate-500">Chưa có trao đổi.</li>
+    </ul>
+  </article>
+</div>
+
+<div
+  id="ld-assign-detail-modal"
+  class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6"
+  aria-hidden="true"
+>
+  <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl">
+    <header class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+      <div>
+        <h3 class="text-base font-semibold text-slate-800">Chi tiết phân công</h3>
+        <p class="text-xs text-slate-500">Thông tin thành viên được giao</p>
+      </div>
+      <button
+        id="ld-assign-detail-close"
+        type="button"
+        class="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+      >
+        ×
+      </button>
+    </header>
+    <div class="space-y-3 px-6 py-4 text-sm text-slate-700">
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Thành viên</span>
+        <span id="ld-assign-detail-assignee" class="font-semibold">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Vai trò</span>
+        <span id="ld-assign-detail-role" class="font-semibold">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Người giao</span>
+        <span id="ld-assign-detail-assignor">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Thời hạn</span>
+        <span id="ld-assign-detail-due">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Ngày giao</span>
+        <span id="ld-assign-detail-at">—</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-slate-500">Trạng thái</span>
+        <span id="ld-assign-detail-status">—</span>
+      </div>
+      <div>
+        <div class="text-slate-500">Yêu cầu/Ghi chú</div>
+        <p id="ld-assign-detail-instruction" class="mt-1 text-slate-700">—</p>
+      </div>
+    </div>
+    <footer class="flex items-center justify-end gap-2 border-t border-slate-100 px-6 py-4">
+      <button
+        id="ld-assign-detail-close-bottom"
+        type="button"
+        class="rounded-md border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+      >
+        Đóng
+      </button>
+    </footer>
+  </div>
+</div>
+
+{% include "_partials/documents/_workflow_action_form.html" %}
+{% endblock content %}
+{% block extra_js %}
+<script src="{% static 'js/status-constants.js' %}"></script>
+<script src="{% static 'js/doc-helpers.js' %}"></script>
+<script src="{% static 'js/lanhdao-vanbandi-detail.js' %}"></script>
+<script src="{% static 'js/lanhdao.js' %}"></script>
+{% endblock extra_js %}

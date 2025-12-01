@@ -1,0 +1,27 @@
+<div
+  id="dm-modal"
+  class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
+    <header class="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+      <div class="text-[15px] font-semibold text-slate-800" id="dm-modal-title">
+        Danh sách văn bản
+      </div>
+      <button
+        id="dm-modal-close"
+        type="button"
+        class="w-9 h-9 grid place-items-center rounded-full hover:bg-slate-100 text-slate-500"
+        aria-label="Đóng"
+      >
+        ✕
+      </button>
+    </header>
+    <div class="p-4 overflow-y-auto max-h-[65vh]">
+      <ul id="dm-modal-body" class="divide-y divide-slate-100 text-[14px] text-slate-700">
+        <li class="px-3 py-2 text-[13px] text-slate-500">Đang tải...</li>
+      </ul>
+    </div>
+  </div>
+</div>

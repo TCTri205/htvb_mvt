@@ -1,0 +1,493 @@
+{% extends "layout/base.html" %}
+{% load static %}
+{% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Danh mục (Văn thư){% endblock %}
+{% block content %}
+
+          <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <!-- ====== SEARCH BAR ====== -->
+            <section class="bg-white border border-slate-200 rounded-xl p-4">
+              <h3 class="text-sm font-semibold text-slate-700 mb-3">
+                Tra cứu danh mục hệ thống (chỉ đọc)
+              </h3>
+              <label class="relative block" for="dm-search">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-slate-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M8 4a4 4 0 102.83 6.83l3.44 3.44a1 1 0 001.41-1.41l-3.44-3.44A4 4 0 008 4zm-6 4a6 6 0 1110.89 3.476l3.817 3.817a3 3 0 11-4.243 4.243l-3.817-3.817A6 6 0 012 8z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <input
+                  id="dm-search"
+                  class="w-full h-10 pl-10 pr-4 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500 text-[14px] placeholder-slate-400"
+                  type="search"
+                  placeholder="Tìm kiếm trong danh mục…"
+                  autocomplete="off"
+                />
+              </label>
+              <!-- Filter pills -->
+              <div class="mt-3 grid grid-cols-1 md:grid-cols-5 gap-2">
+                <button
+                  class="px-3 py-2 rounded-md border border-slate-200 text-sm bg-slate-900 text-white"
+                  data-tab="loai"
+                  type="button"
+                >
+                  🗂&nbsp; Loại văn bản
+                </button>
+                <button
+                  class="px-3 py-2 rounded-md border border-slate-200 text-sm"
+                  data-tab="trangthai"
+                  type="button"
+                >
+                  🏷&nbsp; Trạng thái
+                </button>
+                <button
+                  class="px-3 py-2 rounded-md border border-slate-200 text-sm"
+                  data-tab="mucdo"
+                  type="button"
+                >
+                  📎&nbsp; Mức độ ưu tiên
+                </button>
+                <button
+                  class="px-3 py-2 rounded-md border border-slate-200 text-sm"
+                  data-tab="phongban"
+                  type="button"
+                >
+                  🏢&nbsp; Phòng ban
+                </button>
+                <button
+                  class="px-3 py-2 rounded-md border border-slate-200 text-sm"
+                  data-tab="coquan"
+                  type="button"
+                >
+                  🏛️&nbsp; Cơ quan
+                </button>
+              </div>
+            </section>
+
+            <!-- ====== PANELS ====== -->
+            <section class="mt-6 space-y-6">
+              <!-- Loại văn bản -->
+              <article class="card p-0" data-panel="loai">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Danh mục loại văn bản
+                  </h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Các loại văn bản được sử dụng trong hệ thống
+                  </p>
+                </header>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm tbl-hover">
+                    <thead class="text-left text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 w-[28%]">Tên loại văn bản</th>
+                        <th class="px-4 py-3">Mô tả</th>
+                        <th class="px-4 py-3 w-28 text-center">Số lượng</th>
+                        <th class="px-4 py-3 w-40">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tb-loai">
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Thông báo</td>
+                        <td class="px-4 py-3">Văn bản thông báo chung</td>
+                        <td class="px-4 py-3 text-center">9</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Báo cáo</td>
+                        <td class="px-4 py-3">Báo cáo định kỳ và đột xuất</td>
+                        <td class="px-4 py-3 text-center">5</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Công văn</td>
+                        <td class="px-4 py-3">Công văn hành chính</td>
+                        <td class="px-4 py-3 text-center">6</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Quyết định</td>
+                        <td class="px-4 py-3">Quyết định của lãnh đạo</td>
+                        <td class="px-4 py-3 text-center">4</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Chỉ thị</td>
+                        <td class="px-4 py-3">Chỉ thị chỉ đạo thực hiện</td>
+                        <td class="px-4 py-3 text-center">3</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Nghị định</td>
+                        <td class="px-4 py-3">Nghị định của Chính phủ</td>
+                        <td class="px-4 py-3 text-center">2</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Thông tư</td>
+                        <td class="px-4 py-3">Thông tư hướng dẫn thực hiện</td>
+                        <td class="px-4 py-3 text-center">2</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">Văn bản khác</td>
+                        <td class="px-4 py-3">Các loại văn bản khác</td>
+                        <td class="px-4 py-3 text-center">6</td>
+                        <td class="px-4 py-3">
+                          <a
+                            href="#"
+                            class="text-blue-600 hover:underline flex items-center gap-1"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <!-- Trạng thái -->
+              <article class="card p-0 hidden" data-panel="trangthai">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Danh mục trạng thái văn bản
+                  </h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Các trạng thái xử lý văn bản trong hệ thống
+                  </p>
+                </header>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm tbl-hover">
+                    <thead class="text-left text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 w-56">Trạng thái</th>
+                        <th class="px-4 py-3">Mô tả</th>
+                        <th class="px-4 py-3 w-48">Hiển thị</th>
+                        <th class="px-4 py-3 w-32 text-center">Số lượng</th>
+                        <th class="px-4 py-3 w-40">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tb-trangthai">
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Chưa xử lý</td>
+                        <td class="px-4 py-3">Văn bản mới tiếp nhận</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-danger">Chưa xử lý</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Đang xử lý</td>
+                        <td class="px-4 py-3">Văn bản đang được xử lý</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-primary">Đang xử lý</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Đã xử lý</td>
+                        <td class="px-4 py-3">Văn bản đã hoàn thành</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-success">Đã xử lý</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Chờ duyệt</td>
+                        <td class="px-4 py-3">Văn bản chờ phê duyệt</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-warn">Chờ duyệt</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">Đã phát hành</td>
+                        <td class="px-4 py-3">Văn bản đã được phát hành</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Đã phát hành</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <!-- Mức độ ưu tiên -->
+              <article class="card p-0 hidden" data-panel="mucdo">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">
+                    Danh mục mức độ ưu tiên
+                  </h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Các mức độ ưu tiên xử lý văn bản
+                  </p>
+                </header>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm tbl-hover">
+                    <thead class="text-left text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 w-56">Mức độ</th>
+                        <th class="px-4 py-3">Mô tả</th>
+                        <th class="px-4 py-3 w-48">Hiển thị</th>
+                        <th class="px-4 py-3 w-32 text-center">Số lượng</th>
+                        <th class="px-4 py-3 w-40">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tb-mucdo">
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Khẩn</td>
+                        <td class="px-4 py-3">Cần xử lý ngay lập tức</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-danger">Khẩn</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Cao</td>
+                        <td class="px-4 py-3">Ưu tiên xử lý</td>
+                        <td class="px-4 py-3">
+                          <span class="chip chip-level">Cao</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">Thường</td>
+                        <td class="px-4 py-3">Xử lý theo quy trình</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Thường</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <!-- Phòng ban -->
+              <article class="card p-0 hidden" data-panel="phongban">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">Danh mục phòng ban</h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Các phòng ban trong đơn vị
+                  </p>
+                </header>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm tbl-hover">
+                    <thead class="text-left text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 w-64">Tên phòng ban</th>
+                        <th class="px-4 py-3">Mô tả</th>
+                        <th class="px-4 py-3 w-56">Trưởng phòng</th>
+                        <th class="px-4 py-3 w-32 text-center">Số lượng</th>
+                        <th class="px-4 py-3 w-40">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tb-phongban">
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Phòng Hành chính</td>
+                        <td class="px-4 py-3">Xử lý các vấn đề hành chính</td>
+                        <td class="px-4 py-3">Trần Thị Bình</td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Văn phòng UBND</td>
+                        <td class="px-4 py-3">Văn phòng làm việc của UBND</td>
+                        <td class="px-4 py-3">Lê Văn Cường</td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Văn phòng Chủ tịch</td>
+                        <td class="px-4 py-3">Văn phòng Chủ tịch UBND</td>
+                        <td class="px-4 py-3">Trần Thị Bình</td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">Phòng Tin học</td>
+                        <td class="px-4 py-3">
+                          Quản lý hệ thống công nghệ thông tin
+                        </td>
+                        <td class="px-4 py-3">Phạm Thị Dung</td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+
+              <!-- Cơ quan -->
+              <article class="card p-0 hidden" data-panel="coquan">
+                <header class="px-4 py-3 border-b border-slate-100">
+                  <h3 class="text-[15px] font-semibold">Danh mục cơ quan</h3>
+                  <p class="text-[12.5px] text-slate-500">
+                    Các cơ quan, đơn vị liên quan
+                  </p>
+                </header>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-sm tbl-hover">
+                    <thead class="text-left text-slate-500">
+                      <tr class="border-b border-slate-100">
+                        <th class="px-4 py-3 w-[28%]">Tên cơ quan</th>
+                        <th class="px-4 py-3">Mô tả</th>
+                        <th class="px-4 py-3 w-40">Phân loại</th>
+                        <th class="px-4 py-3 w-32 text-center">Số lượng</th>
+                        <th class="px-4 py-3 w-40">Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tb-coquan">
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">UBND Quận Thanh Khê</td>
+                        <td class="px-4 py-3">Cơ quan cấp trên</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Cấp trên</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Sở Thông tin và Truyền thông</td>
+                        <td class="px-4 py-3">Sở chuyên ngành</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Cùng cấp</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr class="border-b border-slate-100">
+                        <td class="px-4 py-3">Công an Phường</td>
+                        <td class="px-4 py-3">Cơ quan an ninh</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Cùng cấp</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="px-4 py-3">Trường Tiểu học Thanh Khê</td>
+                        <td class="px-4 py-3">Đơn vị trực thuộc</td>
+                        <td class="px-4 py-3">
+                          <span class="chip">Cấp dưới</span>
+                        </td>
+                        <td class="px-4 py-3">
+                          <a href="#" class="text-blue-600 hover:underline"
+                            >👁 Xem chi tiết</a
+                          >
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </article>
+            </section>
+          </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/catalog-page.js' %}"></script>
+<script src="{% static 'js/vanthu.js' %}"></script>
+{% endblock %}
