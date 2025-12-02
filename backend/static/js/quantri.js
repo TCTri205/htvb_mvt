@@ -54,6 +54,14 @@ function escapeHtml(value) {
   return text.replace(/[&<>"']/g, (ch) => map[ch] || ch);
 }
 
+function humanReadableStorage(bytes, decimals = 1) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "0 GB";
+  }
+  const gb = bytes / 1024 / 1024 / 1024;
+  return `${formatNumber(gb, { decimals })} GB`;
+}
+
 function animateValue(element, target, options = {}) {
   if (!element) {
     return;
@@ -237,6 +245,26 @@ function initModal(selector) {
     return Number.isFinite(num) ? num : fallback;
   };
 
+  const archiveState = {
+    backups: [],
+    policies: [],
+  };
+
+  let archiveAuthNoticeElement = null;
+
+  function setArchiveAuthNotice(message) {
+    if (!archiveAuthNoticeElement) {
+      return;
+    }
+    if (!message) {
+      archiveAuthNoticeElement.textContent = "";
+      archiveAuthNoticeElement.classList.add("hidden");
+      return;
+    }
+    archiveAuthNoticeElement.textContent = message;
+    archiveAuthNoticeElement.classList.remove("hidden");
+  }
+
   const AdminRuntime = {
     debounce: window.TrisApp?.debounce || createDebounce(),
     toast: window.TrisApp?.showToast || createToast(),
@@ -259,7 +287,13 @@ function initModal(selector) {
       taikhoan: initTaiKhoan,
       quanlyhethong: initQuanLyHeThong,
     };
-    (controllers[page] || noop)();
+    // Fallback: nếu map trang bị lệch tên file, vẫn đảm bảo trang danh mục được kích hoạt
+    const fallbackPage = controllers[page]
+      ? page
+      : /danhmuc/.test(location.pathname)
+      ? "danhmuc"
+      : page;
+    (controllers[fallbackPage] || noop)();
   });
 
   function onReady(callback) {
@@ -282,6 +316,15 @@ function initModal(selector) {
     const aliases = {
       danhmucdetail: "danhmuc-detail",
       thongbao: "thongbaonhacviec",
+      danhmuchethong: "danhmuc",
+      "danhmuchethong-detail": "danhmuc-detail",
+      danhmuchethongdetail: "danhmuc-detail",
+      danhmuc_hethong: "danhmuc",
+      danhmuc_he_thong: "danhmuc",
+      danhmuc_hethong_detail: "danhmuc-detail",
+      danhmuc_he_thong_detail: "danhmuc-detail",
+      danhmuchesystem: "danhmuc",
+      danhmuchesystem_detail: "danhmuc-detail",
     };
     return aliases[clean] || clean;
   }
@@ -590,18 +633,33 @@ function initModal(selector) {
       return role?.display_name || role?.description || role?.name || "Vai trò";
     };
 
-    const getDepartmentSlug = (department) => {
-      if (!department) return "unknown";
-      if (department.department_code) {
-        return slugify(department.department_code);
+    const getDepartmentSlug = (userOrDepartment) => {
+      // Hỗ trợ cả object user (với flat fields) và object department (nested)
+      if (!userOrDepartment) return "unknown";
+      
+      // Nếu có department_code trực tiếp (flat field từ user)
+      const deptCode = userOrDepartment.department_code || userOrDepartment.department?.department_code;
+      if (deptCode) {
+        return slugify(deptCode);
       }
-      if (DEPT_OVERRIDES[department.name]) {
-        return DEPT_OVERRIDES[department.name];
+      
+      // Nếu có department_name trực tiếp (flat field từ user) hoặc nested
+      const deptName = userOrDepartment.department_name || userOrDepartment.department?.name || userOrDepartment.name;
+      if (deptName && DEPT_OVERRIDES[deptName]) {
+        return DEPT_OVERRIDES[deptName];
       }
-      return slugify(department.name);
+      if (deptName) {
+        return slugify(deptName);
+      }
+      
+      return "unknown";
     };
 
-    const getDepartmentLabel = (department) => department?.name || "Chưa phân";
+    const getDepartmentLabel = (userOrDepartment) => {
+      // Hỗ trợ cả object user (với flat fields) và object department (nested)
+      if (!userOrDepartment) return "Chưa phân";
+      return userOrDepartment.department_name || userOrDepartment.department?.name || userOrDepartment.name || "Chưa phân";
+    };
 
     const userFormModal = initModal("#manageUserModal");
     const userForm = userFormModal?.form;
@@ -814,7 +872,7 @@ function initModal(selector) {
           )}</span></div>`
         );
       }
-      const deptSlug = getDepartmentSlug(user.department);
+      const deptSlug = getDepartmentSlug(user);
       const statusClass = user.is_active ? "badge--dark" : "badge--muted";
       const statusLabel = STATUS_LABELS[user.is_active ? "active" : "locked"];
       return `<tr data-user-id="${escapeHtml(user.user_id)}" data-role="${escapeHtml(
@@ -835,7 +893,7 @@ function initModal(selector) {
           </div>
         </td>
         <td class="px-4 py-3">${buildRoleChips(user.roles)}</td>
-        <td class="px-4 py-3">${escapeHtml(getDepartmentLabel(user.department))}</td>
+        <td class="px-4 py-3">${escapeHtml(getDepartmentLabel(user))}</td>
         <td class="px-4 py-3">
           <div class="space-y-0.5">
             ${
@@ -924,7 +982,7 @@ function initModal(selector) {
           if (!hasRole) return false;
         }
         if (state.dept !== "all") {
-          if (getDepartmentSlug(user.department) !== state.dept) {
+          if (getDepartmentSlug(user) !== state.dept) {
             return false;
           }
         }
@@ -957,10 +1015,10 @@ function initModal(selector) {
       );
       const deptMap = new Map();
       cachedUsers.forEach((user) => {
-        const slug = getDepartmentSlug(user.department);
-        if (!slug) return;
+        const slug = getDepartmentSlug(user);
+        if (!slug || slug === "unknown") return;
         if (!deptMap.has(slug)) {
-          deptMap.set(slug, getDepartmentLabel(user.department));
+          deptMap.set(slug, getDepartmentLabel(user));
         }
       });
       const deptSelector = document.querySelector("#filterDeptSelect") ? "#filterDeptSelect" : "#ddDept";
@@ -2187,6 +2245,7 @@ function initModal(selector) {
     if (window.ApiClient && typeof initDanhMucApi === "function") {
       initDanhMucApi();
     }
+    loadDanhMucSummary();
     const tabButtons = $$('.seg-btn[data-tab]');
     if (!tabButtons.length) return;
     const searchInput = $("#dm-search");
@@ -2223,6 +2282,56 @@ function initModal(selector) {
     showTab(activeTab);
     loadRegisterBooks();
     loadNumberingSummary();
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.textContent = value;
+    }
+  }
+
+  async function loadDanhMucSummary() {
+    const api = window.ApiClient;
+    const setDash = (id) => setText(id, "-");
+    if (!api) {
+      ["kpi-doc-types", "kpi-doc-statuses", "kpi-priorities", "kpi-departments", "kpi-agencies"].forEach(
+        setDash
+      );
+      return;
+    }
+
+    const getCount = (response) => {
+      if (api.extractPageMeta) {
+        const meta = api.extractPageMeta(response);
+        if (meta?.count != null) return meta.count;
+      }
+      const items = api.extractItems ? api.extractItems(response) : [];
+      return Array.isArray(items) ? items.length : 0;
+    };
+
+    const tasks = [
+      { id: "kpi-doc-types", fn: () => api.catalog?.list("document-types", { page_size: 1 }) },
+      { id: "kpi-doc-statuses", fn: () => api.catalog?.list("document-statuses", { page_size: 1 }) },
+      { id: "kpi-priorities", fn: () => api.catalog?.list("urgency-levels", { page_size: 1 }) },
+      { id: "kpi-departments", fn: () => api.departments?.list({ page_size: 1 }) },
+      { id: "kpi-agencies", fn: () => api.organizations?.list({ page_size: 1 }) },
+    ];
+
+    tasks.forEach(({ id }) => setText(id, "…"));
+
+    await Promise.all(
+      tasks.map(async ({ id, fn }) => {
+        try {
+          const response = typeof fn === "function" ? await fn() : null;
+          if (!response) throw new Error("API not ready");
+          setText(id, formatNumber(getCount(response)));
+        } catch (error) {
+          console.warn(`[danhmuc] load KPI ${id} failed`, error);
+          setDash(id);
+        }
+      })
+    );
   }
 
   /* --------------------------- Cấu hình nâng cao --------------------------- */
@@ -3228,66 +3337,561 @@ function initModal(selector) {
   /* --------------------------- Hồ sơ lưu trữ --------------------------- */
   function initHoSoLuuTru() {
     const navButtons = $$('[data-archive-tab]');
-    if (!navButtons.length) return;
+    archiveAuthNoticeElement = document.getElementById("archiveAuthNotice");
+    setArchiveAuthNotice("");
+    const panels = $$('[data-archive-panel]');
+    if (!navButtons.length || !panels.length) return;
+
+    const setActiveState = (btn, isActive) => {
+      const activeClasses = ["bg-blue-600", "text-white", "shadow-sm"];
+      const inactiveClasses = ["bg-white", "text-slate-700"];
+      btn.classList.toggle("is-active", isActive);
+      activeClasses.forEach((cls) => btn.classList.toggle(cls, isActive));
+      inactiveClasses.forEach((cls) => btn.classList.toggle(cls, !isActive));
+    };
+
     const show = (tab) => {
-      navButtons.forEach((btn) => btn.classList.toggle("is-active", btn.dataset.archiveTab === tab));
-      $$('[id^="tab-"]').forEach((panel) => panel.classList.toggle("hidden", panel.id !== tab));
+      navButtons.forEach((btn) => setActiveState(btn, btn.dataset.archiveTab === tab));
+      panels.forEach((panel) => panel.classList.toggle("hidden", panel.dataset.archivePanel !== tab));
     };
     navButtons.forEach((btn) => btn.addEventListener("click", () => show(btn.dataset.archiveTab)));
-    show(navButtons[0].dataset.archiveTab);
+    const initialTab =
+      navButtons.find((btn) => btn.classList.contains("is-active"))?.dataset.archiveTab ||
+      navButtons[0].dataset.archiveTab;
+    if (initialTab) {
+      show(initialTab);
+    }
 
-    ["btn-restore", "btn-backup", "btn-archive"].forEach((id) => {
-      const btn = document.getElementById(id);
-      btn?.addEventListener("click", () => AdminRuntime.toast("Tính năng đang kết nối tới dịch vụ lưu trữ."));
+    document.getElementById("btn-backup")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      handleCreateBackup();
     });
-    loadArchiveMetrics();
+    document.getElementById("btn-restore")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      handleRestoreBackup();
+    });
+    document.getElementById("btn-archive")?.addEventListener("click", (event) => {
+      event.preventDefault();
+      handleArchiveQueue();
+    });
+
+    setupArchiveConfigForm();
+
+    loadArchiveSummary();
+    loadArchiveBackups();
+    loadArchiveQueue();
+    loadRetentionPolicies();
+    loadArchiveConfig();
   }
 
-  async function loadArchiveMetrics() {
-    const api = window.ApiClient;
+  async function loadArchiveSummary() {
+    const api = window.ApiClient?.archive;
     const totalEl = document.getElementById("archiveDocsTotal");
     const activeEl = document.getElementById("archiveCasesActive");
     const pendingEl = document.getElementById("archiveQueuePending");
     const latestEl = document.getElementById("archiveLatestSync");
     const progressBar = document.getElementById("archiveProgressBar");
-    if (!api?.documents || !api?.cases) {
-      if (totalEl) totalEl.textContent = "—";
-      if (activeEl) activeEl.textContent = "—";
-      if (pendingEl) pendingEl.textContent = "—";
-      if (latestEl) latestEl.textContent = "—";
+    const storageFallbackIds = [
+      "archiveStorageDocument",
+      "archiveStorageImage",
+      "archiveStorageVideo",
+      "archiveStorageOther",
+    ];
+    const placeholder = "—";
+    const applyPlaceholders = () => {
+      if (totalEl) totalEl.textContent = placeholder;
+      if (activeEl) activeEl.textContent = placeholder;
+      if (pendingEl) pendingEl.textContent = placeholder;
+      if (latestEl) latestEl.textContent = placeholder;
       if (progressBar) progressBar.style.width = "0%";
+      storageFallbackIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = placeholder;
+      });
+    };
+
+    if (!api?.summary) {
+      applyPlaceholders();
+      setArchiveAuthNotice("");
+      return;
+    }
+    const token = window.ApiClient?.getAccessToken?.();
+    if (!token) {
+      applyPlaceholders();
+      setArchiveAuthNotice("Đăng nhập để xem số liệu Hồ sơ & Lưu trữ.");
       return;
     }
     try {
-      const [docResp, caseResp] = await Promise.all([
-        api.documents.list({ ordering: "-created_at", page_size: 1 }),
-        api.cases.list({ ordering: "-created_at", page_size: 1 }),
-      ]);
-      const docMeta = api.extractPageMeta(docResp);
-      const caseMeta = api.extractPageMeta(caseResp);
-      const docs = api.extractItems(docResp);
-      const totalDocs = docMeta.totalItems || 0;
-      const totalCases = caseMeta.totalItems || 0;
-      if (totalEl) totalEl.textContent = totalDocs.toLocaleString("vi-VN");
-      if (activeEl) activeEl.textContent = totalCases.toLocaleString("vi-VN");
-      const pending = Math.max(totalDocs - totalCases, 0);
-      if (pendingEl) pendingEl.textContent = pending.toLocaleString("vi-VN");
+      const payload = await api.summary();
+      const data = payload?.data || payload;
+      if (!data) {
+        throw new Error("Thiếu dữ liệu lưu trữ.");
+      }
+      if (totalEl) totalEl.textContent = formatNumber(data.total_documents || 0);
+      if (activeEl) activeEl.textContent = formatNumber(data.total_cases || 0);
+      if (pendingEl) pendingEl.textContent = formatNumber(data.pending_queue || 0);
+      if (latestEl) {
+        latestEl.textContent = data.latest_sync ? formatDateTime(data.latest_sync) : "Chưa có";
+      }
       if (progressBar) {
-        const ratio = totalDocs ? Math.min(100, Math.round((totalCases / totalDocs) * 100)) : 0;
+        const storage = data.storage || {};
+        const ratio = storage.capacity_bytes
+          ? Math.min(100, Math.round((storage.total_bytes || 0) / storage.capacity_bytes * 100))
+          : 0;
         progressBar.style.width = `${ratio}%`;
       }
-      const latestDoc = docs[0];
-      if (latestEl) {
-        latestEl.textContent = latestDoc?.created_at ? formatDateTime(latestDoc.created_at) : "Chưa có";
-      }
+      updateArchiveStorageDisplay(data.storage);
+      setArchiveAuthNotice("");
     } catch (error) {
-      console.error("[quantri] loadArchiveMetrics failed", error);
-      if (totalEl) totalEl.textContent = "—";
-      if (activeEl) activeEl.textContent = "—";
-      if (pendingEl) pendingEl.textContent = "—";
-      if (latestEl) latestEl.textContent = "—";
-      if (progressBar) progressBar.style.width = "0%";
+      console.error("[quantri] loadArchiveSummary failed", error);
+      applyPlaceholders();
+      const message =
+        error?.status === 401
+          ? "Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại."
+          : "Không thể tải dữ liệu lưu trữ. Thử lại sau.";
+      setArchiveAuthNotice(message);
     }
+  }
+
+  function updateArchiveStorageDisplay(storage = {}) {
+    const breakdown = (storage.breakdown || []).reduce((acc, item) => {
+      acc[item.label] = Number(item.size_bytes) || 0;
+      return acc;
+    }, {});
+    const mapping = {
+      archiveStorageDocument: "Văn bản",
+      archiveStorageImage: "Hình ảnh",
+      archiveStorageVideo: "Đoạn phim",
+      archiveStorageOther: "Khác",
+    };
+    Object.entries(mapping).forEach(([elementId, label]) => {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      const value = breakdown[label] || 0;
+      el.textContent = value > 0 ? humanReadableStorage(value) : "—";
+    });
+  }
+
+  async function loadArchiveBackups() {
+    const api = window.ApiClient?.archive?.backups;
+    const container = document.getElementById("archiveBackupList");
+    if (!api || !container) return;
+    try {
+      const payload = await api.list();
+      const backups = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+        ? payload
+        : [];
+      archiveState.backups = backups;
+      renderArchiveBackups(backups);
+    } catch (error) {
+      console.error("[quantri] loadArchiveBackups failed", error);
+      renderArchiveBackups([]);
+    }
+  }
+
+  function renderArchiveBackups(backups) {
+    const container = document.getElementById("archiveBackupList");
+    const restoreSelect = document.getElementById("archiveRestoreSelect");
+    const hint = document.getElementById("archiveRestoreHint");
+    if (!container) return;
+    if (!Array.isArray(backups) || backups.length === 0) {
+      container.innerHTML =
+        '<li class="text-sm text-slate-500">Chưa có bản sao lưu nào.</li>';
+      if (restoreSelect) {
+        restoreSelect.innerHTML =
+          '<option value="">Chưa có bản sao lưu</option>';
+        restoreSelect.disabled = true;
+      }
+      if (hint) hint.textContent = "Vui lòng tạo bản sao lưu trước khi khôi phục.";
+      return;
+    }
+    const listItems = backups
+      .map((backup) => {
+        const timestamp = backup.created_at ? formatDateTime(backup.created_at) : "—";
+        const size = humanReadableStorage(Number(backup.size_bytes) || 0);
+        const durationMinutes = backup.duration_seconds
+          ? Math.round(backup.duration_seconds / 60)
+          : null;
+        const methodBadge = escapeHtml(backup.method_label || backup.method || "—");
+        const statusBadge = escapeHtml(backup.status_label || backup.status || "—");
+        return `
+          <li class="rounded-lg border border-slate-200 px-4 py-3 space-y-2">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+              <div class="flex-1 space-y-1">
+                <div class="font-medium">${escapeHtml(backup.title || "Sao lưu hệ thống")}</div>
+                <p class="text-[12px] text-slate-500">
+                  ${timestamp} • ${size} ${durationMinutes ? `• ${durationMinutes} phút` : ""}
+                </p>
+                <div class="flex flex-wrap gap-2 text-[11px] font-semibold">
+                  <span class="inline-flex px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                    ${methodBadge}
+                  </span>
+                  <span class="inline-flex px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700">
+                    ${statusBadge}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </li>
+        `;
+      })
+      .join("");
+    container.innerHTML = listItems;
+    if (restoreSelect) {
+      restoreSelect.disabled = false;
+      const options = backups
+        .map(
+          (backup) =>
+            `<option value="${escapeHtml(backup.backup_id)}">${escapeHtml(
+              backup.title || "Bản sao lưu"
+            )} • ${formatDateTime(backup.created_at)}</option>`
+        )
+        .join("");
+      restoreSelect.innerHTML =
+        '<option value="">Chọn bản sao lưu</option>' + options;
+    }
+    if (hint) {
+      hint.textContent = "Chọn bản sao lưu để khôi phục dữ liệu.";
+    }
+  }
+
+  async function loadArchiveQueue() {
+    const api = window.ApiClient?.archive?.queue;
+    const container = document.getElementById("archiveQueueList");
+    if (!api || !container) return;
+    try {
+      const payload = await api.list();
+      const items = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+        ? payload
+        : [];
+      renderArchiveQueue(items);
+    } catch (error) {
+      console.error("[quantri] loadArchiveQueue failed", error);
+      container.innerHTML =
+        '<li class="text-sm text-slate-500">Không thể tải hàng đợi lưu trữ.</li>';
+    }
+  }
+
+  function renderArchiveQueue(items) {
+    const container = document.getElementById("archiveQueueList");
+    if (!container) return;
+    if (!Array.isArray(items) || !items.length) {
+      container.innerHTML =
+        '<li class="text-sm text-slate-500">Không có tác vụ lưu trữ đang chạy.</li>';
+      return;
+    }
+    const rows = items
+      .map((item) => {
+        const progress = Math.min(100, Number(item.progress) || 0);
+        const size = humanReadableStorage(Number(item.size_bytes) || 0);
+        const metaLines = [
+          item.category ? `Danh mục: ${escapeHtml(item.category)}` : null,
+          size !== "0 GB" ? `Kích thước: ${size}` : null,
+        ]
+          .filter(Boolean)
+          .join(" • ");
+        const statusClasses = getQueueBadgeClasses(item.status);
+        const label = escapeHtml(item.label || "Tác vụ lưu trữ");
+        return `
+          <li class="rounded-lg border border-slate-200 p-4">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+              <div class="flex-1 space-y-1">
+                <div class="font-medium">${label}</div>
+                <p class="text-[12px] text-slate-500">${metaLines}</p>
+              </div>
+              <span class="inline-flex items-center rounded-full px-2.5 py-1 text-[12px] font-semibold ${statusClasses}">
+                ${escapeHtml(item.status_label || item.status || "—")}
+              </span>
+            </div>
+            <div class="mt-3 h-2 rounded-full bg-slate-200">
+              <div class="h-full rounded-full bg-slate-900" style="width: ${progress}%"></div>
+            </div>
+          </li>
+        `;
+      })
+      .join("");
+    container.innerHTML = rows;
+  }
+
+  async function loadRetentionPolicies() {
+    const api = window.ApiClient?.archive?.policies;
+    const container = document.getElementById("archivePolicyList");
+    if (!api || !container) return;
+    container.innerHTML =
+      '<tr><td colspan="7" class="px-4 py-3 text-sm text-slate-500">Đang tải quy định lưu trữ...</td></tr>';
+    try {
+      const payload = await api.list();
+      const policies = Array.isArray(payload?.data)
+        ? payload.data
+        : Array.isArray(payload)
+        ? payload
+        : [];
+      archiveState.policies = policies;
+      renderRetentionPolicies(policies);
+    } catch (error) {
+      console.error("[quantri] loadRetentionPolicies failed", error);
+      container.innerHTML =
+        '<tr><td colspan="7" class="px-4 py-3 text-sm text-rose-600">Không thể tải quy định.</td></tr>';
+    }
+  }
+
+  function renderRetentionPolicies(policies) {
+    const container = document.getElementById("archivePolicyList");
+    if (!container) return;
+    if (!Array.isArray(policies) || !policies.length) {
+      container.innerHTML =
+        '<tr><td colspan="7" class="px-4 py-3 text-sm text-slate-500">Chưa có quy định lưu trữ.</td></tr>';
+      return;
+    }
+    const rows = policies
+      .map((policy) => {
+        const statusClasses = getPolicyBadgeClasses(policy.status);
+        const nextReview = policy.next_review_at
+          ? new Date(policy.next_review_at).toLocaleDateString("vi-VN")
+          : "Chưa có";
+        return `
+          <tr class="hover:bg-slate-50/60">
+            <td class="px-4 py-3">
+              ${escapeHtml(policy.name)}
+              <div class="text-[12px] text-slate-500">
+                ${escapeHtml(policy.description || "—")}
+              </div>
+            </td>
+            <td class="px-4 py-3">
+              <span class="badge">${escapeHtml(policy.category || "—")}</span>
+            </td>
+            <td class="px-4 py-3">${escapeHtml(String(policy.retention_years || "—"))} năm</td>
+            <td class="px-4 py-3">${formatNumber(policy.quantity || 0)}</td>
+            <td class="px-4 py-3">
+              <span class="badge ${statusClasses}">${escapeHtml(policy.status_label || policy.status || "—")}</span>
+            </td>
+            <td class="px-4 py-3">${escapeHtml(nextReview)}</td>
+            <td class="px-4 py-3">
+              <div class="flex gap-2">
+                <button
+                  data-policy-edit="${policy.policy_id}"
+                  class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
+                >
+                  Chỉnh sửa
+                </button>
+                <button
+                  data-policy-review="${policy.policy_id}"
+                  class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
+                >
+                  Rà soát
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+    container.innerHTML = rows;
+    container.querySelectorAll("[data-policy-edit]").forEach((btn) => {
+      btn.addEventListener("click", () => handlePolicyEdit(btn.dataset.policyEdit));
+    });
+    container.querySelectorAll("[data-policy-review]").forEach((btn) => {
+      btn.addEventListener("click", () => handlePolicyReview(btn.dataset.policyReview));
+    });
+  }
+
+  function getPolicyBadgeClasses(status) {
+    if (status === "review") {
+      return "bg-amber-50 border-amber-200 text-amber-700";
+    }
+    if (status === "archived") {
+      return "bg-slate-100 border-slate-200 text-slate-500";
+    }
+    return "bg-emerald-50 border-emerald-200 text-emerald-700";
+  }
+
+  function getQueueBadgeClasses(status) {
+    if (status === "completed") {
+      return "bg-emerald-50 border-emerald-200 text-emerald-700";
+    }
+    if (status === "processing") {
+      return "bg-blue-50 border-blue-200 text-blue-700";
+    }
+    if (status === "failed") {
+      return "bg-rose-50 border-rose-200 text-rose-700";
+    }
+    return "bg-amber-50 border-amber-200 text-amber-700";
+  }
+
+  async function handleCreateBackup() {
+    const api = window.ApiClient?.archive?.backups;
+    if (!api) {
+      AdminRuntime.toast("Không thể tạo sao lưu lúc này.", "error");
+      return;
+    }
+    try {
+      await api.create({ method: "manual" });
+      AdminRuntime.toast("Đã tạo yêu cầu sao lưu.", "success");
+      loadArchiveBackups();
+      loadArchiveQueue();
+    } catch (error) {
+      console.error("[quantri] create backup failed", error);
+      AdminRuntime.toast(resolveApiError(error), "error");
+    }
+  }
+
+  async function handleRestoreBackup() {
+    const select = document.getElementById("archiveRestoreSelect");
+    if (!select || !select.value) {
+      AdminRuntime.toast("Chọn bản sao lưu để khôi phục.", "warn");
+      return;
+    }
+    const api = window.ApiClient?.archive?.backups;
+    if (!api) {
+      AdminRuntime.toast("Không thể thực hiện khôi phục lúc này.", "error");
+      return;
+    }
+    try {
+      await api.restore(select.value);
+      AdminRuntime.toast("Yêu cầu khôi phục đang chờ xử lý.", "success");
+      loadArchiveQueue();
+    } catch (error) {
+      console.error("[quantri] restore backup failed", error);
+      AdminRuntime.toast(resolveApiError(error), "error");
+    }
+  }
+
+  async function handleArchiveQueue() {
+    const api = window.ApiClient?.archive?.queue;
+    if (!api) {
+      AdminRuntime.toast("Không thể đưa vào hàng đợi.", "error");
+      return;
+    }
+    try {
+      await api.create({ label: "Lưu trữ thủ công", category: "manual" });
+      AdminRuntime.toast("Đã thêm vào hàng đợi lưu trữ.", "success");
+      loadArchiveQueue();
+    } catch (error) {
+      console.error("[quantri] archive queue action failed", error);
+      AdminRuntime.toast(resolveApiError(error), "error");
+    }
+  }
+
+  function setupArchiveConfigForm() {
+    const form = document.getElementById("archiveConfigForm");
+    if (!form) return;
+    form.addEventListener("submit", (event) => saveArchiveConfig(event));
+  }
+
+  async function loadArchiveConfig() {
+    const api = window.ApiClient?.systemSettings;
+    const feedback = document.getElementById("archiveConfigFeedback");
+    if (!api) {
+      if (feedback) feedback.textContent = "Không thể tải cấu hình.";
+      return;
+    }
+    try {
+      const payload = await api.allSettings();
+      const settings = payload?.data || payload || {};
+      setSelectValue("archiveConfigFrequency", settings.archive_auto_backup_frequency, "daily_02:00");
+      setSelectValue("archiveConfigRetention", settings.archive_backup_retention_count, "30");
+      setSelectValue("archiveConfigThreshold", settings.archive_alert_threshold, "80");
+      setSelectValue(
+        "archiveConfigAutoArchive",
+        settings.archive_auto_archive_enabled === undefined ||
+          settings.archive_auto_archive_enabled === null
+          ? "true"
+          : String(settings.archive_auto_archive_enabled)
+      );
+      if (feedback) feedback.textContent = "";
+    } catch (error) {
+      console.error("[quantri] loadArchiveConfig failed", error);
+      if (feedback) {
+        feedback.textContent = "Không thể tải cấu hình.";
+      }
+    }
+  }
+
+  async function saveArchiveConfig(event) {
+    event?.preventDefault();
+    const api = window.ApiClient?.systemSettings;
+    const form = document.getElementById("archiveConfigForm");
+    const feedback = document.getElementById("archiveConfigFeedback");
+    const button = document.getElementById("archiveConfigSave");
+    if (!api || !form) return;
+    const frequency = form.elements["archive_auto_backup_frequency"]?.value || "daily_02:00";
+    const retention = Number(form.elements["archive_backup_retention_count"]?.value) || 30;
+    const threshold = Number(form.elements["archive_alert_threshold"]?.value) || 80;
+    const autoArchive =
+      form.elements["archive_auto_archive_enabled"]?.value === "true";
+    if (button) {
+      button.disabled = true;
+    }
+    try {
+      await api.bulkUpdate({
+        archive_auto_backup_frequency: frequency,
+        archive_backup_retention_count: retention,
+        archive_alert_threshold: threshold,
+        archive_auto_archive_enabled: autoArchive,
+      });
+      if (feedback) feedback.textContent = "Đã lưu cấu hình.";
+      AdminRuntime.toast("Cấu hình lưu trữ đã được cập nhật.", "success");
+    } catch (error) {
+      console.error("[quantri] saveArchiveConfig failed", error);
+      if (feedback) feedback.textContent = "Không thể lưu cấu hình.";
+      AdminRuntime.toast(resolveApiError(error), "error");
+    } finally {
+      if (button) {
+        button.disabled = false;
+      }
+    }
+  }
+
+  function setSelectValue(id, value, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (value === undefined || value === null) {
+      el.value = fallback || "";
+      return;
+    }
+    el.value = String(value);
+  }
+
+  function handlePolicyEdit(policyId) {
+    const policy = archiveState.policies.find((item) => String(item.policy_id) === String(policyId));
+    if (!policy) return;
+    const input = window.prompt("Thời hạn lưu trữ (năm)", policy.retention_years || "0");
+    if (input === null) return;
+    const retentionYears = Number.parseInt(input, 10);
+    if (!Number.isFinite(retentionYears)) {
+      AdminRuntime.toast("Thời hạn không hợp lệ.", "error");
+      return;
+    }
+    window.ApiClient?.archive?.policies?.update?.(policy.policy_id, {
+      retention_years: retentionYears,
+    }).then(() => {
+      AdminRuntime.toast("Đã cập nhật quy định.", "success");
+      loadRetentionPolicies();
+    }).catch((error) => {
+      console.error("[quantri] update policy failed", error);
+      AdminRuntime.toast(resolveApiError(error), "error");
+    });
+  }
+
+  function handlePolicyReview(policyId) {
+    const policy = archiveState.policies.find((item) => String(item.policy_id) === String(policyId));
+    if (!policy) return;
+    const defaultDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const input = window.prompt("Ngày rà soát mới (YYYY-MM-DD)", policy.next_review_at || defaultDate);
+    if (!input) return;
+    window.ApiClient?.archive?.policies?.review?.(policy.policy_id, {
+      next_review_at: input,
+    }).then(() => {
+      AdminRuntime.toast("Đã đặt lịch rà soát.", "success");
+      loadRetentionPolicies();
+    }).catch((error) => {
+      console.error("[quantri] review policy failed", error);
+      AdminRuntime.toast(resolveApiError(error), "error");
+    });
   }
   /* --------------------------- Thông báo & nhắc việc --------------------------- */
   function initThongBao() {

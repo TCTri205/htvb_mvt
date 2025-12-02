@@ -3,9 +3,12 @@ from enum import StrEnum
 from typing import Any, Iterable, Optional
 import string
 import unicodedata
+import logging
 from django.apps import apps
 
 from .errors import PermissionDenied
+
+logger = logging.getLogger(__name__)
 
 # ===== Vai trò cốt lõi =====
 class Role(StrEnum):
@@ -112,6 +115,7 @@ PERM_CODE = {
     Act.LD_REQUEST_CHANGES_OUTBOUND: "DOC.OUT.RETURN",
     Act.LD_APPROVE_OUTBOUND: "DOC.OUT.APPROVE",
     Act.VT_ISSUE_OUTBOUND: "DOC.OUT.PUBLISH",
+    Act.VT_REGISTER_OUTBOUND: "DOC.OUT.REGISTER",
     Act.QT_CANCEL_ISSUED_OUTBOUND: "DOC.OUT.WITHDRAW",
     Act.VT_ARCHIVE_OUTBOUND: "DOC.OUT.ARCHIVE",
 
@@ -205,6 +209,8 @@ ROLE_ACTIONS = {
         Act.VIEW, Act.REPORT_EXPORT,
         Act.QT_RECALL_INBOUND, Act.QT_CANCEL_ISSUED_OUTBOUND, Act.QT_FIX_STATE_MANUALLY,
         Act.CASE_ARCHIVE,
+        # Allow QT to perform VT actions for testing/operation
+        Act.VT_CREATE_INBOUND, Act.VT_UPDATE_METADATA, Act.VT_REGISTER_INBOUND,
     },
     Role.VT: {
         Act.VIEW, Act.REPORT_EXPORT,
@@ -216,7 +222,7 @@ ROLE_ACTIONS = {
         Act.VT_ISSUE_OUTBOUND, Act.VT_ARCHIVE_OUTBOUND,
         Act.IN_LINK, Act.IN_IMPORT_EXPORT,
         Act.CASE_CREATE, Act.CASE_WAIT_ASSIGN,
-        Act.CASE_ARCHIVE,
+        Act.CASE_ARCHIVE, Act.CASE_REQUEST_CLOSE,
         Act.CONFIG_REGISTER_BOOK, Act.CONFIG_NUMBERING_RULE, Act.CONFIG_TEMPLATE,
     },
     Role.CV: {
@@ -232,6 +238,7 @@ ROLE_ACTIONS = {
         Act.LD_ASSIGN_OFFICER, Act.LD_APPROVE_INBOUND, Act.LD_REQUEST_CHANGES_INBOUND,
         Act.LD_HANDLE_CLERK_REJECTION,
         Act.LD_REQUEST_CHANGES_OUTBOUND, Act.LD_APPROVE_OUTBOUND, Act.LD_REQUEST_CHANGES_FROM_CLERK,
+        Act.VT_REGISTER_OUTBOUND, # Allow LD to register outbound documents
         Act.QT_CANCEL_ISSUED_OUTBOUND,
         Act.IN_LINK,
         Act.CASE_CREATE, Act.CASE_WAIT_ASSIGN, Act.CASE_ASSIGN, Act.CASE_REASSIGN,
@@ -431,6 +438,15 @@ def _is_case_assignee(user, case) -> bool:
                                role_on_case='assignee').exists()
 
 
+def _is_case_watcher(user, case) -> bool:
+    Part = _get_model('cases', 'CaseParticipant')
+    if Part is None or case is None:
+        return False
+    return Part.objects.filter(case_id=getattr(case, "case_id", None),
+                               user_id=getattr(user, "user_id", None),
+                               role_on_case='watcher').exists()
+
+
 def _is_case_owner(user, case) -> bool:
     if case is None:
         return False
@@ -449,24 +465,81 @@ def can(user, act: Act, obj=None) -> bool:
     if act in (Act.CASE_ASSIGN, Act.CASE_REASSIGN, Act.CASE_APPROVE_CLOSE):
         return role_code == Role.LD.value
 
-    # 1) Ưu tiên kiểm DB nếu có
     db_has = _has_permission_db(user, act)
-    if db_has is not None:
+    db_checked = db_has is not None
+
+    # 1) Quy tắc riêng cho hành động dự thảo (CV) — không khóa cứng bởi bảng permission
+    cv_draft_actions = {Act.CV_CREATE_DRAFT, Act.CV_UPDATE_DRAFT, Act.CV_SUBMIT_DRAFT}
+    if act in cv_draft_actions:
+        # Nếu DB cấp quyền rõ ràng thì chấp nhận ngay
+        if db_has is True:
+            return True
+
+        # Chỉ CV (hoặc superuser) mới được dùng nhánh fallback này
+        if role_code not in (Role.CV.value, Role.QT.value) and not getattr(user, "is_superuser", False):
+            return False
+
+        if act == Act.CV_CREATE_DRAFT:
+            return True
+
+        # Update/Submit: Allow CV to edit/submit ANY draft document for collaboration
+        if obj is None:
+            logger.info(f"[RBAC] {act}: No document object, allowing based on CV role")
+            return True
+
+        from .status_resolver import StatusResolver as SR, OutboundStatus
+        draft_status_id = SR.doc_status_id(OutboundStatus.DRAFT.value)
+        doc_status_id = getattr(obj, "status_id", None)
+        doc_id = getattr(obj, "document_id", "N/A")
+        user_id = getattr(user, "user_id", None)
+        doc_created_by_id = getattr(obj, "created_by_id", None)
+        
+        logger.info(
+            f"[RBAC] {act} check: doc_status_id={doc_status_id}, draft_status_id={draft_status_id}, "
+            f"doc_id={doc_id}, user_id={user_id}, created_by_id={doc_created_by_id}"
+        )
+
+        # CRITICAL FIX: CV can submit/edit ANY DRAFT document (collaborative workflow)
+        if doc_status_id == draft_status_id:
+            logger.info(f"[RBAC] {act}: Document is DRAFT (status_id={doc_status_id}), allowing CV to proceed - ALLOWED")
+            return True
+
+        # For non-DRAFT documents, check creator or assignee
+        logger.info(f"[RBAC] {act}: Non-DRAFT document (status_id={doc_status_id}), checking creator/assignee")
+
+        if doc_created_by_id and doc_created_by_id == user_id:
+            logger.info(f"[RBAC] {act}: User is creator - ALLOWED")
+            return True
+
+        is_assignee = _is_doc_assignee(user, obj)
+        logger.info(f"[RBAC] {act}: is_assignee={is_assignee}")
+        
+        if not is_assignee and db_has is False:
+            logger.warning(f"[RBAC] {act}: Not creator, not assignee, DB denied - REJECTED")
+            return False
+        
+        return is_assignee
+
+    # 2) Ưu tiên kết quả DB cho các hành động khác
+    if db_checked:
         return bool(db_has)
 
-    # 2) Fallback ma trận tĩnh
+    # 3) Fallback ma trận tĩnh
     if not role_code:
         return False
     allowed = ROLE_ACTIONS.get(Role(role_code), set())
     if act not in allowed:
         return False
 
-    # 3) Quy tắc động theo đối tượng
+    # 4) Quy tắc động theo đối tượng
+    # Inbound: CV must be assignee
     if act == Act.CV_START_PROCESSING:
         return _is_doc_assignee(user, obj)
     if act == Act.CV_SUBMIT_FOR_APPROVAL:
         # CV phải là assignee; LD được phép chỉ đạo hoàn tất
         return _is_doc_assignee(user, obj) or role_code == Role.LD.value
+    
+    # Case actions
     if act in (Act.CASE_START, Act.CASE_PAUSE, Act.CASE_RESUME, Act.CASE_REQUEST_CLOSE):
         is_assignee = _is_case_assignee(user, obj)
         is_owner = _is_case_owner(user, obj)
@@ -476,7 +549,17 @@ def can(user, act: Act, obj=None) -> bool:
         if act in (Act.CASE_PAUSE, Act.CASE_RESUME):
             return is_assignee or is_owner or (role_code == Role.LD.value and is_leader)
         if act == Act.CASE_REQUEST_CLOSE:
-            return is_assignee or is_owner or (role_code == Role.LD.value and is_leader)
+            is_watcher = _is_case_watcher(user, obj)
+            return is_assignee or is_owner or is_watcher or (role_code == Role.LD.value and is_leader)
+            
+    # Fallback for VT_REGISTER_OUTBOUND if not caught by DB or ROLE_ACTIONS
+    if act == Act.VT_REGISTER_OUTBOUND:
+        # If DB said NO explicitly, return False
+        if db_checked and db_has is False:
+            return False
+        # Otherwise, if role is VT or LD (added for flexibility), allow it
+        if role_code in (Role.VT.value, Role.LD.value):
+            return True
 
     return True
 

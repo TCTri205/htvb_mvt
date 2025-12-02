@@ -19,8 +19,14 @@
                   {{ case.case_code }}
                 </span>
               </div>
-              <!-- bỏ các nút 'Thêm nhiệm vụ' và 'Cập nhật trạng thái' cho CV -->
+              <!-- Action Buttons for CV -->
               <div class="flex items-center gap-2">
+                <button
+                  class="hidden h-9 rounded-md bg-blue-600 px-3 text-sm font-medium text-white hover:bg-blue-700 shadow-sm"
+                  data-action="submit"
+                >
+                  Trình lãnh đạo
+                </button>
                 <button
                   class="hidden h-9 rounded-md bg-rose-600 px-3 text-sm font-medium text-white hover:bg-rose-700 shadow-sm"
                   data-action="request-close"

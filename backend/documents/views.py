@@ -9,7 +9,7 @@ from django.core.files.storage import default_storage
 from django.http import FileResponse, Http404
 from django.db.models import Count
 from django.utils import timezone
-from rest_framework import status, viewsets
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, SAFE_METHODS
 from rest_framework.response import Response
@@ -657,8 +657,13 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class DispatchViewSet(viewsets.GenericViewSet):
+class DispatchViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    viewsets.GenericViewSet,
+):
     queryset = DispatchOutbox.objects.select_related("document").all()
+    ordering = ("-sent_at", "-dispatch_id")
     serializer_class = DocumentDispatchSerializer
     permission_classes = [IsAuthenticated]
     lookup_field = "dispatch_id"

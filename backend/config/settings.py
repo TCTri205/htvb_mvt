@@ -140,6 +140,7 @@ INSTALLED_APPS = [
     "reports",
     "audit",
     "systemapps",
+    "archive",
     "analytics",  # Analytics & Reports API
     "ui",
     "core.apps.CoreConfig",
@@ -228,20 +229,14 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 MEDIA_URL = "/media/"
 MEDIA_ROOT = (BASE_DIR / get_str("MEDIA_ROOT", "media")).resolve()
 
-# =============================================================================
-# DRF & OpenAPI
-# =============================================================================
+
 REST_FRAMEWORK = {
-    # Auth: CHỈ dùng JWT để biên 401/403 rõ ràng cho SPA (tránh CSRF noise qua SessionAuth)
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-
     "DEFAULT_PAGINATION_CLASS": "core.pagination.DefaultPageNumberPagination",
     "PAGE_SIZE": 20,
 

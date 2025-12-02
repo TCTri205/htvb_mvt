@@ -353,6 +353,27 @@ class CaseViewSet(viewsets.ModelViewSet):
             assignee = User.objects.filter(**{USER_PK_FIELD: assignee_id}).first()
             if assignee is None:
                 return Response({"detail": "Người được giao không hợp lệ."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate: Assignee must not be a Clerk (VT)
+            # Use rbac helper to get user role instead of direct attribute access
+            assignee_role = rbac.get_single_role_code(assignee)
+            if assignee_role == Role.VT.value:
+                return Response(
+                    {"detail": "Không thể giao nhiệm vụ cho Văn thư. Văn thư chỉ có vai trò theo dõi."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validate: Assignee must be a participant with ASSIGNEE or COOWNER role (not WATCHER)
+            participant = CaseParticipant.objects.filter(
+                case=case,
+                user=assignee,
+                role_on_case__in=[CaseParticipant.RoleOnCase.ASSIGNEE, CaseParticipant.RoleOnCase.COOWNER]
+            ).first()
+            if participant is None:
+                return Response(
+                    {"detail": "Người được giao phải là thành viên phụ trách hoặc đồng phụ trách của hồ sơ."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
         elif role_code == Role.CV.value:
             assignee = request.user
 
@@ -392,7 +413,7 @@ class CaseViewSet(viewsets.ModelViewSet):
         is_participant_assignee = CaseParticipant.objects.filter(
             case=case, 
             user=request.user, 
-            role_on_case__in=[CaseParticipant.RoleOnCase.ASSIGNEE, CaseParticipant.RoleOnCase.COOWNER]
+            role_on_case__in=[CaseParticipant.RoleOnCase.ASSIGNEE, CaseParticipant.RoleOnCase.COOWNER, CaseParticipant.RoleOnCase.WATCHER]
         ).exists()
         
         if not (is_owner or is_participant_assignee):

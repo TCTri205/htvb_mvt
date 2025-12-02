@@ -32,7 +32,7 @@
     setupHeaderInteractions();
 
     const handlers = {
-      dashboard: animateDashboardProgress,
+      dashboard: initDashboardPage,
       vanbanden: initVanBanDen,
       "vanbanden-detail": initVanBanDenDetailPage,
       vanbandi: initVanBanDi,
@@ -120,6 +120,398 @@
       ...document.getElementsByClassName("bg-blue-600")
     );
     fallback.forEach((bar) => animateBar(bar, calculatePercentWidth(bar)));
+  }
+
+  function initDashboardPage() {
+    animateDashboardProgress();
+    const layout = window.Layout || {};
+    const ready =
+      layout.authPromise && typeof layout.authPromise.then === "function"
+        ? layout.authPromise
+        : Promise.resolve();
+    ready
+      .then(loadDashboardWidgets)
+      .catch((error) =>
+        console.error("[chuyenvien] Không thể xác thực dashboard:", error)
+      );
+  }
+
+  async function loadDashboardWidgets() {
+    const api = window.ApiClient;
+    const helpers = window.DocHelpers;
+    if (!api || typeof api.request !== "function") {
+      console.warn("[chuyenvien] ApiClient chưa sẵn sàng; bỏ qua dashboard.");
+      return;
+    }
+    try {
+      const response = await api.request("/api/v1/analytics/leader-dashboard", {
+        params: { scope: "personal" },
+      });
+      const payload = response?.data;
+      if (!response?.success || !payload) {
+        console.warn("[chuyenvien] API dashboard trả về dữ liệu không hợp lệ.");
+        return;
+      }
+      updateDashboardKPIs(payload);
+      renderPendingDocuments(payload.pending_documents || [], helpers);
+      renderApprovalTimeline(payload.approval_timeline || [], helpers);
+      renderTaskProgress(payload.task_progress || {}, helpers);
+      renderNotifications(payload.notifications || [], helpers);
+      animateDashboardProgress();
+    } catch (error) {
+      console.error("[chuyenvien] Lỗi tải dashboard:", error);
+    }
+  }
+
+  function updateDashboardKPIs(payload) {
+    const totals = payload.pending_counts || {};
+    const pendingCount =
+      (Number.isFinite(totals.approval) ? totals.approval : 0) +
+      (Number.isFinite(totals.sign) ? totals.sign : 0);
+    const task = payload.task_progress || {};
+    const completed = Number.isFinite(task.completed) ? task.completed : 0;
+    const totalTasks = Number.isFinite(task.total) ? task.total : 0;
+    const rate = totalTasks ? Math.round((completed / totalTasks) * 100) : 0;
+    setText("[data-kpi=\"vb-can-xu-ly\"]", pendingCount);
+    setText("[data-kpi=\"task-done\"]", completed);
+    setText("[data-kpi=\"task-total\"]", totalTasks);
+    const rateNode = document.querySelector("[data-kpi=\"task-rate\"]");
+    if (rateNode) {
+      rateNode.textContent = `${rate}%`;
+    }
+    const progressBar = document.querySelector("[data-kpi=\"task-progress-bar\"]");
+    if (progressBar) {
+      progressBar.dataset.progressValue = String(rate);
+      progressBar.parentElement?.setAttribute("aria-valuenow", String(rate));
+    }
+    setText(
+      "[data-kpi=\"notif-unread\"]",
+      (payload.notifications || []).filter((item) => !item.read).length
+    );
+  }
+
+  function renderPendingDocuments(items, helpers) {
+    const list = document.getElementById("vb-list");
+    if (!list) return;
+    const escape = createEscaper(helpers);
+    const rows = Array.isArray(items) ? items.slice(0, 6) : [];
+    if (!rows.length) {
+      list.innerHTML =
+        '<li class="px-4 py-6 text-center text-[13px] text-slate-500">Không có văn bản cần xử lý trong thời điểm này.</li>';
+      return;
+    }
+    list.innerHTML = rows
+      .map((item) => renderPendingDocItem(item, escape))
+      .join("");
+  }
+
+  function renderPendingDocItem(item, escape) {
+    const title = escape(item.title || "Văn bản");
+    const code = item.code ? `Số: ${escape(item.code)}` : "";
+    const due = formatDashboardDate(item.due_at);
+    const dueSpan = due
+      ? `<span class="font-medium text-slate-600">Hạn: ${escape(due)}</span>`
+      : "";
+    const meta = [code, dueSpan].filter(Boolean).join(" · ");
+    const deptLine = item.department
+      ? `<div class="text-[12px] text-slate-500">Đơn vị xử lý: ${escape(
+          item.department
+        )}</div>`
+      : "";
+    const statusLabel = item.status || "Chưa xác định";
+    const badgeClass = getStatusChipClass(statusLabel, !!item.is_overdue);
+    return `
+      <li class="px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-50/60">
+        <div class="min-w-0">
+          <p class="font-medium text-slate-900 truncate">${title}</p>
+          <p class="text-[12.5px] text-slate-500 mt-0.5">${meta || "Đang cập nhật"}</p>
+          ${deptLine}
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClass}">${escape(
+            statusLabel
+          )}</span>
+          <button
+            class="grid place-items-center w-7 h-7 rounded-full hover:bg-slate-100"
+            title="Chi tiết"
+            type="button"
+            aria-label="Chi tiết ${title}"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10 3a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 8.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3zM10 14a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/>
+            </svg>
+          </button>
+        </div>
+      </li>
+    `;
+  }
+
+  function renderApprovalTimeline(items, helpers) {
+    const list = document.querySelector(
+      "[data-source=\"document_workflow_logs\"]"
+    );
+    if (!list) return;
+    if (!Array.isArray(items) || !items.length) {
+      list.innerHTML =
+        '<li class="px-4 py-6 text-center text-[13px] text-slate-500">Không có nhật ký xử lý gần đây.</li>';
+      return;
+    }
+    const escape = createEscaper(helpers);
+    list.innerHTML = items
+      .slice(0, 6)
+      .map((item) => renderTimelineItem(item, escape))
+      .join("");
+  }
+
+  function renderTimelineItem(item, escape) {
+    const title = escape(
+      item.title || (item.code ? item.code : "Nhật ký xử lý")
+    );
+    const actionText = escape(item.action || "Log");
+    const timestamp = formatDashboardDateTime(item.timestamp);
+    const actor = item.actor ? ` — ${escape(item.actor)}` : "";
+    const statusLine = item.status
+      ? `<p class="text-[12px] text-slate-400">Trạng thái: ${escape(
+          item.status
+        )}</p>`
+      : "";
+    const noteLine = item.note
+      ? `<p class="text-[12px] text-slate-400">Ghi chú: ${escape(item.note)}</p>`
+      : "";
+    const badgeClass = getTimelineBadgeClass(item.status, item.is_overdue);
+    return `
+      <li class="px-4 py-3 flex items-center justify-between hover:bg-slate-50/60">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 text-blue-600 font-semibold text-[13px]">LOG</div>
+          <div>
+            <p class="font-medium">${title}</p>
+            <p class="text-[12.5px] text-slate-500">
+              ${timestamp}${actor}
+            </p>
+            ${statusLine}
+            ${noteLine}
+          </div>
+        </div>
+        <span class="px-3 py-1.5 rounded-md ${badgeClass} text-[12px] font-medium text-slate-700">
+          ${actionText}
+        </span>
+      </li>
+    `;
+  }
+
+  function renderTaskProgress(taskProgress, helpers) {
+    const list = document.getElementById("task-list");
+    if (!list) return;
+    const escape = createEscaper(helpers);
+    const completed = Number.isFinite(taskProgress.completed)
+      ? taskProgress.completed
+      : 0;
+    const total = Number.isFinite(taskProgress.total) ? taskProgress.total : 0;
+    const rate = total ? Math.round((completed / total) * 100) : 0;
+    setText("[data-kpi=\"task-done\"]", completed);
+    setText("[data-kpi=\"task-total\"]", total);
+    const rateNode = document.querySelector("[data-kpi=\"task-rate\"]");
+    if (rateNode) {
+      rateNode.textContent = `${rate}%`;
+    }
+    const progressBar = document.querySelector("[data-kpi=\"task-progress-bar\"]");
+    if (progressBar) {
+      progressBar.dataset.progressValue = String(rate);
+      progressBar.parentElement?.setAttribute("aria-valuenow", String(rate));
+    }
+    const items = Array.isArray(taskProgress.items)
+      ? taskProgress.items.slice(0, 6)
+      : [];
+    if (!items.length) {
+      list.innerHTML =
+        '<li class="text-[13px] text-slate-500 text-center">Chưa có nhiệm vụ được ghi nhận.</li>';
+      return;
+    }
+    list.innerHTML = items
+      .map((task) => renderTaskItem(task, escape))
+      .join("");
+  }
+
+  function renderTaskItem(task, escape) {
+    const title = escape(task.title || "Công việc");
+    const due = formatDashboardDate(task.due_at);
+    const status = task.status || "Chưa xác định";
+    const badgeClass = getTaskBadgeClass(status);
+    const dueLine = due
+      ? `<div class="text-[12px] text-slate-500">Hạn: ${escape(due)}</div>`
+      : "";
+    return `
+      <li class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+        <div class="flex-1 min-w-0">
+          <p class="text-[14px] font-medium truncate">${title}</p>
+          ${dueLine}
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">
+          ${escape(status)}
+        </span>
+      </li>
+    `;
+  }
+
+  function renderNotifications(items, helpers) {
+    const list = document.querySelector("#thong-bao-moi [data-source=\"notifications\"]");
+    if (!list) return;
+    const escape = createEscaper(helpers);
+    if (!Array.isArray(items) || !items.length) {
+      list.innerHTML =
+        '<li class="px-3 py-3 rounded-lg border-b border-slate-100"><div class="flex items-start gap-3"><div class="mt-0.5 text-blue-600">🔔</div><div class="flex-1"><p class="font-medium text-[14px] text-slate-500">Không có thông báo mới</p></div></div></li>';
+      return;
+    }
+    list.innerHTML = items
+      .map((item, index) => renderNotificationItem(item, escape, index === items.length - 1))
+      .join("");
+  }
+
+  function renderNotificationItem(item, escape, isLast) {
+    const title = escape(item.title || "Thông báo");
+    const body = escape(item.body || "");
+    const time = formatDashboardDateTime(item.sent_at);
+    const hasLink = Boolean(item.link);
+    const link = sanitizeLink(item.link);
+    const heading = hasLink && link
+      ? `<a href="${link}" class="hover:underline" target="_blank" rel="noreferrer">${title}</a>`
+      : title;
+    const unreadDot = item.read
+      ? ""
+      : '<span class="w-2 h-2 rounded-full bg-blue-600 mt-2" aria-label="Chưa đọc"></span>';
+    const borderClass = isLast ? "" : "border-b border-slate-100";
+    return `
+      <li class="px-3 py-3 rounded-lg hover:bg-slate-50 ${borderClass}">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 text-blue-600">🔔</div>
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-[14px]">${heading}</p>
+            <p class="text-[12.5px] text-slate-500">${body}</p>
+            <div class="text-[12px] text-slate-400 mt-1">${time}</div>
+          </div>
+          ${unreadDot}
+        </div>
+      </li>
+    `;
+  }
+
+  function setText(selector, value) {
+    const el = document.querySelector(selector);
+    if (!el) return;
+    el.textContent = String(value ?? "");
+  }
+
+  function createEscaper(helpers) {
+    return (value) => {
+      if (!value && value !== 0) return "";
+      if (helpers?.escapeHtml) {
+        return helpers.escapeHtml(String(value));
+      }
+      return String(value);
+    };
+  }
+
+  function formatDashboardDate(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (!Number.isNaN(date.getTime())) {
+      return [
+        String(date.getDate()).padStart(2, "0"),
+        String(date.getMonth() + 1).padStart(2, "0"),
+        date.getFullYear(),
+      ].join("/");
+    }
+    const trimmed = String(value).split("T")[0];
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(trimmed)) {
+      const [y, m, d] = trimmed.split("-");
+      return `${d}/${m}/${y}`;
+    }
+    return String(value);
+  }
+
+  function formatDashboardDateTime(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleString("vi-VN", { hour12: false });
+  }
+
+  function getStatusChipClass(status, isOverdue) {
+    if (isOverdue) {
+      return "bg-rose-50 text-rose-700";
+    }
+    const text = (status || "").toLowerCase();
+    if (text.includes("chờ") || text.includes("cho")) {
+      return "bg-amber-50 text-amber-700";
+    }
+    if (text.includes("đang") || text.includes("dang")) {
+      return "bg-blue-50 text-blue-700";
+    }
+    if (
+      text.includes("hoàn") ||
+      text.includes("hoan") ||
+      text.includes("kết") ||
+      text.includes("ket")
+    ) {
+      return "bg-emerald-50 text-emerald-700";
+    }
+    return "bg-slate-100 text-slate-700";
+  }
+
+  function getTimelineBadgeClass(status, isOverdue) {
+    if (isOverdue) {
+      return "bg-rose-50 text-rose-700";
+    }
+    const text = (status || "").toLowerCase();
+    if (
+      text.includes("hoàn") ||
+      text.includes("hoan") ||
+      text.includes("đã") ||
+      text.includes("da")
+    ) {
+      return "bg-emerald-50 text-emerald-700";
+    }
+    if (
+      text.includes("quá") ||
+      text.includes("qua") ||
+      text.includes("trễ") ||
+      text.includes("tre")
+    ) {
+      return "bg-rose-50 text-rose-700";
+    }
+    return "bg-slate-100 text-slate-700";
+  }
+
+  function getTaskBadgeClass(status) {
+    const text = (status || "").toLowerCase();
+    if (text.includes("hoàn") || text.includes("hoan")) {
+      return "bg-emerald-50 text-emerald-700";
+    }
+    if (text.includes("dang") || text.includes("đang")) {
+      return "bg-blue-50 text-blue-700";
+    }
+    if (
+      text.includes("quá") ||
+      text.includes("qua") ||
+      text.includes("trễ") ||
+      text.includes("tre")
+    ) {
+      return "bg-rose-50 text-rose-700";
+    }
+    return "bg-slate-100 text-slate-700";
+  }
+
+  function sanitizeLink(value) {
+    if (!value) return "";
+    const trimmed = String(value).trim();
+    if (!trimmed) return "";
+    let normalized = trimmed;
+    if (!/^https?:\/\//i.test(normalized)) {
+      normalized = normalized.startsWith("/")
+        ? normalized
+        : `/${normalized.replace(/^\/+/, "")}`;
+    }
+    return encodeURI(normalized);
   }
 
   function animateBar(bar, targetPercent) {

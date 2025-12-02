@@ -7,6 +7,7 @@ from __future__ import annotations
 from datetime import datetime
 import csv
 import io
+from typing import Optional
 
 from django.http import HttpResponse
 from django.utils import timezone
@@ -18,11 +19,15 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from drf_spectacular.types import OpenApiTypes
 
+from accounts.api_admin import RoleAccessPermission
+from workflow.services.rbac import Role
+
 from .services import (
     DashboardService,
     DocumentAnalyticsService,
     PerformanceService,
-    ActivityService
+    ActivityService,
+    LeaderDashboardService,
 )
 from .serializers import (
     DashboardKPISerializer,
@@ -32,8 +37,18 @@ from .serializers import (
     UserPerformanceSerializer,
     TimelineSerializer,
     PriorityDistributionSerializer,
-    ExportRequestSerializer
+    ExportRequestSerializer,
+    LeaderDashboardSerializer,
 )
+
+
+def _parse_iso_datetime(value: Optional[str]) -> Optional[datetime]:
+    if not value:
+        return None
+    result = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if timezone.is_naive(result):
+        result = timezone.make_aware(result)
+    return result
 
 
 class DashboardKPIView(APIView):
@@ -257,11 +272,89 @@ class PriorityDistributionView(APIView):
                 
         user_id = None
         if scope == 'personal':
-            user_id = request.user.id
+            user_id = request.user.pk
             
         data = DocumentAnalyticsService.get_by_priority(date_from, date_to, user_id)
         serializer = PriorityDistributionSerializer(data)
         
+        return Response({"success": True, "data": serializer.data})
+
+
+class DocumentStatusSummaryView(APIView):
+    """Document status counts grouped by direction."""
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Analytics"],
+        operation_id="analytics_document_status_summary",
+        summary="Document status summary",
+        responses={200: {"type": "object", "properties": {"INBOUND": {"type": "object"}, "OUTBOUND": {"type": "object"}}}},
+    )
+    def get(self, request):
+        summary = DocumentAnalyticsService.get_status_summary()
+        return Response({"success": True, "data": summary})
+
+
+class LeaderDashboardView(APIView):
+    """Leader dashboard overview with KPIs, queues, and notifications."""
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        tags=["Analytics"],
+        operation_id="analytics_leader_dashboard",
+        summary="Leader dashboard overview",
+        parameters=[
+            OpenApiParameter(name="date_from", type=OpenApiTypes.DATETIME, location=OpenApiParameter.QUERY, required=False),
+            OpenApiParameter(name="date_to", type=OpenApiTypes.DATETIME, location=OpenApiParameter.QUERY, required=False),
+            OpenApiParameter(name="department_id", type=OpenApiTypes.INT, location=OpenApiParameter.QUERY, required=False),
+            OpenApiParameter(
+                name="scope",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Scope of data, pass 'personal' to filter to the current user",
+            ),
+        ],
+        responses={200: LeaderDashboardSerializer},
+    )
+    def get(self, request):
+        date_from = _parse_iso_datetime(request.query_params.get("date_from"))
+        date_to = _parse_iso_datetime(request.query_params.get("date_to"))
+        department_id = request.query_params.get("department_id")
+        scope = request.query_params.get("scope")
+
+        if department_id:
+            department_id = int(department_id)
+
+        user_id = None
+        if scope == "personal":
+            user_id = request.user.pk
+
+        if not department_id:
+            department_id = getattr(request.user, "department_id", None)
+
+        kpis = DashboardService.get_kpis(date_from, date_to, department_id, user_id)
+        pending = LeaderDashboardService.get_pending_documents(
+            user_id=user_id, department_id=department_id
+        )
+        timeline = LeaderDashboardService.get_recent_approval_steps(
+            user_id=user_id, department_id=department_id
+        )
+        tasks = LeaderDashboardService.get_task_progress(
+            user_id=user_id, department_id=department_id
+        )
+        notifications = LeaderDashboardService.get_notifications(request.user.pk)
+
+        payload = {
+            "kpis": kpis,
+            "pending_documents": pending.get("items", []),
+            "pending_counts": pending.get("counts", {"approval": 0, "sign": 0}),
+            "approval_timeline": timeline,
+            "task_progress": tasks,
+            "notifications": notifications,
+        }
+
+        serializer = LeaderDashboardSerializer(payload)
         return Response({"success": True, "data": serializer.data})
 
 

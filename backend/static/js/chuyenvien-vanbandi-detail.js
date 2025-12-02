@@ -53,6 +53,9 @@
 
   function toArray(payload) {
     if (!payload) return [];
+    // Handle direct array responses (from non-paginated endpoints like specialists)
+    if (Array.isArray(payload)) return payload;
+    // Handle paginated responses
     if (Array.isArray(payload.items)) return payload.items;
     if (Array.isArray(payload.results)) return payload.results;
     return [];
@@ -321,40 +324,76 @@
     async function loadCandidateCvs(departmentId) {
     if (!assignSelect) return;
     
-    // Show loading state
-    assignSelect.disabled = true;
-    assignSelect.innerHTML = '<option value="">Đang tải...</option>';
-    showAssignMessage("", false);
-    
-    console.log("[CV] Loading candidate specialists, department:", departmentId);
-    
     try {
-      // Try specialists API first
-      const specialists = await tryLoadSpecialists(departmentId);
-      if (specialists && specialists.length > 0) {
-        console.log("[CV] Loaded specialists successfully:", specialists.length);
-        renderAssignOptions(specialists);
-        return;
+      assignSelect.disabled = true;
+      assignSelect.innerHTML = '<option value="">Đang tải...</option>';
+      showAssignMessage("", false);
+
+      const departmentIdToUse = Number.isFinite(departmentId)
+        ? departmentId
+        : departmentId
+        ? Number.parseInt(departmentId, 10)
+        : null;
+      
+      console.log("[loadCandidateCvs] Starting load with deptId:", departmentIdToUse);
+      
+      let users = [];
+      let usedFallback = false;
+      
+      try {
+        users = await tryLoadSpecialists(departmentIdToUse);
+        console.log("[loadCandidateCvs] Loaded specialists count:", users.length);
+        console.log("[loadCandidateCvs] Specialists data:", users);
+        
+        if (users.length === 0) {
+          // Fallback to users API if specialists returns empty
+          console.log("[loadCandidateCvs] Specialists empty, trying users API as fallback...");
+          try {
+            users = await tryLoadUsers(departmentIdToUse);
+            usedFallback = true;
+            console.log("[loadCandidateCvs] Loaded users count (fallback):", users.length);
+            console.log("[loadCandidateCvs] Users data (fallback):", users);
+          } catch (fallbackErr) {
+            console.warn("[loadCandidateCvs] Fallback to users API also failed:", fallbackErr);
+            // Continue with empty array, will show message below
+          }
+        }
+      } catch (err) {
+        // Try fallback on error
+        console.warn("[loadCandidateCvs] Specialists API failed, trying users API as fallback...", err);
+        console.error("[CV] Error details:", {
+          message: err?.message,
+          status: err?.status,
+          data: err?.data,
+          code: err?.code
+        });
+        
+        try {
+          users = await tryLoadUsers(departmentIdToUse);
+          usedFallback = true;
+          console.log("[loadCandidateCvs] Loaded users count (fallback):", users.length);
+          console.log("[loadCandidateCvs] Users data (fallback):", users);
+        } catch (fallbackErr) {
+          // Both failed
+          console.error("[loadCandidateCvs] Both specialists and users API failed");
+          throw new Error(`Không thể tải danh sách chuyên viên: ${fallbackErr?.message || err?.message || "Lỗi không xác định"}`);
+        }
       }
-      console.log("[CV] No specialists found, trying users fallback");
-    } catch (err) {
-      console.warn("[CV] Specialists API failed:", err.message || err);
-    }
-    
-    try {
-      // Fallback to users API with role filter
-      const users = await tryLoadUsers(departmentId);
-      console.log("[CV] Loaded users successfully:", users.length);
-      renderAssignOptions(users);
+
+      assignSelect.innerHTML = '<option value="">-- Chọn chuyên viên --</option>';
       
       if (users.length === 0) {
+        console.warn("[loadCandidateCvs] No specialists found for department:", departmentIdToUse);
         showAssignMessage("Không tìm thấy chuyên viên nào.", false);
+      } else {
+        const source = usedFallback ? "users API (fallback)" : "specialists API";
+        console.log(`[loadCandidateCvs] Rendering ${users.length} specialists from ${source} to dropdown`);
+        renderAssignOptions(users);
+        console.log("[loadCandidateCvs] Successfully populated dropdown with specialists");
       }
     } catch (err) {
-      console.error("[CV] Lỗi tải danh sách chuyên viên:", err);
-      const errorMsg = err?.status === 403
-        ? "Không có quyền truy cập danh sách chuyên viên."
-        : "Không thể tải danh sách chuyên viên. Vui lòng thử lại.";
+      console.error("[CV] Failed to load specialists list:", err);
+      const errorMsg = err?.message || "Không thể tải danh sách chuyên viên. Vui lòng thử lại.";
       showAssignMessage(errorMsg, true);
       assignSelect.innerHTML = '<option value="">Lỗi tải dữ liệu</option>';
     } finally {
@@ -374,7 +413,7 @@
     }
     
     const response = await api.specialists.list(params);
-    return extractUsers(response);
+    return toArray(response);
   }
   
   async function tryLoadUsers(departmentId) {
@@ -389,33 +428,7 @@
     }
     
     const response = await api.users.list(params);
-    return extractUsers(response);
-  }
-  
-  function extractUsers(payload) {
-    if (!payload) return [];
-    
-    // Try api.extractItems helper first
-    if (typeof window.ApiClient?.extractItems === "function") {
-      return window.ApiClient.extractItems(payload);
-    }
-    
-    // Handle pagination
-    if (payload.results && Array.isArray(payload.results)) {
-      return payload.results;
-    }
-    
-    // Handle array response
-    if (Array.isArray(payload)) {
-      return payload;
-    }
-    
-    // Handle items array
-    if (payload.items && Array.isArray(payload.items)) {
-      return payload.items;
-    }
-    
-    return [];
+    return toArray(response);
   }
 
     function handleAssignSubmit(event) {

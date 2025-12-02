@@ -91,8 +91,7 @@
     const btnAll = document.getElementById("btnViewAllApprove");
     if (btnAll) {
       btnAll.addEventListener("click", () => {
-        // Tùy routing thực tế; tạm thời trỏ về văn bản đi
-        window.location.href = "vanbandi.html";
+        window.location.href = "/lanhdao/vanbandi/";
       });
     }
   };

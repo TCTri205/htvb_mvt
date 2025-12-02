@@ -188,13 +188,28 @@ function renderCaseInfo(data) {
     priorityEl.className = "px-2.5 py-1 rounded-full text-xs font-semibold " + getPriorityColor(data.priority);
   }
 
-  // Show/Hide Request Close button
+  // Show/Hide Submit button (MOI_TAO -> CHO_PHAN_CONG)
+  const btnSubmit = $("[data-action='submit']");
+  if (btnSubmit) {
+    if (statusCode === 'MOI_TAO') {
+      btnSubmit.classList.remove("hidden");
+    } else {
+      btnSubmit.classList.add("hidden");
+    }
+  }
+
+  // Show/Hide Request Close button (DANG_THUC_HIEN -> CHO_DUYET_DONG)
+  // Once submitted, specialist cannot cancel - only Leader can approve/reject
   const btnRequestClose = $("[data-action='request-close']");
   if (btnRequestClose) {
+    // Show ONLY in DANG_THUC_HIEN status
     if (statusCode === 'DANG_THUC_HIEN') {
       btnRequestClose.classList.remove("hidden");
+      btnRequestClose.disabled = false;
     } else {
+      // Hide in all other statuses (including CHO_DUYET_DONG)
       btnRequestClose.classList.add("hidden");
+      btnRequestClose.disabled = true;
     }
   }
 }
@@ -652,6 +667,17 @@ async function postComment(caseId, content) {
 
 // Complete a task (mark as DONE)
 async function completeTask(taskId) {
+  // Only allow task modification when case is actively being executed
+  if (preloadedCase) {
+    const statusCode = preloadedCase.status?.code || preloadedCase.status?.name || preloadedCase.status || "";
+    const normalizedStatus = statusCode ? String(statusCode).toUpperCase().trim().replace(/\s+/g, '_') : "";
+    
+    if (normalizedStatus !== 'DANG_THUC_HIEN') {
+      alert("Chỉ có thể thay đổi nhiệm vụ khi hồ sơ đang ở trạng thái Đang xử lý.");
+      return;
+    }
+  }
+  
   if (!confirm("Bạn có chắc chắn muốn đánh dấu nhiệm vụ này là hoàn thành?")) {
     return;
   }
@@ -673,6 +699,45 @@ async function completeTask(taskId) {
   } catch (error) {
     console.error("Error completing task:", error);
     alert("Lỗi khi đánh dấu hoàn thành: " + (error.message || error.detail || "Lỗi không xác định"));
+  }
+}
+
+// Toggle task status (Complete/Undo) - called from task modal  
+async function toggleTaskStatus(taskId, newStatus) {
+  // Only allow task modification when case is actively being executed
+  if (preloadedCase) {
+    const statusCode = preloadedCase.status?.code || preloadedCase.status?.name || preloadedCase.status || "";
+    const normalizedStatus = statusCode ? String(statusCode).toUpperCase().trim().replace(/\s+/g, '_') : "";
+    
+    if (normalizedStatus !== 'DANG_THUC_HIEN') {
+      alert("Chỉ có thể thay đổi nhiệm vụ khi hồ sơ đang ở trạng thái Đang xử lý.");
+      return;
+    }
+  }
+  
+  try {
+    await api.request(`/api/v1/case-tasks/${taskId}/`, {
+      method: "PATCH",
+      body: {
+        status: newStatus
+      }
+    });
+    
+    // Close modal and reload tasks
+    const modal = document.getElementById("modalTaskDetail");
+    if (modal) modal.close();
+    
+    if (currentCaseId) {
+      await loadTasks(currentCaseId);
+    }
+    
+    showToast(
+      newStatus === "DONE" ? "Đã đánh dấu hoàn thành" : "Đã huỷ hoàn thành",
+      "success"
+    );
+  } catch (error) {
+    console.error("Error toggling task status:", error);
+    alert("Lỗi khi cập nhật trạng thái: " + (error.message || error.detail || "Lỗi không xác định"));
   }
 }
 
@@ -734,3 +799,101 @@ window.openTaskDetail = openTaskDetail;
 window.deleteTaskAttachment = deleteTaskAttachment;
 window.handleTaskAttachmentUpload = handleTaskAttachmentUpload;
 window.toggleTaskStatus = toggleTaskStatus;
+
+// Setup event listeners for action buttons
+function setupInteractions(caseId) {
+  // Submit button (MOI_TAO -> CHO_PHAN_CONG)
+  const btnSubmit = $("[data-action='submit']");
+  if (btnSubmit) {
+    btnSubmit.addEventListener("click", async () => {
+      await handleSubmit(caseId);
+    });
+  }
+
+  // Request Close button (DANG_THUC_HIEN -> CHO_DUYET_DONG)
+  const btnRequestClose = $("[data-action='request-close']");
+  if (btnRequestClose) {
+    btnRequestClose.addEventListener("click", async () => {
+      await handleRequestClose(caseId);
+    });
+  }
+
+  // Activity log button
+  const btnAddActivity = $("[data-action='add-activity']");
+  if (btnAddActivity) {
+    btnAddActivity.addEventListener("click", () => {
+      const note = prompt("Nhập nội dung nhật ký:");
+      if (note && note.trim()) {
+        postComment(caseId, note.trim());
+      }
+    });
+  }
+}
+
+// Handle Submit action (MOI_TAO -> CHO_PHAN_CONG)
+async function handleSubmit(caseId) {
+  const note = prompt("Ghi chú khi trình lãnh đạo (không bắt buộc):");
+  
+  if (note === null) return; // User cancelled
+  
+  try {
+    await api.request(`/api/v1/cases/${caseId}/submit/`, {
+      method: "POST",
+      body: note ? { note } : {}
+    });
+    
+    showToast("Đã trình hồ sơ lên lãnh đạo!", "success");
+    
+    // Reload page after short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } catch (error) {
+    console.error("Error submitting case:", error);
+    alert("Lỗi khi trình hồ sơ: " + (error.message || error.detail || "Lỗi không xác định"));
+  }
+}
+
+// Handle Request Close action (DANG_THUC_HIEN -> CHO_DUYET_DONG)
+async function handleRequestClose(caseId) {
+  const note = prompt("Lý do đề nghị đóng hồ sơ (không bắt buộc):");
+  
+  if (note === null) return; // User cancelled
+  
+  try {
+    await api.request(`/api/v1/cases/${caseId}/request_close/`, {
+      method: "POST",
+      body: note ? { note } : {}
+    });
+    
+    showToast("Đã gửi đề nghị đóng hồ sơ!", "success");
+    
+    // Reload page after short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
+  } catch (error) {
+    console.error("Error requesting close:", error);
+    alert("Lỗi khi đề nghị đóng: " + (error.message || error.detail || "Lỗi không xác định"));
+  }
+}
+
+// Post activity log
+async function postComment(caseId, content) {
+  try {
+    await api.request("/api/v1/comments/", {
+      method: "POST",
+      body: {
+        entity_type: "case",
+        entity_id: caseId,
+        content: content
+      }
+    });
+    // Reload activity logs
+    loadActivityLogsAndComments(caseId);
+    showToast("Đã thêm nhật ký!", "success");
+  } catch (e) {
+    console.error("Error posting comment:", e);
+    alert("Không thể gửi nhật ký: " + (e.message || e.detail || "Lỗi không xác định"));
+  }
+}

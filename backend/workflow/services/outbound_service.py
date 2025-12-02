@@ -1,6 +1,7 @@
 # workflow/services/outbound_service.py
 from dataclasses import dataclass
 from typing import Any, Optional, List
+import logging
 from django.apps import apps
 from django.db import transaction, IntegrityError
 from django.db.models import Max
@@ -10,6 +11,8 @@ from .rbac import can, Act
 from .status_resolver import StatusResolver as SR, OutboundStatus
 from .audit import audit_log
 from .events import emit
+
+logger = logging.getLogger(__name__)
 
 def _doc_models():
     Doc = apps.get_model('documents', 'Document')

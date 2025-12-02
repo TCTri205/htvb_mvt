@@ -69,7 +69,8 @@ async function loadCaseDetail(caseId, preloaded) {
       loadRelatedDocs(caseId)
     ]);
 
-    setupInteractions(caseId);
+    // VT has no workflow actions - setupInteractions not needed
+    // setupInteractions(caseId);
 
   } catch (err) {
     console.error("Error loading case detail:", err);
@@ -190,16 +191,10 @@ function renderCaseInfo(data) {
   updateActionButtons(statusCode);
 }
 
+// VT Role: Read-Only (Archive Only) - No workflow actions
 function updateActionButtons(statusCode) {
-    const btnSubmit = $("#btnSubmit");
-    
-    // Hide all buttons by default
-    if (btnSubmit) btnSubmit.classList.add("hidden");
-
-    // Show submit button only for MOI_TAO status
-    if (statusCode === 'MOI_TAO') {
-        if (btnSubmit) btnSubmit.classList.remove("hidden");
-    }
+    // Văn thư has no workflow action buttons
+    // All buttons remain hidden as VT is read-only
 }
 
 function renderParticipants(list) {
@@ -490,76 +485,6 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// --- Submit Action Handler ---
-async function handleSubmitAction(caseId) {
-  const modal = $('#modalSubmit');
-  const noteInput = $('#submitNote');
-  const btnConfirm = $('#btnConfirmSubmit');
-  const btnCancel = $('#btnCancelSubmit');
-  
-  if (!modal) return;
-  
-  // Show modal
-  modal.showModal();
-  
-  // Clear previous note
-  if (noteInput) noteInput.value = '';
-  
-  // Handle confirm
-  const confirmHandler = async () => {
-    const note = noteInput?.value?.trim() || '';
-    
-    try {
-      // Disable button during request
-      if (btnConfirm) {
-        btnConfirm.disabled = true;
-        btnConfirm.textContent = 'Đang xử lý...';
-      }
-      
-      // Call submit API
-      await api.request(`/api/v1/cases/${caseId}/submit/`, {
-        method: 'POST',
-        body: note ? { note } : {}
-      });
-      
-      // Close modal
-      modal.close();
-      
-      // Show success toast
-      showToast('Đã trình hồ sơ lên lãnh đạo thành công!', 'success');
-      
-      // Reload page after short delay
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-      
-    } catch (error) {
-      console.error('Error submitting case:', error);
-      showToast(error.message || 'Không thể trình hồ sơ. Vui lòng thử lại.', 'error');
-      
-      // Re-enable button
-      if (btnConfirm) {
-        btnConfirm.disabled = false;
-        btnConfirm.textContent = 'Xác nhận trình';
-      }
-    }
-  };
-  
-  // Handle cancel
-  const cancelHandler = () => {
-    modal.close();
-  };
-  
-  // Remove old listeners to prevent duplicates
-  if (btnConfirm) {
-    btnConfirm.replaceWith(btnConfirm.cloneNode(true));
-    const newBtnConfirm = $('#btnConfirmSubmit');
-    if (newBtnConfirm) newBtnConfirm.addEventListener('click', confirmHandler);
-  }
-  
-  if (btnCancel) {
-    btnCancel.replaceWith(btnCancel.cloneNode(true));
-    const newBtnCancel = $('#btnCancelSubmit');
-    if (newBtnCancel) newBtnCancel.addEventListener('click', cancelHandler);
-  }
-}
+// VT Role: Read-Only (Archive Only)
+// Submit action handler removed - VT users cannot perform workflow actions
+// Văn thư chỉ xem và lưu trữ hồ sơ, không thể trình/phân công/duyệt

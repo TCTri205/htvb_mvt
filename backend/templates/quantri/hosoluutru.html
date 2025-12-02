@@ -145,32 +145,38 @@
                 </div>
               </article>
             </section>
+            <div
+              id="archiveAuthNotice"
+              class="hidden mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700"
+              role="status"
+              aria-live="polite"
+            ></div>
             <!-- ===== Segmented tabs ===== -->
             <section class="mt-4">
               <div
                 class="bg-white border border-slate-200 rounded-xl p-1 flex items-center text-[13px] overflow-x-auto"
               >
                 <button
-                  class="seg-btn flex-1 h-10 rounded-lg text-center font-medium hover:bg-slate-50 px-3 whitespace-nowrap bg-blue-600 text-white"
-                  data-tab="usage"
+                  class="seg-btn flex-1 h-10 rounded-lg text-center font-medium hover:bg-slate-50 px-3 whitespace-nowrap"
+                  data-archive-tab="tab-usage"
                 >
                   Dung lượng &amp; Backup
                 </button>
                 <button
                   class="seg-btn flex-1 h-10 rounded-lg text-center font-medium hover:bg-slate-50 px-3 whitespace-nowrap"
-                  data-tab="policy"
+                  data-archive-tab="tab-policy"
                 >
                   Quy định lưu trữ
                 </button>
                 <button
                   class="seg-btn flex-1 h-10 rounded-lg text-center font-medium hover:bg-slate-50 px-3 whitespace-nowrap"
-                  data-tab="queue"
+                  data-archive-tab="tab-queue"
                 >
                   Lưu trữ hồ sơ
                 </button>
                 <button
                   class="seg-btn flex-1 h-10 rounded-lg text-center font-medium hover:bg-slate-50 px-3 whitespace-nowrap"
-                  data-tab="config"
+                  data-archive-tab="tab-config"
                 >
                   Cấu hình
                 </button>
@@ -183,6 +189,7 @@
             <section
               id="tab-usage"
               class="mt-4 grid grid-cols-1 xl:grid-cols-2 gap-6"
+              data-archive-panel="tab-usage"
             >
               <!-- Left: breakdown -->
               <article class="bg-white border border-slate-200 rounded-xl">
@@ -207,28 +214,48 @@
                         class="mx-auto w-2 h-2 rounded-full bg-blue-500 mb-2"
                       ></div>
                       <p class="text-[12px] text-slate-500">Văn bản</p>
-                      <p class="text-[14px] font-semibold">234.2 GB</p>
+                      <p
+                        id="archiveStorageDocument"
+                        class="text-[14px] font-semibold"
+                      >
+                        —
+                      </p>
                     </div>
                     <div class="text-center">
                       <div
                         class="mx-auto w-2 h-2 rounded-full bg-emerald-500 mb-2"
                       ></div>
                       <p class="text-[12px] text-slate-500">Hình ảnh</p>
-                      <p class="text-[14px] font-semibold">45.8 GB</p>
+                      <p
+                        id="archiveStorageImage"
+                        class="text-[14px] font-semibold"
+                      >
+                        —
+                      </p>
                     </div>
                     <div class="text-center">
                       <div
                         class="mx-auto w-2 h-2 rounded-full bg-violet-500 mb-2"
                       ></div>
                       <p class="text-[12px] text-slate-500">Đoạn phim</p>
-                      <p class="text-[14px] font-semibold">12.3 GB</p>
+                      <p
+                        id="archiveStorageVideo"
+                        class="text-[14px] font-semibold"
+                      >
+                        —
+                      </p>
                     </div>
                     <div class="text-center">
                       <div
                         class="mx-auto w-2 h-2 rounded-full bg-slate-500 mb-2"
                       ></div>
                       <p class="text-[12px] text-slate-500">Khác</p>
-                      <p class="text-[14px] font-semibold">55.2 GB</p>
+                      <p
+                        id="archiveStorageOther"
+                        class="text-[14px] font-semibold"
+                      >
+                        —
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -265,8 +292,17 @@
                       />
                     </svg>
                   </div>
-                  <p class="mt-3 text-[13px] text-slate-500">
-                    Chọn “Khôi phục” để khôi phục dữ liệu từ bản backup
+                  <select
+                    id="archiveRestoreSelect"
+                    class="mt-3 w-full rounded-lg border border-slate-200 px-3 py-2 text-[13px] focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                  >
+                    <option value="">Chọn bản sao lưu</option>
+                  </select>
+                  <p
+                    id="archiveRestoreHint"
+                    class="mt-2 text-[12px] text-slate-500"
+                  >
+                    Chọn “Khôi phục” để khôi phục dữ liệu từ bản backup đã chọn.
                   </p>
                 </div>
               </article>
@@ -286,49 +322,12 @@
                     ⬇ Tạo backup
                   </button>
                 </header>
-                <ul class="p-3 space-y-3">
-                  <li
-                    class="rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between"
-                  >
-                    <div>
-                      <div class="font-medium">Sao lưu tự động</div>
-                      <div class="text-[12px] text-slate-500">
-                        2024-12-25 02:00 • 45.2 GB • 2h 15m
-                      </div>
-                    </div>
-                    <span
-                      class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1"
-                      >Thành công</span
-                    >
-                  </li>
-                  <li
-                    class="rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between"
-                  >
-                    <div>
-                      <div class="font-medium">Sao lưu thủ công</div>
-                      <div class="text-[12px] text-slate-500">
-                        2024-12-24 14:30 • 18.2 GB • 45m
-                      </div>
-                    </div>
-                    <span
-                      class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1"
-                      >Thành công</span
-                    >
-                  </li>
-                  <li
-                    class="rounded-lg border border-slate-200 px-4 py-3 flex items-center justify-between"
-                  >
-                    <div>
-                      <div class="font-medium">Sao lưu tự động</div>
-                      <div class="text-[12px] text-slate-500">
-                        2024-12-20 00:20 • 45.1 GB • 2h 18m
-                      </div>
-                    </div>
-                    <span
-                      class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1"
-                      >Thành công</span
-                    >
-                  </li>
+                <ul
+                  id="archiveBackupList"
+                  class="p-3 space-y-3"
+                  aria-live="polite"
+                >
+                  <li class="text-sm text-slate-500">Đang tải lịch sử sao lưu...</li>
                 </ul>
               </article>
             </section>
@@ -336,7 +335,7 @@
             <!-- ===========================
                TAB 2: RETENTION POLICY
           ============================ -->
-            <section id="tab-policy" class="mt-4 hidden">
+            <section id="tab-policy" class="mt-4 hidden" data-archive-panel="tab-policy">
               <article class="bg-white border border-slate-200 rounded-xl">
                 <header class="px-4 py-3 border-b border-slate-100">
                   <h3 class="text-[15px] font-semibold">
@@ -370,142 +369,16 @@
                         </th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
-                      <tr class="hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
-                          Hồ sơ hành chính
-                          <div class="text-[12px] text-slate-500">
-                            Các văn bản hành chính thường ngày, thông báo nội bộ
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <span class="badge">Hành chính</span>
-                        </td>
-                        <td class="px-4 py-3">5 năm</td>
-                        <td class="px-4 py-3">1.247</td>
-                        <td class="px-4 py-3">
-                          <span
-                            class="badge bg-emerald-50 border-emerald-200 text-emerald-700"
-                            >Đang áp dụng</span
-                          >
-                        </td>
-                        <td class="px-4 py-3">2025-01-15</td>
-                        <td class="px-4 py-3">
-                          <div class="flex gap-2">
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Rà soát
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr class="hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
-                          Hồ sơ tài chính
-                          <div class="text-[12px] text-slate-500">
-                            Báo cáo tài chính, ngân sách, quyết toán
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <span class="badge">Tài chính</span>
-                        </td>
-                        <td class="px-4 py-3">15 năm</td>
-                        <td class="px-4 py-3">856</td>
-                        <td class="px-4 py-3">
-                          <span
-                            class="badge bg-emerald-50 border-emerald-200 text-emerald-700"
-                            >Đang áp dụng</span
-                          >
-                        </td>
-                        <td class="px-4 py-3">2025-02-20</td>
-                        <td class="px-4 py-3">
-                          <div class="flex gap-2">
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Rà soát
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr class="hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
-                          Hồ sơ quy hoạch
-                          <div class="text-[12px] text-slate-500">
-                            Quy hoạch phát triển kinh tế xã hội, quy hoạch đô
-                            thị
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <span class="badge">Quy hoạch</span>
-                        </td>
-                        <td class="px-4 py-3">Vĩnh viễn</td>
-                        <td class="px-4 py-3">423</td>
-                        <td class="px-4 py-3">
-                          <span
-                            class="badge bg-emerald-50 border-emerald-200 text-emerald-700"
-                            >Đang áp dụng</span
-                          >
-                        </td>
-                        <td class="px-4 py-3">2025-03-10</td>
-                        <td class="px-4 py-3">
-                          <div class="flex gap-2">
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Rà soát
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr class="hover:bg-slate-50/60">
-                        <td class="px-4 py-3">
-                          Hồ sơ nhân sự
-                          <div class="text-[12px] text-slate-500">
-                            Hồ sơ cán bộ, công chức, viên chức
-                          </div>
-                        </td>
-                        <td class="px-4 py-3">
-                          <span class="badge">Nhân sự</span>
-                        </td>
-                        <td class="px-4 py-3">20 năm</td>
-                        <td class="px-4 py-3">689</td>
-                        <td class="px-4 py-3">
-                          <span
-                            class="badge bg-amber-50 border-amber-200 text-amber-700"
-                            >Cần rà soát</span
-                          >
-                        </td>
-                        <td class="px-4 py-3">2024-12-01</td>
-                        <td class="px-4 py-3">
-                          <div class="flex gap-2">
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Chỉnh sửa
-                            </button>
-                            <button
-                              class="px-3 h-8 rounded-md bg-slate-100 text-[12px] hover:bg-slate-200"
-                            >
-                              Rà soát
-                            </button>
-                          </div>
+                    <tbody
+                      id="archivePolicyList"
+                      class="divide-y divide-slate-100"
+                    >
+                      <tr>
+                        <td
+                          colspan="7"
+                          class="px-4 py-6 text-sm text-slate-500 text-center"
+                        >
+                          Đang tải quy định lưu trữ...
                         </td>
                       </tr>
                     </tbody>
@@ -517,7 +390,7 @@
             <!-- ===========================
                TAB 3: ARCHIVE QUEUE
           ============================ -->
-            <section id="tab-queue" class="mt-4 hidden">
+            <section id="tab-queue" class="mt-4 hidden" data-archive-panel="tab-queue">
               <article class="bg-white border border-slate-200 rounded-xl">
                 <header
                   class="px-4 py-3 border-b border-slate-100 flex items-center justify-between"
@@ -530,64 +403,12 @@
                     🗃 Lưu trữ dữ liệu
                   </button>
                 </header>
-                <ul class="p-4 space-y-4">
-                  <!-- item -->
-                  <li class="rounded-lg border border-slate-200 p-4">
-                    <div
-                      class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2"
-                    >
-                      <div class="font-medium">
-                        Văn_bản_hành_chính_2023.zip
-                        <div class="text-[12px] text-slate-500 font-normal">
-                          Danh mục: Hành chính &nbsp; Ngày: 2024-12-20 &nbsp;
-                          Kích thước: 2.4 GB
-                        </div>
-                      </div>
-                      <span
-                        class="inline-flex items-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold px-2.5 py-1"
-                        >Đang xử lý</span
-                      >
-                    </div>
-                    <div class="mt-3 h-2 rounded-full bg-slate-200">
-                      <div class="h-full bg-slate-900" style="width: 65%"></div>
-                    </div>
-                  </li>
-
-                  <li class="rounded-lg border border-slate-200 p-4">
-                    <div
-                      class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2"
-                    >
-                      <div class="font-medium">
-                        Báo_cáo_tài_chính_Q4_2023.zip
-                        <div class="text-[12px] text-slate-500 font-normal">
-                          Danh mục: Tài chính &nbsp; Ngày: 2024-12-19 &nbsp;
-                          Kích thước: 1.8 GB
-                        </div>
-                      </div>
-                      <span
-                        class="inline-flex items-center rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold px-2.5 py-1"
-                        >Hoàn thành</span
-                      >
-                    </div>
-                  </li>
-
-                  <li class="rounded-lg border border-slate-200 p-4">
-                    <div
-                      class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2"
-                    >
-                      <div class="font-medium">
-                        Hồ_sơ_nhân_sự_2023.zip
-                        <div class="text-[12px] text-slate-500 font-normal">
-                          Danh mục: Nhân sự &nbsp; Ngày: 2024-12-18 &nbsp; Kích
-                          thước: 3.2 GB
-                        </div>
-                      </div>
-                      <span
-                        class="inline-flex items-center rounded-full bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1"
-                        >Chờ xử lý</span
-                      >
-                    </div>
-                  </li>
+                <ul
+                  id="archiveQueueList"
+                  class="p-4 space-y-4"
+                  aria-live="polite"
+                >
+                  <li class="text-sm text-slate-500">Đang cập nhật hàng đợi lưu trữ...</li>
                 </ul>
               </article>
             </section>
@@ -595,12 +416,13 @@
             <!-- ===========================
                TAB 4: CONFIG
           ============================ -->
-            <section id="tab-config" class="mt-4 hidden">
+            <section id="tab-config" class="mt-4 hidden" data-archive-panel="tab-config">
               <article class="bg-white border border-slate-200 rounded-xl">
                 <header class="px-4 py-3 border-b border-slate-100">
                   <h3 class="text-[15px] font-semibold">Cấu hình lưu trữ</h3>
                 </header>
-                <div
+                <form
+                  id="archiveConfigForm"
                   class="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 lg:p-6 text-[14px]"
                 >
                   <!-- Auto backup -->
@@ -610,22 +432,26 @@
                       >Tần suất backup:</label
                     >
                     <select
+                      id="archiveConfigFrequency"
+                      name="archive_auto_backup_frequency"
                       class="w-full h-10 rounded-lg border border-slate-200 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
                     >
-                      <option>Hàng ngày lúc 02:00</option>
-                      <option>Hàng ngày lúc 23:00</option>
-                      <option>Hàng tuần (CN 03:00)</option>
+                      <option value="daily_02:00">Hàng ngày lúc 02:00</option>
+                      <option value="daily_23:00">Hàng ngày lúc 23:00</option>
+                      <option value="weekly_sun_03:00">Hàng tuần (CN 03:00)</option>
                     </select>
 
                     <label class="block text-[13px] text-slate-600 mt-3 mb-1"
                       >Số lượng backup lưu trữ:</label
                     >
                     <select
+                      id="archiveConfigRetention"
+                      name="archive_backup_retention_count"
                       class="w-full h-10 rounded-lg border border-slate-200 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
                     >
-                      <option>30 bản</option>
-                      <option>60 bản</option>
-                      <option>90 bản</option>
+                      <option value="30">30 bản</option>
+                      <option value="60">60 bản</option>
+                      <option value="90">90 bản</option>
                     </select>
                   </div>
 
@@ -636,32 +462,44 @@
                       >Cảnh báo khi dung lượng đạt:</label
                     >
                     <select
+                      id="archiveConfigThreshold"
+                      name="archive_alert_threshold"
                       class="w-full h-10 rounded-lg border border-slate-200 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
                     >
-                      <option>80%</option>
-                      <option>85%</option>
-                      <option>90%</option>
+                      <option value="80">80%</option>
+                      <option value="85">85%</option>
+                      <option value="90">90%</option>
                     </select>
 
                     <label class="block text-[13px] text-slate-600 mt-3 mb-1"
                       >Tự động lưu trữ khi đầy:</label
                     >
                     <select
+                      id="archiveConfigAutoArchive"
+                      name="archive_auto_archive_enabled"
                       class="w-full h-10 rounded-lg border border-slate-200 px-3 bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
                     >
-                      <option>Bật</option>
-                      <option>Tắt</option>
+                      <option value="true">Bật</option>
+                      <option value="false">Tắt</option>
                     </select>
                   </div>
 
                   <div class="lg:col-span-2">
-                    <button
-                      class="px-4 h-10 rounded-lg bg-slate-900 text-white text-[13px]"
-                    >
-                      Lưu cấu hình
-                    </button>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <span
+                        id="archiveConfigFeedback"
+                        class="text-[12.5px] text-slate-500"
+                      ></span>
+                      <button
+                        id="archiveConfigSave"
+                        class="px-4 h-10 rounded-lg bg-slate-900 text-white text-[13px]"
+                        type="submit"
+                      >
+                        Lưu cấu hình
+                      </button>
+                    </div>
                   </div>
-                </div>
+                </form>
               </article>
             </section>
           </div>

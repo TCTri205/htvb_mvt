@@ -1,0 +1,50 @@
+<!-- Add Member Modal - Simple one-at-a-time for other statuses -->
+<dialog id="modalAddMember" class="p-0 rounded-lg shadow-xl backdrop:bg-slate-900/50 w-full max-w-md">
+  <div class="p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-semibold text-slate-800">Thêm thành viên</h3>
+      <button type="button" onclick="document.getElementById('modalAddMember').close()" 
+              class="text-slate-400 hover:text-slate-600">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <form data-form="add-member-simple" class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          Chọn người dùng <span class="text-rose-600">*</span>
+        </label>
+        <select name="user_id" required 
+                class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
+                data-add-member-users>
+          <option value="">-- Chọn người dùng --</option>
+        </select>
+      </div>
+      
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          Vai trò <span class="text-rose-600">*</span>
+        </label>
+        <select name="role_on_case" required 
+                data-role-select
+                class="w-full text-sm border-slate-300 rounded-md focus:border-blue-500 focus:ring-blue-500">
+          <option value="assignee" selected>Phụ trách</option>
+          <option value="watcher">Theo dõi</option>
+        </select>
+      </div>
+      
+      <div class="flex justify-end gap-3 pt-2">
+        <button type="button" onclick="document.getElementById('modalAddMember').close()" 
+                class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-md border border-slate-200">
+          Hủy
+        </button>
+        <button type="submit" 
+                class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+          Thêm thành viên
+        </button>
+      </div>
+    </form>
+  </div>
+</dialog>

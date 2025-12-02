@@ -92,20 +92,27 @@ class OutboundDetailView(LoginRequiredMixin, WorkflowActionFormMixin, DetailView
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         raw_action = (request.POST.get("action") or "").strip().lower()
+        logger.info(f"[OutboundDetailView] POST received: action='{raw_action}', POST data: {dict(request.POST)}")
         canonical_action = self.ACTION_ALIASES.get(raw_action, raw_action)
+        logger.info(f"[OutboundDetailView] Canonical action: '{canonical_action}'")
         handler_name = self.ACTION_HANDLERS.get(canonical_action)
         if not handler_name:
+            logger.warning(f"[OutboundDetailView] No handler found for action '{canonical_action}'")
             messages.error(request, "Hành động không hợp lệ.")
             return redirect(request.path)
 
         handler = getattr(self, handler_name, None)
         if handler is None:
+            logger.error(f"[OutboundDetailView] Handler method '{handler_name}' not found")
             messages.error(request, "Không tìm thấy xử lý cho hành động.")
             return redirect(request.path)
 
         try:
+            logger.info(f"[OutboundDetailView] Calling handler: {handler_name}")
             handler()
+            logger.info(f"[OutboundDetailView] Handler completed successfully")
         except (wf_errors.PermissionDenied, wf_errors.ValidationError, wf_errors.InvalidTransition) as exc:
+            logger.warning(f"[OutboundDetailView] Workflow error: {exc}")
             messages.error(request, str(exc))
         except Exception:
             logger.exception("Lỗi khi xử lý hành động outbound %s", canonical_action)
@@ -268,9 +275,11 @@ class OutboundDraftView(LoginRequiredMixin, WorkflowActionFormMixin, TemplateVie
             document.save(update_fields=["title", "document_code"])
             return document
 
+        logger.info(f"[OutboundDraftView] Creating draft for user: {self.request.user.username}, Dept: {self.request.user.department_id} - {self.request.user.department}")
         return Document.objects.create(
             doc_direction=Document.Direction.DU_THAO,
             title=title,
             document_code=code,
             created_by=self.request.user,
+            department=self.request.user.department,
         )

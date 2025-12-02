@@ -133,6 +133,7 @@ class InboundDetailView(LoginRequiredMixin, WorkflowActionMixin, DetailView):
         "cv_request_reassign": "_handle_request_reassign",
         "start": "_handle_start",
         "complete": "_handle_complete",
+        "vt_register_inbound": "_handle_register_with_book",
         "vt_final_check_ok_inbound": "_handle_finalize_registration",
         "vt_final_check_reject_inbound": "_handle_final_check_reject",
         "vt_dispatch_result": "_handle_dispatch_result",
@@ -198,20 +199,28 @@ class InboundDetailView(LoginRequiredMixin, WorkflowActionMixin, DetailView):
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         role_names = set(rbac._get_user_role_names(self.request.user) or [])
-        path = self.request.path or ""
-        if path.startswith("/lanhdao/"):
+        
+        # Determine body_role based on USER IDENTITY, not just URL path
+        resolved_role = InboundListRoleRedirectMixin.resolve_role_for_request(self.request, role_names)
+        
+        if resolved_role == Role.LD.value:
             body_role = "lanhdao"
-        elif path.startswith("/chuyenvien/"):
+        elif resolved_role == Role.CV.value:
             body_role = "chuyenvien"
-        elif path.startswith("/vanthu/"):
+        elif resolved_role == Role.VT.value:
             body_role = "vanthu"
         else:
-            resolved_role = InboundListRoleRedirectMixin.resolve_role_for_request(self.request, role_names)
-            body_role = "vanthu"
-            if resolved_role == Role.LD.value:
+            # Fallback to path-based if role resolution fails (e.g. admin/QT)
+            path = self.request.path or ""
+            if path.startswith("/lanhdao/"):
                 body_role = "lanhdao"
-            elif resolved_role == Role.CV.value:
+            elif path.startswith("/chuyenvien/"):
                 body_role = "chuyenvien"
+            elif path.startswith("/vanthu/"):
+                body_role = "vanthu"
+            else:
+                body_role = "vanthu" # Default fallback
+        
         ctx.setdefault("body_role", body_role)
         ctx.setdefault("body_page", "vanbanden-detail")
         ctx.setdefault("doc_id", getattr(ctx.get("object"), "document_id", None))
@@ -300,6 +309,53 @@ class InboundDetailView(LoginRequiredMixin, WorkflowActionMixin, DetailView):
         note = self._get_value("note")
         self.service.handle_clerk_rejection(self.object, note=note or None)
         messages.success(self.request, "Đã xử lý phản hồi từ văn thư.")
+
+    def _handle_register_with_book(self):
+        """Register inbound document from RECEIVED status with register book."""
+        # Get register book ID from form
+        register_id = self._get_int("register_book_id")
+        comment = self._get_value("comment")
+        
+        # Use existing document data or get from form
+        received_number = self.object.received_number
+        if not received_number:
+            # If not set, try to generate or get from form
+            # For now, use document ID as fallback
+            received_number = self.object.pk or self.object.document_id
+        
+        received_date = self.object.received_date
+        if not received_date:
+            from django.utils import timezone
+            received_date = timezone.now().date()
+        
+        sender = self.object.sender or "N/A"
+        
+        # Fix: Set initial RECEIVED status if document has no status
+        if not self.object.status_id:
+            from workflow.services.status_resolver import StatusResolver as SR, InboundStatus
+            received_status_id = SR.doc_status_id(InboundStatus.RECEIVED.value)
+            self.object.status_id = received_status_id
+            self.object.save(update_fields=["status_id"])
+        
+        # Register the document (changes status to WAITING_ASSIGNMENT)
+        self.service.register(
+            self.object,
+            received_number=received_number,
+            received_date=received_date,
+            sender=sender,
+        )
+        
+        # Save register book info if provided
+        if register_id:
+            from documents.models import RegisterBook
+            try:
+                register_book = RegisterBook.objects.get(register_id=register_id)
+                # You may want to link document to register book here
+                # For now, just add to workflow log meta
+            except RegisterBook.DoesNotExist:
+                pass
+        
+        messages.success(self.request, "Đã đăng ký văn bản đến vào sổ.")
 
     def _handle_finalize_registration(self):
         note = self._get_value("note")

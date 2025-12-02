@@ -39,7 +39,7 @@ class AuditLog(models.Model):
         null=True, blank=True,
         on_delete=models.SET_NULL,
     )
-    action = models.CharField(max_length=50, choices=Action.choices)
+    action = models.CharField(max_length=100)
     entity_type = models.CharField(
         max_length=20,
         null=True, blank=True,

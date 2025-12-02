@@ -511,6 +511,16 @@ class DocumentSlimSerializer(serializers.ModelSerializer):
 
     @extend_schema_field(OpenApiTypes.INT)
     def get_main_department_id(self, obj: Any) -> Optional[int]:
+        # For outbound documents (du_thao), ALWAYS use creator's department
+        # This fixes legacy data where department_id was incorrectly assigned
+        if hasattr(obj, 'doc_direction') and obj.doc_direction == 'du_thao':
+            created_by = getattr(obj, "created_by", None)
+            if created_by:
+                creator_dept_id = getattr(created_by, "department_id", None)
+                if creator_dept_id is not None:
+                    return creator_dept_id
+        
+        # For other documents, use the stored department
         return getattr(obj, "department_id", None)
 
     @extend_schema_field(OpenApiTypes.INT)

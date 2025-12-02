@@ -16,6 +16,7 @@
     if (Array.isArray(payload)) return payload;
     if (Array.isArray(payload.items)) return payload.items;
     if (Array.isArray(payload.results)) return payload.results;
+    if (Array.isArray(payload.participants)) return payload.participants;
     return [];
   }
 
@@ -255,9 +256,10 @@
 
   async function loadParticipants() {
     try {
-      const participants = await api.request(
+      const participantsRes = await api.request(
         `/api/v1/cases/${caseId}/participants/`
       );
+      const participants = toArray(participantsRes);
       renderParticipants(participants);
 
       // Update form visibility after loading participants
@@ -279,7 +281,8 @@
 
   async function loadTasks() {
     try {
-      const tasks = await api.request(`/api/v1/cases/${caseId}/tasks/`);
+      const tasksRes = await api.request(`/api/v1/cases/${caseId}/tasks/`);
+      const tasks = toArray(tasksRes);
       renderTasks(tasks);
       updateTaskMetrics(tasks);
     } catch (error) {
@@ -290,8 +293,8 @@
 
   async function loadActivityLogs() {
     try {
-      const logs = await api.request(`/api/v1/cases/${caseId}/activity-logs/`);
-      renderActivityLogs(logs);
+      const logsRes = await api.request(`/api/v1/cases/${caseId}/activity-logs/`);
+      renderActivityLogs(toArray(logsRes));
     } catch (error) {
       console.error("Error loading logs:", error);
       renderPlaceholder("case-activity", "Không thể tải nhật ký.");
@@ -300,7 +303,8 @@
 
   async function loadRelatedDocs() {
     try {
-      const docs = await api.request(`/api/v1/cases/${caseId}/documents/`);
+      const docsRes = await api.request(`/api/v1/cases/${caseId}/documents/`);
+      const docs = toArray(docsRes);
       renderRelatedDocs(docs);
       updateDocMetrics(docs);
     } catch (error) {
@@ -330,7 +334,18 @@
     setText("[data-case-code]", data.case_code);
     setText("[data-case-department]", data.department?.name || "—");
     setText("[data-case-leader]", data.leader?.full_name || "—");
-    setText("[data-case-assignee]", data.owner?.full_name || "—");
+
+    // Prefer explicit assignees list, fallback to owner
+    let assigneeDisplay = "—";
+    if (Array.isArray(data.assignees) && data.assignees.length > 0) {
+      assigneeDisplay = data.assignees
+        .map((u) => u.full_name || u.username || u.id)
+        .join(", ");
+    } else if (data.owner) {
+      assigneeDisplay =
+        data.owner.full_name || data.owner.username || data.owner.id || "—";
+    }
+    setText("[data-case-assignee]", assigneeDisplay);
     setText("[data-case-deadline]", formatDateValue(data.due_date, true));
     setText("[data-case-created]", formatDateValue(data.created_at, false));
 
@@ -596,7 +611,8 @@
     });
   }
 
-  function renderRelatedDocs(list) {
+  function renderRelatedDocs(listPayload) {
+    const list = toArray(listPayload);
     const container = $("[data-case-docs]");
     if (!container) return;
     container.innerHTML = "";
@@ -633,7 +649,8 @@
     });
   }
 
-  function updateTaskMetrics(tasks) {
+  function updateTaskMetrics(tasksPayload) {
+    const tasks = toArray(tasksPayload);
     if (!tasks) return;
     const total = tasks.length;
     const completed = tasks.filter(
@@ -650,7 +667,8 @@
     setText('[data-case-metric="tasks-open"]', open);
   }
 
-  function updateDocMetrics(docs) {
+  function updateDocMetrics(docsPayload) {
+    const docs = toArray(docsPayload);
     if (!docs) return;
     setText('[data-case-metric="docs-count"]', docs.length);
   }
@@ -689,11 +707,14 @@
         api.request(`/api/v1/comments/?entity_type=case&entity_id=${caseId}`),
       ]);
 
-      activityLogs = logs || [];
+      const logList = toArray(logs);
+      const commentList = toArray(comments);
+
+      activityLogs = logList;
 
       const combined = [
-        ...logs.map((l) => ({ ...l, type: "log", at: l.at })),
-        ...comments.map((c) => ({
+        ...logList.map((l) => ({ ...l, type: "log", at: l.at })),
+        ...commentList.map((c) => ({
           action: "Bình luận",
           note: c.content,
           actor: c.user,
@@ -712,10 +733,10 @@
         !tbody.querySelector("[data-case-members-placeholder]")
       ) {
         try {
-          const participants = await api.request(
+          const participantsRes = await api.request(
             `/api/v1/cases/${caseId}/participants/`
           );
-          renderParticipants(participants);
+          renderParticipants(toArray(participantsRes));
         } catch (e) {
           console.error("Error reloading participants after activity logs:", e);
         }
@@ -797,9 +818,10 @@
 
   async function loadAttachments() {
     try {
-      const attachments = await api.request(
+      const attachmentsRes = await api.request(
         `/api/v1/cases/${caseId}/attachments/`
       );
+      const attachments = toArray(attachmentsRes);
       renderAttachments(attachments);
     } catch (error) {
       console.error("Error loading attachments:", error);
@@ -807,7 +829,8 @@
     }
   }
 
-  function renderAttachments(list) {
+  function renderAttachments(listPayload) {
+    const list = toArray(listPayload);
     const container = $("[data-case-attachments]");
     if (!container) return;
     container.innerHTML = "";
@@ -1015,6 +1038,7 @@
           showToast("Lỗi cập nhật nhiệm vụ: " + helpers.resolveErrorMessage(error), "error");
         }
       });
+      
     }
   }
 
@@ -1027,21 +1051,28 @@
         `/api/v1/cases/${caseId}/participants/`
       );
       participants.forEach((p) => {
-        // Try multiple ways to get user ID
         const user = p.user;
-        if (!user) {
-          console.warn("[LD] Skipping participant without user object:", p);
+        
+        // DEBUG: Log participant data
+        console.log("[LD] Participant:", {
+          username: user?.username,
+          full_name: user?.full_name,
+          role_on_case: p.role_on_case,
+          user_role: user?.role
+        });
+        
+        if (!user) return;
+
+        // FILTER: Do not show Watchers (Văn thư/Theo dõi) in task assignment
+        if (p.role_on_case === 'watcher' || user.role === 'VT') {
+          console.log("[LD] FILTERED OUT:", user.username, "- role_on_case:", p.role_on_case, "user.role:", user.role);
           return;
         }
         
-        // Try to get user ID from multiple possible fields
         const userId = user.user_id || user.id || user.pk || user.username;
+        if (!userId) return;
         
-        if (!userId) {
-          console.warn("[LD] Skipping participant - no valid user identifier:", p);
-          return;
-        }
-        
+        console.log("[LD] ADDING to dropdown:", user.username);
         const option = document.createElement("option");
         option.value = userId;
         option.textContent = user.full_name || user.username || "—";
@@ -1069,6 +1100,7 @@
 
   function updateActionButtons(statusCode, isWaitingAssignment) {
     const assignButtons = $$("[data-assign-button]");
+    const confirmAssignButton = $('[data-action="confirm-assign"]');
     const addMemberButton = $('[data-action="add-member"]');
     const addTaskButton = $('[data-action="add-task"]');
     const buttons = {
@@ -1095,10 +1127,20 @@
     console.log("[LD] Normalized status (after replace):", normalizedStatus);
 
     // Determine if we can manage members and tasks
-    // Allow management for all statuses except CHO_DUYET_DONG and DONG
-    const canManage = normalizedStatus !== "CHO_DUYET_DONG" && normalizedStatus !== "DONG";
+    // LD can only manage from CHO_PHAN_CONG onwards, NOT at MOI_TAO
+    // Block management at: MOI_TAO, CHO_DUYET_DONG, DONG
+    const canManage = normalizedStatus !== "MOI_TAO" && 
+                      normalizedStatus !== "CHO_DUYET_DONG" && 
+                      normalizedStatus !== "DONG";
     
-    // Toggle between "Assign" (CHO_PHAN_CONG) and "Add Member" (TAM_DUNG, DANG_THUC_HIEN, etc.)
+    // Strict rule: Cannot assign/add members in DANG_THUC_HIEN
+    // Only allow in TAM_DUNG or other valid statuses (excluding waiting assignment which is handled separately)
+    const canManageMembers = canManage && normalizedStatus !== "DANG_THUC_HIEN";
+
+    // Check if we're in a status that allows assignment operations
+    const isWaitingOrPaused = isWaitingAssignment || normalizedStatus === "TAM_DUNG";
+
+    // Toggle between "Assign" (CHO_PHAN_CONG) and "Add Member" (TAM_DUNG, etc.)
     if (isWaitingAssignment) {
       // Show assignment workflow buttons only
       assignButtons.forEach((btn) => {
@@ -1107,6 +1149,9 @@
           setAssignEnabled(btn, true);
         }
       });
+      // Show confirm assign button in CHO_PHAN_CONG
+      if (confirmAssignButton) setActionButtonVisibility(confirmAssignButton, true);
+
       // Hide add member button
       if (addMemberButton) setActionButtonVisibility(addMemberButton, false);
     } else {
@@ -1114,10 +1159,14 @@
       assignButtons.forEach((btn) => {
         if (btn) setActionButtonVisibility(btn, false);
       });
-      // Show add member button if we can manage
+      
+      // Hide confirm assign button (only needed in CHO_PHAN_CONG)
+      if (confirmAssignButton) setActionButtonVisibility(confirmAssignButton, false);
+
+      // Show add member button if we can manage members (e.g. TAM_DUNG)
       if (addMemberButton) {
-        setActionButtonVisibility(addMemberButton, canManage);
-        if (canManage) {
+        setActionButtonVisibility(addMemberButton, canManageMembers);
+        if (canManageMembers) {
           addMemberButton.disabled = false;
           addMemberButton.classList.remove("opacity-50", "cursor-not-allowed");
         } else {
@@ -1127,10 +1176,10 @@
       }
     }
     
-    // Handle add task button - enabled for TAM_DUNG, DANG_THUC_HIEN, etc.
+    // Handle add task button - only enabled in CHO_PHAN_CONG and TAM_DUNG, NOT in DANG_THUC_HIEN
     if (addTaskButton) {
-      setActionButtonVisibility(addTaskButton, true);
-      if (canManage) {
+      setActionButtonVisibility(addTaskButton, canManageMembers);
+      if (canManageMembers) {
         addTaskButton.disabled = false;
         addTaskButton.classList.remove("opacity-50", "cursor-not-allowed");
       } else {
@@ -1348,46 +1397,16 @@
 
       btn.addEventListener("click", () => {
         if (btn.id === "btnAssignMember") {
-          const assignWrapper = $("#ld-assign-wrapper");
-          if (assignWrapper) {
-            const computed = window.getComputedStyle(assignWrapper);
-            const isHidden =
-              assignWrapper.classList.contains("hidden") ||
-              assignWrapper.hidden ||
-              computed.display === "none" ||
-              computed.visibility === "hidden";
-
-            // Show form if status is CHO_PHAN_CONG
-            if (caseData) {
-              const rawStatusValue =
-                caseData.status?.code ||
-                caseData.status?.name ||
-                caseData.status;
-
-              if (isWaitingAssignmentStatus(rawStatusValue)) {
-                showAssignForm();
-
-                // Scroll to form and focus
-                setTimeout(() => {
-                  assignWrapper.scrollIntoView({
-                    behavior: "smooth",
-                    block: "nearest",
-                  });
-                  setTimeout(() => {
-                    const assignSelect = $("#ld-assign-assignee");
-                    if (assignSelect) assignSelect.focus();
-                  }, 400);
-                }, 100);
-              }
-            } else {
-              // If no case data, just try to show and scroll
-              showAssignForm();
-              setTimeout(() => {
-                assignWrapper.scrollIntoView({
-                  behavior: "smooth",
-                  block: "nearest",
-                });
-              }, 100);
+          // Open assignment modal for CHO_PHAN_CONG status
+          const modal = $("#modalAssignment");
+          if (modal) {
+            modal.showModal();
+            // Load specialists into modal dropdown
+            const modalSelect = document.querySelector("#assignment-assignee");
+            if (modalSelect) {
+              loadCandidateSpecialists(null).catch(err => 
+                console.error("[LD] Error loading specialists for modal:", err)
+              );
             }
           }
         } else {
@@ -1402,6 +1421,11 @@
 
       btn.setAttribute("data-assign-click-listener", "true");
     });
+
+    const btnConfirmAssign = $('[data-action="confirm-assign"]');
+    if (btnConfirmAssign) {
+      btnConfirmAssign.addEventListener("click", handleFinalConfirmation);
+    }
 
     const btnPause = $('[data-action="pause"]');
     if (btnPause) btnPause.addEventListener("click", handlePause);
@@ -1429,13 +1453,74 @@
     });
   }
 
+  function showAssignForm() {
+    const wrapper = $("#ld-assign-wrapper");
+    if (wrapper) wrapper.classList.remove("hidden");
+  }
+
+  function hideAssignForm() {
+    const wrapper = $("#ld-assign-wrapper");
+    if (wrapper) wrapper.classList.add("hidden");
+  }
+
+  // Populate member select based on role
+  async function populateMemberSelect(role = 'assignee') {
+    const select = document.querySelector('[data-add-member-users]');
+    if (!select) return;
+
+    // Clear current options
+    select.innerHTML = '<option value="">-- Đang tải... --</option>';
+
+    try {
+      let users = [];
+      if (role === 'watcher') {
+        // Load VT users using Clerk API (accessible by LD)
+        const payload = await api.clerks.list();
+        users = Array.isArray(payload) ? payload : (payload.results || []);
+      } else {
+        // Load Specialists (CV)
+        try {
+            const payload = await api.specialists.list({ ordering: 'full_name' });
+            users = Array.isArray(payload) ? payload : (payload.results || []);
+        } catch (e) {
+            console.warn("[LD] Specialists API failed, fallback to users API", e);
+            const payload = await api.users.list({ role: 'CV', ordering: 'full_name' });
+            users = Array.isArray(payload) ? payload : (payload.results || []);
+        }
+      }
+
+      // Render options
+      if (users.length === 0) {
+        select.innerHTML = '<option value="">-- Không tìm thấy người dùng --</option>';
+      } else {
+        select.innerHTML = '<option value="">-- Chọn người dùng --</option>' + 
+          users.map(u => `<option value="${u.id || u.user_id}">${u.full_name || u.username} (${u.department_name || '---'})</option>`).join('');
+      }
+    } catch (err) {
+      console.error("[LD] Error loading users:", err);
+      select.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+    }
+  }
+
   async function handleAddMember() {
     const modal = $("#modalAddMember");
     if (!modal) return;
-    await populateMemberSelect();
-    modal.showModal();
+    
+    // Initial populate
     const form = modal.querySelector('[data-form="add-member-simple"]');
     if (!form) return;
+
+    const roleSelect = form.querySelector('[data-role-select]');
+    if (roleSelect) {
+        // Reset to default
+        roleSelect.value = 'assignee';
+        // Attach listener
+        roleSelect.onchange = () => populateMemberSelect(roleSelect.value);
+    }
+
+    await populateMemberSelect('assignee');
+    modal.showModal();
+    
     form.onsubmit = async (e) => {
       e.preventDefault();
       const formData = new FormData(form);
@@ -1482,7 +1567,7 @@
         
         // Add new participant
         filtered.push({ 
-          user_id: String(userId), // Ensure string format
+          user_id: String(userId),
           role_on_case: roleOnCase 
         });
         
@@ -1492,54 +1577,26 @@
           method: "PUT",
           body: { participants: filtered },
         });
+        
+        showToast("Đã thêm thành viên thành công");
         modal.close();
         form.reset();
-        showToast("Đã thêm thành viên thành công!", "success");
         await loadParticipants();
-      } catch (error) {
-        console.error("[LD] Error adding member:", error);
-        showToast(error.message || "Không thể thêm thành viên", "error");
+      } catch (err) {
+        console.error("[LD] handleAddMember error:", err);
+        showToast(err.message || "Không thể thêm thành viên", "error");
       }
     };
   }
-  
-  async function populateMemberSelect() {
-    const select = $("[data-add-member-users]");
-    if (!select) return;
-    select.innerHTML = '<option value="">-- Chọn chuyên viên --</option>';
-    try {
-      const specialists = await api.request(`/api/v1/specialists/`);
-      (specialists || []).forEach((specialist) => {
-        const userId = specialist.user_id || specialist.id || specialist.pk;
-        if (!userId) return;
-        const option = document.createElement("option");
-        option.value = userId;
-        option.textContent = `${specialist.full_name || specialist.username} (${specialist.department_name || specialist.department?.name || '—'})`;
-        select.appendChild(option);
-      });
-    } catch (error) {
-      console.error("Error loading specialists:", error);
-    }
-  }
 
   async function handleDeleteMember(userId) {
-    if (!userId) {
-      console.warn("[LD] handleDeleteMember: No userId provided");
-      return;
-    }
-    
-    if (!confirm("Bạn có chắc muốn xóa thành viên này khỏi hồ sơ?")) {
-      return;
-    }
-    
+    if (!confirm("Bạn có chắc chắn muốn xóa thành viên này khỏi hồ sơ?")) return;
+
     try {
-      // ✅ Backend doesn't have DELETE endpoint, must use PUT with filtered list
-      // 1. Get current participants
       const existingParticipants = await api.request(
         `/api/v1/cases/${caseId}/participants/`
       );
-      
-      // 2. Normalize and filter out the participant to delete
+
       const normalized = (
         Array.isArray(existingParticipants)
           ? existingParticipants
@@ -1547,82 +1604,34 @@
       )
         .map((item) => {
           const user = item.user;
-          // Extract user_id robustly
           const normalizedUserId = user?.user_id || user?.id || user?.pk;
-          if (!normalizedUserId || !item.role_on_case) {
-            console.warn("[LD] handleDeleteMember: Skipping participant with invalid data:", item);
-            return null;
-          }
+          if (!normalizedUserId || !item.role_on_case) return null;
           return {
             user_id: String(normalizedUserId),
             role_on_case: item.role_on_case,
           };
         })
         .filter(Boolean);
-      
-      // 3. Filter out the user to delete
+
+      // Filter out the user to delete
       const filtered = normalized.filter((item) => item.user_id !== String(userId));
-      
-      console.log("[LD] handleDeleteMember:", {
-        userId,
-        before: normalized.length,
-        after: filtered.length,
-      });
-      
-      // 4. PUT updated list
+
+      if (filtered.length === normalized.length) {
+        showToast("Thành viên không tồn tại trong danh sách", "warning");
+        return;
+      }
+
       await api.request(`/api/v1/cases/${caseId}/participants/`, {
         method: "PUT",
         body: { participants: filtered },
       });
-      
-      showToast("Đã xóa thành viên", "success");
+
+      showToast("Đã xóa thành viên thành công");
       await loadParticipants();
-    } catch (error) {
-      console.error("[LD] Error deleting member:", error);
-      showToast(error.message || "Không thể xóa thành viên", "error");
+    } catch (err) {
+      console.error("[LD] handleDeleteMember error:", err);
+      showToast(err.message || "Không thể xóa thành viên", "error");
     }
-  }
-
-  // Simple function to show assign form
-  function showAssignForm() {
-    const assignWrapper = $("#ld-assign-wrapper");
-    if (!assignWrapper) {
-      console.warn("[LD] showAssignForm: assignWrapper not found");
-      return false;
-    }
-
-    console.log("[LD] showAssignForm: Showing form");
-    console.log("[LD] Before:", {
-      classList: assignWrapper.classList.toString(),
-      hidden: assignWrapper.hidden,
-      display: window.getComputedStyle(assignWrapper).display,
-    });
-
-    // Remove hidden class and attribute
-    assignWrapper.classList.remove("hidden");
-    assignWrapper.hidden = false;
-    assignWrapper.removeAttribute("hidden");
-    
-    // Force display with inline style to override any CSS
-    assignWrapper.style.display = "block";
-
-    console.log("[LD] After:", {
-      classList: assignWrapper.classList.toString(),
-      hidden: assignWrapper.hidden,  
-      display: window.getComputedStyle(assignWrapper).display,
-    });
-
-    return true;
-  }
-
-  // Simple function to hide assign form
-  function hideAssignForm() {
-    const assignWrapper = $("#ld-assign-wrapper");
-    if (!assignWrapper) return;
-
-    assignWrapper.classList.add("hidden");
-    assignWrapper.hidden = true;
-    console.log("[LD] hideAssignForm: Form hidden");
   }
 
   // Show message in assign form
@@ -1850,7 +1859,8 @@
   function renderAssignOptions(users) {
     console.log("[LD] renderAssignOptions called with:", users);
     
-    const assignSelect = $("#ld-assign-assignee");
+    // Try modal first, fallback to inline form (for backwards compatibility)
+    const assignSelect = $("#assignment-assignee") || $("#ld-assign-assignee");
     if (!assignSelect) {
       console.warn("[LD] Assign select not found in renderAssignOptions");
       return;
@@ -1931,116 +1941,55 @@
   }
 
   async function handleFinalConfirmation() {
-    if (pendingSpecialists.length === 0) {
-      showAssignMessage("Vui lòng thêm ít nhất một chuyên viên.", true);
-      return;
-    }
-
-    // Get shared instruction
-    const instructionInput = $("#ld-assign-instruction");
-    const instruction = instructionInput?.value?.trim() || "";
-
-    const confirmBtn = $("#btn-final-confirm");
+    const confirmBtn = $("#btnConfirmAssign");
     if (confirmBtn) {
       confirmBtn.disabled = true;
       confirmBtn.textContent = "Đang xử lý...";
     }
 
     try {
-      showAssignMessage("Đang thêm chuyên viên...", false);
-
-      // Step 1: Get existing participants
+      // Step 1: Get existing participants to validate
       const existingParticipants = await api.request(
         `/api/v1/cases/${caseId}/participants/`
       );
-      const normalized = (
-        Array.isArray(existingParticipants)
-          ? existingParticipants
-          : existingParticipants?.participants || []
-      )
-        .map((item) => {
-          let normalizedUserId = item.user?.user_id || item.user_id;
-          if (!normalizedUserId || !item.role_on_case) return null;
-          normalizedUserId = String(normalizedUserId)
-            .replace(/-/g, "")
-            .toLowerCase();
-          return { user_id: normalizedUserId, role_on_case: item.role_on_case };
-        })
-        .filter(Boolean);
+      
+      const participants = Array.isArray(existingParticipants) 
+        ? existingParticipants 
+        : (existingParticipants.participants || []);
 
-      // Step 2: Add pending specialists to participants
-      const newAssignees = pendingSpecialists.map((s) => ({
-        user_id: String(s.user_id).replace(/-/g, "").toLowerCase(),
-        role_on_case: "assignee",
-      }));
+      // Check if there are any assignees (role 'assignee')
+      const hasAssignee = participants.some(p => p.role_on_case === 'assignee');
 
-      // Remove duplicates and merge
-      const newAssigneeIds = new Set(newAssignees.map((a) => a.user_id));
-      const filtered = normalized.filter(
-        (item) =>
-          !(
-            item.role_on_case === "assignee" && newAssigneeIds.has(item.user_id)
-          )
-      );
-      const allParticipants = [...filtered, ...newAssignees];
-
-      await api.request(`/api/v1/cases/${caseId}/participants/`, {
-        method: "PUT",
-        body: { participants: allParticipants },
-      });
-
-      showAssignMessage("Đang tạo nhiệm vụ...", false);
-
-      // Step 3: Create tasks for each specialist
-      for (const specialist of pendingSpecialists) {
-        if (
-          specialist.task &&
-          specialist.task.title &&
-          specialist.task.title.trim()
-        ) {
-          const taskPayload = {
-            title: specialist.task.title.trim(),
-            assignee_id: specialist.user_id,
-            due_at: specialist.task.due_at || null,
-            note: instruction || null,
-          };
-
-          await api.request(`/api/v1/cases/${caseId}/tasks/`, {
-            method: "POST",
-            body: taskPayload,
-          });
+      if (!hasAssignee) {
+        showToast("Vui lòng phân công ít nhất một chuyên viên trước khi xác nhận.", "warning");
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Xác nhận phân công";
         }
+        return;
       }
 
-      showAssignMessage("Đang hoàn tất phân công...", false);
-
-      // Step 4: Call assign API to transition to DANG_THUC_HIEN
-      const assignPayload = {
-        assignees: newAssignees.map((a) => a.user_id),
-        instruction:
-          instruction ||
-          `Đã phân công ${pendingSpecialists.length} chuyên viên`,
+      // Step 2: Confirm assignment (transition status)
+      const payload = {
+        participants: participants.map(p => ({
+          user_id: p.user.id || p.user.user_id || p.user.pk,
+          role_on_case: p.role_on_case,
+          instruction: p.instruction || ""
+        })),
+        tasks: [] 
       };
 
       await api.request(`/api/v1/cases/${caseId}/assign/`, {
         method: "POST",
-        body: assignPayload,
+        body: payload,
       });
 
-      showAssignMessage("Phân công thành công!", false);
-
-      // Clear pending specialists
-      pendingSpecialists = [];
-
-      // Reset form
-      const assignForm = $("#ld-assign-form");
-      if (assignForm) assignForm.reset();
-
-      // Reload page to show updated state
+      showToast("Đã phân công hồ sơ thành công!", "success");
       setTimeout(() => window.location.reload(), 1500);
+
     } catch (error) {
       console.error("[LD] Error in final confirmation:", error);
-      showAssignMessage(error.message || "Không thể hoàn tất phân công.", true);
+      showToast(error.message || "Không thể hoàn tất phân công.", "error");
 
       if (confirmBtn) {
         confirmBtn.disabled = false;

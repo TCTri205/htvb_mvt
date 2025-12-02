@@ -5,20 +5,27 @@ FIXED: Date range handling, efficiency caps, NULL handling, consistent query pat
 """
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from functools import lru_cache
 import re
 import unicodedata
 from typing import Optional, Dict, Any, List
 
-from django.db.models import Count, Q, F, Avg, ExpressionWrapper, DurationField
+from django.db.models import Count, Q, F, Avg, ExpressionWrapper, DurationField, Prefetch
 from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 
-from documents.models import Document, DocumentAssignment
+from documents.models import Document, DocumentAssignment, DocumentWorkflowLog
 from accounts.models import Department
 from catalog.models import DocumentStatus
+from cases.models import CaseTask
+from notifications.models import Notification
+from workflow.services.status_resolver import (
+    InboundStatus,
+    OutboundStatus,
+    canonical_status_key,
+)
 
 User = get_user_model()
 
@@ -358,6 +365,26 @@ class DocumentAnalyticsService:
             
         return result
 
+    @staticmethod
+    def get_status_summary() -> dict[str, dict[str, int]]:
+        summary = {
+            "INBOUND": {},
+            "OUTBOUND": {},
+        }
+        qs = Document.objects.filter(status__status_name__isnull=False)
+        stats = (
+            qs.values("doc_direction", "status__status_name")
+            .annotate(count=Count("document_id"))
+        )
+        for stat in stats:
+            direction = stat.get("doc_direction")
+            bucket = "INBOUND" if direction == Document.Direction.DEN else "OUTBOUND"
+            status_name = (stat.get("status__status_name") or "").upper()
+            if not status_name:
+                continue
+            summary[bucket][status_name] = summary[bucket].get(status_name, 0) + stat.get("count", 0)
+        return summary
+
 
 class PerformanceService:
     """Service for performance metrics."""
@@ -566,3 +593,253 @@ class ActivityService:
                 "data": values
             }]
         }
+
+
+class LeaderDashboardService:
+    """Aggregated helpers for the lãnh đạo dashboard."""
+
+    PENDING_STATUSES = {
+        InboundStatus.PENDING_LEADER_APPROVAL.value,
+        OutboundStatus.SUBMITTED.value,
+        OutboundStatus.PENDING_CLERK_CHECK.value,
+    }
+
+    TASK_STATUS_OPEN = {
+        CaseTask.Status.OPEN,
+        CaseTask.Status.IN_PROGRESS,
+    }
+
+    @staticmethod
+    def _to_datetime(value: Any) -> Optional[datetime]:
+        if isinstance(value, datetime):
+            return value
+        if isinstance(value, date):
+            return datetime.combine(value, datetime.min.time())
+        return None
+
+    @staticmethod
+    def _ensure_timezone(value: Optional[datetime]) -> Optional[datetime]:
+        if value is None:
+            return None
+        if timezone.is_naive(value):
+            return timezone.make_aware(value)
+        return value
+
+    @staticmethod
+    def _serialize_document(doc: Document) -> Dict[str, Any]:
+        status_name = getattr(doc.status, "status_name", None)
+        assignments: list[DocumentAssignment] = getattr(doc, "leader_assignments", [])
+        due_raw = assignments[0].due_at if assignments else None
+        if not due_raw:
+            due_raw = getattr(doc, "received_date", None) or getattr(doc, "issued_date", None)
+        due_at = LeaderDashboardService._ensure_timezone(
+            LeaderDashboardService._to_datetime(due_raw)
+        )
+
+        code = (
+            doc.document_code
+            or doc.issue_number
+            or doc.received_number
+            or str(getattr(doc, "document_id", ""))
+        )
+
+        now = timezone.now()
+        is_overdue = bool(due_at and due_at < now)
+
+        return {
+            "document_id": getattr(doc, "document_id", None),
+            "title": doc.title,
+            "code": code,
+            "direction": doc.doc_direction,
+            "status": status_name,
+            "status_key": canonical_status_key(status_name, doc.doc_direction) if status_name else "",
+            "due_at": due_at.isoformat() if due_at else None,
+            "updated_at": doc.updated_at.isoformat() if getattr(doc, "updated_at", None) else None,
+            "department": getattr(doc.department, "name", None),
+            "is_overdue": is_overdue,
+        }
+
+    @staticmethod
+    def _serialize_approval_step(log: DocumentWorkflowLog) -> Dict[str, Any]:
+        doc = getattr(log, "document", None)
+        code = (
+            getattr(doc, "document_code", None)
+            or getattr(doc, "issue_number", None)
+            or getattr(doc, "received_number", None)
+            or (str(getattr(doc, "document_id", None)) if doc else None)
+            or ""
+        )
+        return {
+            "log_id": getattr(log, "log_id", None),
+            "document_id": getattr(doc, "document_id", None) if doc else None,
+            "code": code,
+            "title": getattr(doc, "title", None) if doc else None,
+            "action": getattr(log, "action", None),
+            "status": getattr(getattr(log, "to_status", None), "status_name", None)
+            or getattr(getattr(log, "from_status", None), "status_name", None),
+            "actor": getattr(getattr(log, "acted_by", None), "full_name", None),
+            "timestamp": getattr(log, "acted_at", None).isoformat()
+            if getattr(log, "acted_at", None)
+            else None,
+            "note": getattr(log, "comment", None),
+        }
+
+    @staticmethod
+    def get_pending_documents(
+        user_id: Optional[int] = None,
+        department_id: Optional[int] = None,
+        limit: int = 5,
+    ) -> Dict[str, Any]:
+        qs = Document.objects.select_related("status", "department")
+        if user_id:
+            qs = qs.filter(Q(assignments__user_id=user_id) | Q(created_by_id=user_id))
+        elif department_id:
+            qs = qs.filter(department_id=department_id)
+        qs = qs.filter(status__status_name__in=LeaderDashboardService.PENDING_STATUSES).distinct()
+
+        inbound_pending = qs.filter(doc_direction=Document.Direction.DEN).count()
+        outbound_pending = qs.filter(doc_direction=Document.Direction.DI).count()
+
+        if user_id:
+            qs = qs.prefetch_related(
+                Prefetch(
+                    "assignments",
+                    queryset=DocumentAssignment.objects.filter(user_id=user_id).order_by("due_at"),
+                    to_attr="leader_assignments",
+                )
+            )
+
+        docs = qs.order_by("-updated_at")[:limit]
+
+        return {
+            "items": [LeaderDashboardService._serialize_document(doc) for doc in docs],
+            "counts": {
+                "approval": inbound_pending,
+                "sign": outbound_pending,
+            },
+        }
+
+    @staticmethod
+    def get_recent_approval_steps(
+        user_id: Optional[int] = None,
+        department_id: Optional[int] = None,
+        limit: int = 5,
+    ) -> List[Dict[str, Any]]:
+        qs = DocumentWorkflowLog.objects.select_related(
+            "document", "acted_by", "to_status", "from_status"
+        )
+        if user_id:
+            qs = qs.filter(document__assignments__user_id=user_id)
+        elif department_id:
+            qs = qs.filter(document__department_id=department_id)
+        logs = qs.order_by("-acted_at")[:limit]
+        return [LeaderDashboardService._serialize_approval_step(log) for log in logs]
+
+    @staticmethod
+    def get_task_progress(
+        user_id: Optional[int] = None,
+        department_id: Optional[int] = None,
+        limit: int = 5,
+    ) -> Dict[str, Any]:
+        qs = CaseTask.objects.select_related("assignee", "case")
+        if department_id:
+            qs = qs.filter(case__department_id=department_id)
+        elif user_id:
+            qs = qs.filter(Q(case__leader_id=user_id) | Q(assignee_id=user_id))
+
+        total = qs.count()
+        completed = qs.filter(status=CaseTask.Status.DONE).count()
+        late = (
+            qs.filter(status__in=LeaderDashboardService.TASK_STATUS_OPEN)
+            .filter(due_at__isnull=False, due_at__lt=timezone.now())
+            .count()
+        )
+
+        tasks = qs.order_by("due_at", "-created_at")[:limit]
+        items = []
+        for task in tasks:
+            items.append(
+                {
+                    "task_id": getattr(task, "task_id", None),
+                    "title": task.title,
+                    "status": task.status,
+                    "due_at": getattr(task, "due_at", None).isoformat()
+                    if getattr(task, "due_at", None)
+                    else None,
+                    "assignee": getattr(getattr(task, "assignee", None), "full_name", None),
+                    "case_title": getattr(getattr(task, "case", None), "title", None),
+                    "case_code": getattr(getattr(task, "case", None), "case_code", None),
+                }
+            )
+
+        return {
+            "total": total,
+            "completed": completed,
+            "late": late,
+            "items": items,
+        }
+
+    @staticmethod
+    def _normalize_notification_link(link: Optional[str]) -> str:
+        if not link:
+            return ""
+        normalized = str(link).strip()
+        if not normalized:
+            return ""
+        lower = normalized.lower()
+        if lower.startswith("http://") or lower.startswith("https://"):
+            return normalized
+        trimmed = normalized if normalized.startswith("/") else f"/{normalized}"
+        if trimmed.startswith("/lanhdao/"):
+            return trimmed
+
+        mapping = {
+            "/vanbanden/": "/lanhdao/vanbanden/",
+            "/vanbandi/": "/lanhdao/vanbandi/",
+            "/hosocongviec/": "/lanhdao/hosocongviec/",
+            "/vanban/": "/lanhdao/vanbanden/",
+        }
+
+        for prefix, target in mapping.items():
+            if trimmed.startswith(prefix):
+                return target + trimmed[len(prefix) :]
+        return trimmed
+
+    @staticmethod
+    def get_notifications(user_id: Optional[int], limit: int = 5) -> List[Dict[str, Any]]:
+        if not user_id:
+            return []
+        qs = Notification.objects.filter(user_id=user_id).order_by("-sent_at")[:limit]
+        result = []
+        for note in qs:
+            result.append(
+                {
+                    "notification_id": getattr(note, "notification_id", None),
+                    "title": note.title,
+                    "body": note.body,
+                    "sent_at": note.sent_at.isoformat() if note.sent_at else None,
+                    "read": note.read_at is not None,
+                    "link": LeaderDashboardService._normalize_notification_link(note.link),
+                }
+            )
+        return result
+
+    @staticmethod
+    def get_status_summary() -> dict[str, dict[str, int]]:
+        summary = {
+            "INBOUND": {},
+            "OUTBOUND": {},
+        }
+        qs = Document.objects.filter(status__status_name__isnull=False)
+        stats = (
+            qs.values("doc_direction", "status__status_name")
+            .annotate(count=Count("document_id"))
+        )
+        for stat in stats:
+            direction = stat.get("doc_direction")
+            bucket = "INBOUND" if direction == Document.Direction.DEN else "OUTBOUND"
+            status_name = (stat.get("status__status_name") or "").upper()
+            if not status_name:
+                continue
+            summary[bucket][status_name] = summary[bucket].get(status_name, 0) + stat.get("count", 0)
+        return summary

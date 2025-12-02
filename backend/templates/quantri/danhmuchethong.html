@@ -2,6 +2,11 @@
 {% load static %}
 {% block title %}Hệ thống Quản lý Văn bản &amp; Điều hành • Danh mục hệ thống{% endblock %}
 {% block content %}
+<script>
+  // Đặt rõ ngữ cảnh trang cho JS quản trị
+  document.body.dataset.page = document.body.dataset.page || "danhmuc";
+  document.body.dataset.role = document.body.dataset.role || "quantri";
+</script>
 
           <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
             <h1 class="text-[15px] font-semibold mb-3">
@@ -20,7 +25,7 @@
                   <p class="text-[13px] text-slate-600 font-semibold">
                     Loại văn bản
                   </p>
-                  <p class="mt-2 text-3xl font-bold">8</p>
+                  <p id="kpi-doc-types" class="mt-2 text-3xl font-bold">-</p>
                 </div>
                 <div
                   class="w-10 h-10 rounded-lg bg-blue-50 grid place-items-center"
@@ -45,7 +50,7 @@
                   <p class="text-[13px] text-slate-600 font-semibold">
                     Trạng thái
                   </p>
-                  <p class="mt-2 text-3xl font-bold">5</p>
+                  <p id="kpi-doc-statuses" class="mt-2 text-3xl font-bold">-</p>
                 </div>
                 <div
                   class="w-10 h-10 rounded-lg bg-emerald-50 grid place-items-center"
@@ -70,7 +75,7 @@
                   <p class="text-[13px] text-slate-600 font-semibold">
                     Mức ưu tiên
                   </p>
-                  <p class="mt-2 text-3xl font-bold">3</p>
+                  <p id="kpi-priorities" class="mt-2 text-3xl font-bold">-</p>
                 </div>
                 <div
                   class="w-10 h-10 rounded-lg bg-amber-50 grid place-items-center"
@@ -93,7 +98,7 @@
                   <p class="text-[13px] text-slate-600 font-semibold">
                     Phòng ban
                   </p>
-                  <p class="mt-2 text-3xl font-bold">4</p>
+                  <p id="kpi-departments" class="mt-2 text-3xl font-bold">-</p>
                 </div>
                 <div
                   class="w-10 h-10 rounded-lg bg-violet-50 grid place-items-center"
@@ -116,7 +121,7 @@
                   <p class="text-[13px] text-slate-600 font-semibold">
                     Cơ quan
                   </p>
-                  <p class="mt-2 text-3xl font-bold">4</p>
+                  <p id="kpi-agencies" class="mt-2 text-3xl font-bold">-</p>
                 </div>
                 <div
                   class="w-10 h-10 rounded-lg bg-fuchsia-50 grid place-items-center"
@@ -2204,4 +2209,5 @@
 {% block extra_js %}
 <script src="{% static 'js/doc-helpers.js' %}"></script>
 <script src="{% static 'js/quantri.js' %}" defer></script>
+<script src="{% static 'js/quantri-danhmuc.js' %}" defer></script>
 {% endblock %}

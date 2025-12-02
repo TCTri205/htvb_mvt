@@ -124,9 +124,25 @@ class DocumentPermission(BasePermission):
             direction = _direction_from_request(request, view)
             if direction in (Document.Direction.DU_THAO, Document.Direction.DI):
                 return Act.OUT_DRAFT_CREATE
-            return Act.IN_DRAFT_EDIT
-        if action in ("update", "partial_update") and getattr(view, "doc_direction", None) == "di":
-            return Act.OUT_DRAFT_EDIT
+            return Act.IN_EDIT_NOTE
+
+        if action in ("update", "partial_update"):
+            # Ưu tiên lấy hướng từ instance nếu có (ở object permission)
+            direction_hint = None
+            if obj is not None:
+                direction_hint = getattr(obj, "doc_direction", None)
+            if not direction_hint:
+                direction_hint = _direction_from_request(request, view)
+            if not direction_hint:
+                direction_hint = getattr(view, "doc_direction", None)
+
+            if direction_hint in (Document.Direction.DU_THAO, Document.Direction.DI):
+                return Act.OUT_DRAFT_EDIT
+            if direction_hint == Document.Direction.DEN:
+                return Act.IN_EDIT_NOTE
+
+            # Không đoán được hướng, defer sang object-level (has_object_permission)
+            return None
 
         # Không đoán mò cho inbound/khác → yêu cầu map rõ ràng
         return None
@@ -139,8 +155,8 @@ class DocumentPermission(BasePermission):
         # giúp các rule động (_is_doc_assignee, ...) trong can() hoạt động chính xác.
         if self._is_detail_request(view):
             if not act and request.method not in SAFE_METHODS:
-                # Cho phép attachments tiếp tục để kiểm object-level (RBAC cần doc)
-                if getattr(view, "action", "") == "attachments":
+                # Cho phép attachments/REST update đi tiếp để object-level quyết định
+                if getattr(view, "action", "") in ("attachments", "update", "partial_update"):
                     return True
                 return False
             return True

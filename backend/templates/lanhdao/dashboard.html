@@ -4,6 +4,10 @@
 {% block content %}
 
           <div class="max-w-none px-6 lg:px-8 py-6 lg:py-7">
+            <div
+              id="dashboardError"
+              class="hidden px-4 py-3 mb-4 rounded-lg bg-rose-50 text-rose-800 text-sm"
+            ></div>
             <!-- ====== TOP METRICS ====== -->
             <section class="grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6">
               <!-- Văn bản chờ duyệt -->
@@ -158,81 +162,10 @@
 
                 <ul class="divide-y divide-slate-100" id="approve-list">
                   <li
-                    class="px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-50/60"
+                    class="px-4 py-3 text-sm text-slate-500"
+                    data-dashboard-placeholder
                   >
-                    <div>
-                      <p class="font-medium">
-                        Thông báo tổ chức Đại hội Đảng bộ phường
-                      </p>
-                      <p class="text-[12.5px] text-slate-500">
-                        Số: 001/TB-UBND | 2024-01-15 —
-                        <span class="font-medium text-slate-600"
-                          >Hạn: 2024-01-20</span
-                        >
-                      </p>
-                    </div>
-                    <span
-                      class="rounded-full bg-amber-50 text-amber-700 text-xs font-semibold px-2.5 py-1"
-                      >Chờ duyệt</span
-                    >
-                  </li>
-
-                  <li
-                    class="px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-50/60"
-                  >
-                    <div>
-                      <p class="font-medium">
-                        Báo cáo kết quả thực hiện kế hoạch phát triển kinh tế
-                        2023
-                      </p>
-                      <p class="text-[12.5px] text-slate-500">
-                        Số: 021/BC-UBND | 2024-01-18
-                      </p>
-                    </div>
-                    <button
-                      class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12px] font-medium hover:bg-slate-700"
-                      title="Phê duyệt"
-                    >
-                      Chờ duyệt
-                    </button>
-                  </li>
-
-                  <li
-                    class="px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-50/60"
-                  >
-                    <div>
-                      <p class="font-medium">
-                        Công văn đề nghị cấp kinh phí tổ chức sự kiện
-                      </p>
-                      <p class="text-[12.5px] text-slate-500">
-                        Số: 026/CV-UBND | 2024-02-01
-                      </p>
-                    </div>
-                    <button
-                      class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12px] font-medium hover:bg-slate-700"
-                      title="Phê duyệt"
-                    >
-                      Chờ duyệt
-                    </button>
-                  </li>
-
-                  <li
-                    class="px-4 py-3 flex items-start justify-between gap-4 hover:bg-slate-50/60"
-                  >
-                    <div>
-                      <p class="font-medium">
-                        Quyết định phân công nhiệm vụ cho cán bộ
-                      </p>
-                      <p class="text-[12.5px] text-slate-500">
-                        Số: 028/QĐ-UBND | 2024-02-01
-                      </p>
-                    </div>
-                    <button
-                      class="px-3 py-1.5 rounded-md bg-slate-900 text-white text-[12px] font-medium hover:bg-slate-700"
-                      title="Phê duyệt"
-                    >
-                      Chờ duyệt
-                    </button>
+                    Đang tải danh sách văn bản cần phê duyệt...
                   </li>
                 </ul>
 
@@ -260,81 +193,10 @@
 
                 <ul class="divide-y divide-slate-100" id="approval-tracking">
                   <li
-                    class="px-4 py-3 flex items-center justify-between hover:bg-slate-50/60"
+                    class="px-4 py-3 text-sm text-slate-500"
+                    data-dashboard-placeholder
                   >
-                    <div class="flex items-start gap-3">
-                      <div
-                        class="mt-0.5 text-indigo-600 font-semibold text-[13px]"
-                      >
-                        STEP
-                      </div>
-                      <div>
-                        <p class="font-medium">VB-015 • Bước 2/3</p>
-                        <p class="text-[12.5px] text-slate-500">
-                          2024-02-08 08:45 — Đang chờ Chủ tịch phê duyệt quyết
-                          định.
-                        </p>
-                        <p class="text-[12px] text-slate-400">
-                          Người duyệt: Trần Thị Bình • Trạng thái: PENDING
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      class="px-3 py-1.5 rounded-md bg-amber-50 text-[12px] font-medium text-amber-700"
-                      >Chờ ký</span
-                    >
-                  </li>
-
-                  <li
-                    class="px-4 py-3 flex items-center justify-between hover:bg-slate-50/60"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div
-                        class="mt-0.5 text-indigo-600 font-semibold text-[13px]"
-                      >
-                        STEP
-                      </div>
-                      <div>
-                        <p class="font-medium">VB-012 • Bước 3/3</p>
-                        <p class="text-[12.5px] text-slate-500">
-                          2024-02-06 16:10 — Đã ký số và ban hành đến các đơn vị
-                          liên quan.
-                        </p>
-                        <p class="text-[12px] text-slate-400">
-                          Người duyệt: Nguyễn Văn An • Trạng thái: APPROVE
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      class="px-3 py-1.5 rounded-md bg-emerald-50 text-[12px] font-medium text-emerald-700"
-                      >Đã ký</span
-                    >
-                  </li>
-
-                  <li
-                    class="px-4 py-3 flex items-center justify-between hover:bg-slate-50/60"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div
-                        class="mt-0.5 text-indigo-600 font-semibold text-[13px]"
-                      >
-                        STEP
-                      </div>
-                      <div>
-                        <p class="font-medium">VB-019 • Bước 1/2</p>
-                        <p class="text-[12.5px] text-slate-500">
-                          2024-02-05 14:20 — Trả lại, yêu cầu bổ sung căn cứ
-                          pháp lý.
-                        </p>
-                        <p class="text-[12px] text-slate-400">
-                          Người duyệt: Phạm Thị Dung • Trạng thái: REJECT
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      class="px-3 py-1.5 rounded-md bg-rose-50 text-[12px] font-medium text-rose-700"
-                      >Yêu cầu bổ sung</span
-                    >
+                    Đang tải trạng thái phê duyệt...
                   </li>
                 </ul>
               </aside>
@@ -374,37 +236,10 @@
 
                   <ul id="unitTaskList" class="mt-4 space-y-2.5">
                     <li
-                      class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
+                      class="px-3 py-3 text-sm text-slate-500 border border-dashed border-slate-200 rounded-lg text-center"
+                      data-dashboard-placeholder
                     >
-                      <span class="text-[14px]"
-                        >Chuẩn bị báo cáo tổng kết năm 2023</span
-                      >
-                      <span
-                        class="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold"
-                        >Đang thực hiện</span
-                      >
-                    </li>
-                    <li
-                      class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                    >
-                      <span class="text-[14px]"
-                        >Tổ chức họp Ban chỉ đạo xây dựng nông thôn mới</span
-                      >
-                      <span
-                        class="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold"
-                        >Hoàn thành</span
-                      >
-                    </li>
-                    <li
-                      class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2"
-                    >
-                      <span class="text-[14px]"
-                        >Xử lý văn bản về an toàn thực phẩm</span
-                      >
-                      <span
-                        class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold"
-                        >Chưa bắt đầu</span
-                      >
+                      Đang tải tiến độ công việc...
                     </li>
                   </ul>
                 </div>
@@ -423,67 +258,10 @@
 
                 <ul class="p-2" id="alertList">
                   <li
-                    class="px-3 py-3 rounded-lg hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
+                    class="px-3 py-3 text-sm text-slate-500 border border-dashed border-slate-200 rounded-lg text-center"
+                    data-dashboard-placeholder
                   >
-                    <div class="flex items-start gap-3">
-                      <div class="mt-0.5 text-blue-600">🔔</div>
-                      <div class="flex-1">
-                        <p class="font-medium text-[14px]">
-                          Văn bản VB008 sắp hết hạn xử lý
-                        </p>
-                        <p class="text-[12.5px] text-slate-500">
-                          Thông báo về việc kiểm tra an toàn thực phẩm sắp hết
-                          hạn xử lý vào ngày 05/02/2024
-                        </p>
-                        <div class="text-[12px] text-slate-400 mt-1">
-                          2024-02-03
-                        </div>
-                      </div>
-                      <span
-                        class="w-2 h-2 rounded-full bg-blue-600 mt-2"
-                      ></span>
-                    </div>
-                  </li>
-
-                  <li
-                    class="px-3 py-3 rounded-lg hover:bg-slate-50 border-b border-slate-100 last:border-b-0"
-                  >
-                    <div class="flex items-start gap-3">
-                      <div class="mt-0.5 text-blue-600">🔔</div>
-                      <div class="flex-1">
-                        <p class="font-medium text-[14px]">
-                          Có văn bản mới cần xử lý
-                        </p>
-                        <p class="text-[12.5px] text-slate-500">
-                          Công văn về công tác chuẩn bị bầu cử vừa được tiếp
-                          nhận
-                        </p>
-                        <div class="text-[12px] text-slate-400 mt-1">
-                          2024-02-07
-                        </div>
-                      </div>
-                      <span
-                        class="w-2 h-2 rounded-full bg-blue-600 mt-2"
-                      ></span>
-                    </div>
-                  </li>
-
-                  <li class="px-3 py-3 rounded-lg hover:bg-slate-50">
-                    <div class="flex items-start gap-3">
-                      <div class="mt-0.5 text-blue-600">🔔</div>
-                      <div class="flex-1">
-                        <p class="font-medium text-[14px]">
-                          Nhiệm vụ T006 đã quá hạn
-                        </p>
-                        <p class="text-[12.5px] text-slate-500">
-                          “Xử lý công văn về kỷ luật, kỷ cương” đã quá hạn hoàn
-                          thành
-                        </p>
-                        <div class="text-[12px] text-slate-400 mt-1">
-                          2024-02-08
-                        </div>
-                      </div>
-                    </div>
+                    Đang tải báo cáo và thông báo...
                   </li>
                 </ul>
               </aside>
@@ -492,4 +270,5 @@
 {% endblock %}
 {% block extra_js %}
 <script src="{% static 'js/lanhdao.js' %}"></script>
+<script src="{% static 'js/lanhdao-dashboard.js' %}"></script>
 {% endblock %}

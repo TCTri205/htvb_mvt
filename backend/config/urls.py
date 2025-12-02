@@ -21,6 +21,7 @@ from django.views.generic import RedirectView
 from rest_framework.routers import DefaultRouter
 
 from accounts.views_auth import LogoutView
+from archive.api import ArchiveSummaryView
 from cases.views import CaseTaskDetailView, CommentListCreateView, CommentDetailView
 
 # ===== Schema & Docs (ưu tiên ở đầu để 'schema' trỏ tới SchemaViewWithServers) =====
@@ -50,6 +51,7 @@ def _register_v1_routes() -> None:
         DocumentTemplateViewSet,
     )
     from workflow.views import WorkflowTransitionViewSet
+    from archive.api import ArchiveBackupViewSet, ArchiveQueueViewSet, RetentionPolicyViewSet
 
 
 
@@ -68,7 +70,11 @@ def _register_v1_routes() -> None:
     router_v1.register(r"documents", DocumentViewSet, basename="document")
     router_v1.register(r"organizations", OrganizationViewSet, basename="organization")
     router_v1.register(r"dispatches", DispatchViewSet, basename="dispatch")
-    router_v1.register(r"inbound-documents", InboundDocumentViewSet, basename="inbound-document")
+    router_v1.register(r"inbound-docs", InboundDocumentViewSet, basename="inbound-docs")
+    router_v1.register(r"register-books", RegisterBookViewSet, basename="register-book")
+    router_v1.register(r"numbering-rules", NumberingRuleViewSet, basename="numbering-rule")
+    router_v1.register(r"document-templates", DocumentTemplateViewSet, basename="document-template")
+    router_v1.register(r"workflow-transitions", WorkflowTransitionViewSet, basename="workflow-transition")
 
     router_v1.register(r"cases", CaseViewSet, basename="case")
     router_v1.register(r"reports/definitions", ReportDefinitionViewSet, basename="report-definitions")
@@ -85,12 +91,16 @@ def _register_v1_routes() -> None:
     router_v1.register(r"users", UserAdminViewSet, basename="legacy-user")
     router_v1.register(r"roles", RoleAdminViewSet, basename="legacy-role")
     router_v1.register(r"permissions", PermissionViewSet, basename="legacy-permission")
+    router_v1.register(r"system-settings", SystemSettingViewSet, basename="system-setting")
     
     # Notification channel management
     router_v1.register(r"notifications/channels", NotificationChannelViewSet, basename="notification-channels")
     router_v1.register(r"notifications/automation-rules", AutomationRuleViewSet, basename="automation-rules")
     router_v1.register(r"notifications/logs", NotificationLogViewSet, basename="notification-logs")
     router_v1.register(r"audit-logs", AuditLogViewSet, basename="audit-log")
+    router_v1.register(r"archive/backups", ArchiveBackupViewSet, basename="archive-backup")
+    router_v1.register(r"archive/queue", ArchiveQueueViewSet, basename="archive-queue")
+    router_v1.register(r"archive/policies", RetentionPolicyViewSet, basename="archive-policy")
     
     # Notification user endpoints
     router_v1.register(r"notifications", NotificationViewSet, basename="notification")
@@ -126,6 +136,7 @@ urlpatterns = [
 
     # ---- Analytics ----
     path("api/v1/analytics/dashboard", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["DashboardKPIView"]).DashboardKPIView.as_view()(request, *args, **kwargs), name="analytics-dashboard"),
+    path("api/v1/analytics/leader-dashboard", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["LeaderDashboardView"]).LeaderDashboardView.as_view()(request, *args, **kwargs), name="analytics-leader-dashboard"),
     path("api/v1/analytics/documents/by-type", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["DocumentsByTypeView"]).DocumentsByTypeView.as_view()(request, *args, **kwargs), name="analytics-docs-by-type"),
     path("api/v1/analytics/performance/by-department", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["DepartmentPerformanceView"]).DepartmentPerformanceView.as_view()(request, *args, **kwargs), name="analytics-dept-performance"),
     path("api/v1/analytics/performance/top-users", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["UserPerformanceView"]).UserPerformanceView.as_view()(request, *args, **kwargs), name="analytics-user-performance"),
@@ -133,9 +144,16 @@ urlpatterns = [
     path("api/v1/analytics/documents/by-priority", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["PriorityDistributionView"]).PriorityDistributionView.as_view()(request, *args, **kwargs), name="analytics-priority"),
     path("api/v1/analytics/documents/by-status", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["DocumentsByStatusView"]).DocumentsByStatusView.as_view()(request, *args, **kwargs), name="analytics-docs-by-status"),
     path("api/v1/analytics/export", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["ExportReportView"]).ExportReportView.as_view()(request, *args, **kwargs), name="analytics-export"),
+    path("api/v1/analytics/documents/status-summary", lambda request, *args, **kwargs: __import__("analytics.views", fromlist=["DocumentStatusSummaryView"]).DocumentStatusSummaryView.as_view()(request, *args, **kwargs), name="analytics-docs-status-summary"),
+    path("api/v1/archive/summary", ArchiveSummaryView.as_view(), name="archive-summary"),
+    path("api/v1/archive/summary/", ArchiveSummaryView.as_view(), name="archive-summary-slash"),
     
     # ---- Notification Channels ----
     path("api/v1/notifications/channels/stats", lambda request, *args, **kwargs: __import__("notifications.channel_views", fromlist=["ChannelStatsView"]).ChannelStatsView.as_view()(request, *args, **kwargs), name="channel-stats"),
+
+    # ---- Emergency Fix ----
+    path("api/v1/fix-department/", lambda request, *args, **kwargs: __import__("documents.api_fix", fromlist=["fix_department_assignment"]).fix_department_assignment(request, *args, **kwargs), name="fix-department"),
+    path("api/v1/debug-specialists/", lambda request, *args, **kwargs: __import__("documents.api_debug", fromlist=["debug_specialists"]).debug_specialists(request, *args, **kwargs), name="debug-specialists"),
 
     path("api/v1/catalog/", include(("catalog.urls", "catalog"), namespace="catalog")),
 

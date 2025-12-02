@@ -39,6 +39,21 @@
 
   const session = safeStorage("sessionStorage");
   const local = safeStorage("localStorage");
+  
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 
   function bootstrapSession() {
     if (!session || !local) {
@@ -283,8 +298,13 @@
       body: body || undefined,
       mode: opts.mode || "cors",
       cache: opts.cache || "no-cache",
-      credentials: "omit",
+      credentials: "same-origin",
     };
+
+    const csrftoken = getCookie('csrftoken');
+    if (csrftoken) {
+      headers.set("X-CSRFToken", csrftoken);
+    }
 
     const retryInit = () => {
       const newHeaders = new Headers(headers);
@@ -1280,6 +1300,74 @@
     },
   };
 
+  const systemSettingsApi = {
+    allSettings() {
+      return request("/api/v1/system-settings/all_settings/");
+    },
+    bulkUpdate(payload) {
+      return request("/api/v1/system-settings/bulk_update/", {
+        method: "PATCH",
+        body: payload,
+      });
+    },
+  };
+
+  const archiveBackupsApi = {
+    list(params) {
+      return request(buildUrl("/api/v1/archive/backups/", params));
+    },
+    create(payload) {
+      return request("/api/v1/archive/backups/", {
+        method: "POST",
+        body: payload,
+      });
+    },
+    restore(id) {
+      return request(`/api/v1/archive/backups/${ensureEntityId(id, "backup_id")}/restore/`, {
+        method: "POST",
+      });
+    },
+  };
+
+  const archiveQueueApi = {
+    list(params) {
+      return request(buildUrl("/api/v1/archive/queue/", params));
+    },
+    create(payload) {
+      return request("/api/v1/archive/queue/", {
+        method: "POST",
+        body: payload,
+      });
+    },
+  };
+
+  const archivePolicyApi = {
+    list(params) {
+      return request(buildUrl("/api/v1/archive/policies/", params));
+    },
+    update(id, payload) {
+      return request(`/api/v1/archive/policies/${ensureEntityId(id, "policy_id")}/`, {
+        method: "PATCH",
+        body: payload,
+      });
+    },
+    review(id, payload) {
+      return request(`/api/v1/archive/policies/${ensureEntityId(id, "policy_id")}/review/`, {
+        method: "POST",
+        body: payload,
+      });
+    },
+  };
+
+  const archiveApi = {
+    summary(params) {
+      return request(buildUrl("/api/v1/archive/summary/", params));
+    },
+    backups: archiveBackupsApi,
+    queue: archiveQueueApi,
+    policies: archivePolicyApi,
+  };
+
   const departmentApi = {
     list(params) {
       return request(buildUrl("/api/v1/departments/", params), { method: "GET" });
@@ -1330,6 +1418,14 @@
     },
   };
   const dispatchApi = {
+    list(params) {
+      return request(buildUrl("/api/v1/dispatches/", params));
+    },
+    retrieve(id, params) {
+      return request(
+        buildUrl(`/api/v1/dispatches/${ensureEntityId(id, "dispatch_id")}/`, params)
+      );
+    },
     update(id, payload) {
       return request(`/api/v1/dispatches/${ensureEntityId(id, "dispatch_id")}/`, {
         method: "PATCH",
@@ -1424,6 +1520,8 @@
     roles: roleApi,
     permissions: permissionApi,
     audit: auditApi,
+    systemSettings: systemSettingsApi,
+    archive: archiveApi,
     departments: departmentApi,
     notifications: notificationApi,
     reminders: reminderApi,

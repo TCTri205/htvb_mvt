@@ -194,60 +194,11 @@
   };
 
   pageHandlers['dashboard'] = function () {
-    // Các hook nhẹ để đảm bảo JS ngoài có đủ dữ liệu/ID để hoạt động an toàn
-          (function () {
-            // Tính lại % thanh tiến độ nếu cần (đảm bảo đồng bộ số & thanh)
-            function syncProgress(idDone, idTotal, idBar, idPercent) {
-              const doneEl = document.getElementById(idDone);
-              const totalEl = document.getElementById(idTotal);
-              const barEl = document.getElementById(idBar);
-              const percentEl = document.getElementById(idPercent);
-              if (!doneEl || !totalEl || !barEl || !percentEl) return;
-
-              const done = Number(
-                doneEl.dataset.progress || doneEl.textContent || 0
-              );
-              const total = Number(
-                totalEl.dataset.total || totalEl.textContent || 0
-              );
-              const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-
-              barEl.style.width = pct + "%";
-              percentEl.textContent = String(pct);
-            }
-
-            // Khởi tạo KPI từ data-value (nếu có)
-            function syncKpi(id) {
-              const el = document.getElementById(id);
-              if (!el) return;
-              const val = el.dataset.value;
-              if (val !== undefined) el.textContent = val;
-            }
-
-            runAfterDom(function () {
-              // KPI
-              [
-                "kpi-den-chua-xuly",
-                "kpi-di-chua-phathanh",
-                "kpi-khan",
-                "kpi-luutru",
-              ].forEach(syncKpi);
-
-              // Progress bars
-              syncProgress(
-                "vb-den-progress",
-                "vb-den-total",
-                "bar-vb-den",
-                "vb-den-percent"
-              );
-              syncProgress(
-                "vb-di-progress",
-                "vb-di-total",
-                "bar-vb-di",
-                "vb-di-percent"
-              );
-            });
-          })();
+    if (typeof window.initVanThuDashboard === 'function') {
+      window.initVanThuDashboard();
+    } else {
+      console.warn('[vanthu-dashboard] initVanThuDashboard not defined.');
+    }
   };
 
   pageHandlers['hosocongviec'] = function () {

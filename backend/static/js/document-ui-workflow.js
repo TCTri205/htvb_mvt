@@ -39,6 +39,9 @@
   const ACTION_MATRIX = {
     INBOUND: {
       VT: {
+        RECEIVED: [
+          { action: "VT_REGISTER_INBOUND", label: "Đăng ký văn bản đến" },
+        ],
         PENDING_CLERK_CHECK: [
           { action: "VT_FINAL_CHECK_OK_INBOUND", label: "Kiểm tra & vào sổ" },
           {
@@ -58,9 +61,8 @@
           { action: "LD_APPROVE_INBOUND", label: "Phê duyệt kết quả" },
           { action: "LD_REQUEST_CHANGES_INBOUND", label: "Yêu cầu chỉnh sửa" },
         ],
-        PENDING_CLERK_CHECK: [
-          { action: "LD_HANDLE_CLERK_REJECTION", label: "Xử lý phản hồi VT" },
-        ],
+        // VT is doing final check - LD has no actions at this stage
+        PENDING_CLERK_CHECK: [],
       },
       CV: {
         PROCESSING: [
@@ -197,6 +199,25 @@
         options: [],
         apiMethod: "registerBooks.list",
         apiParams: { direction: "di", is_active: true },
+        optionValue: "register_id",
+        optionLabel: (item) => `${item.name} (${item.year})`,
+      },
+      {
+        name: "comment",
+        label: "Ghi chú",
+        type: "textarea",
+        placeholder: "Ghi chú khi vào sổ (không bắt buộc)",
+      },
+    ],
+    VT_REGISTER_INBOUND: [
+      {
+        name: "register_book_id",
+        label: "Chọn sổ đăng ký",
+        type: "select",
+        required: true,
+        options: [],
+        apiMethod: "registerBooks.list",
+        apiParams: { direction: "den", is_active: true },
         optionValue: "register_id",
         optionLabel: (item) => `${item.name} (${item.year})`,
       },

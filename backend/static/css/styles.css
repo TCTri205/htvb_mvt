@@ -4865,4 +4865,25 @@ select {
         grid-column: span 1;
     }
 }
+/* Badge styles */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1;
+}
+
+.badge--dark {
+    background-color: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.badge--sm {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+}
 

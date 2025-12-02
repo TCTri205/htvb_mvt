@@ -92,3 +92,68 @@ class ExportRequestSerializer(serializers.Serializer):
     filters = serializers.JSONField(required=False)
     date_from = serializers.DateTimeField(required=False)
     date_to = serializers.DateTimeField(required=False)
+
+
+class PendingDocumentSerializer(serializers.Serializer):
+    document_id = serializers.IntegerField(required=False)
+    title = serializers.CharField()
+    code = serializers.CharField()
+    direction = serializers.CharField()
+    status = serializers.CharField(allow_null=True, required=False)
+    status_key = serializers.CharField(allow_blank=True, required=False)
+    due_at = serializers.DateTimeField(allow_null=True, required=False)
+    updated_at = serializers.DateTimeField(allow_null=True, required=False)
+    department = serializers.CharField(allow_null=True, required=False)
+    is_overdue = serializers.BooleanField()
+
+
+class PendingCountsSerializer(serializers.Serializer):
+    approval = serializers.IntegerField()
+    sign = serializers.IntegerField()
+
+
+class ApprovalStepSerializer(serializers.Serializer):
+    log_id = serializers.IntegerField(required=False)
+    document_id = serializers.IntegerField(allow_null=True, required=False)
+    code = serializers.CharField(allow_blank=True)
+    title = serializers.CharField(allow_null=True, required=False)
+    action = serializers.CharField()
+    status = serializers.CharField(allow_null=True, required=False)
+    actor = serializers.CharField(allow_null=True, required=False)
+    timestamp = serializers.DateTimeField(allow_null=True, required=False)
+    note = serializers.CharField(allow_null=True, required=False)
+
+
+class TaskItemSerializer(serializers.Serializer):
+    task_id = serializers.IntegerField(required=False)
+    title = serializers.CharField()
+    status = serializers.CharField()
+    due_at = serializers.DateTimeField(allow_null=True, required=False)
+    assignee = serializers.CharField(allow_null=True, required=False)
+    case_title = serializers.CharField(allow_null=True, required=False)
+    case_code = serializers.CharField(allow_null=True, required=False)
+
+
+class TaskSummarySerializer(serializers.Serializer):
+    total = serializers.IntegerField()
+    completed = serializers.IntegerField()
+    late = serializers.IntegerField()
+    items = TaskItemSerializer(many=True)
+
+
+class NotificationItemSerializer(serializers.Serializer):
+    notification_id = serializers.IntegerField(required=False)
+    title = serializers.CharField()
+    body = serializers.CharField(allow_null=True, required=False)
+    sent_at = serializers.DateTimeField(allow_null=True, required=False)
+    read = serializers.BooleanField()
+    link = serializers.CharField(allow_null=True, required=False)
+
+
+class LeaderDashboardSerializer(serializers.Serializer):
+    kpis = DashboardKPISerializer()
+    pending_documents = PendingDocumentSerializer(many=True)
+    pending_counts = PendingCountsSerializer()
+    approval_timeline = ApprovalStepSerializer(many=True)
+    task_progress = TaskSummarySerializer()
+    notifications = NotificationItemSerializer(many=True)

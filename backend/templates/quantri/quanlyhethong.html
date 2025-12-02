@@ -17,10 +17,10 @@
 
             <!-- KPI row -->
             <section
-              class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6"
+              class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 lg:gap-8"
             >
               <article
-                class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm"
+                class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
               >
                 <div class="flex items-center justify-between">
                   <h3 class="text-sm font-medium text-slate-600">
@@ -31,13 +31,18 @@
                     >🖥️</span
                   >
                 </div>
-                <p class="mt-2 text-sm text-emerald-600 font-semibold">
+                <p
+                  class="mt-2 text-sm text-emerald-600 font-semibold"
+                  id="qt-card-server-text"
+                >
                   Hoạt động ổn định
                 </p>
-                <p class="text-xs text-slate-500">Uptime 15 ngày 08 giờ</p>
+                <p class="text-xs text-slate-500" id="qt-card-server-meta">
+                  Uptime 15 ngày 08 giờ
+                </p>
               </article>
               <article
-                class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm"
+                class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
               >
                 <div class="flex items-center justify-between">
                   <h3 class="text-sm font-medium text-slate-600">
@@ -48,13 +53,15 @@
                     >🗄️</span
                   >
                 </div>
-                <p class="mt-2 text-sm text-slate-700">
+                <p class="mt-2 text-sm text-slate-700" id="qt-card-db-text">
                   23 kết nối đang hoạt động
                 </p>
-                <p class="text-xs text-slate-500">Dung lượng 234.5 GB</p>
+                <p class="text-xs text-slate-500" id="qt-card-db-meta">
+                  Dung lượng 234.5 GB
+                </p>
               </article>
               <article
-                class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm"
+                class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
               >
                 <div class="flex items-center justify-between">
                   <h3 class="text-sm font-medium text-slate-600">Bảo mật</h3>
@@ -63,13 +70,18 @@
                     >🛡️</span
                   >
                 </div>
-                <p class="mt-2 text-sm text-emerald-600 font-semibold">
+                <p
+                  class="mt-2 text-sm text-emerald-600 font-semibold"
+                  id="qt-card-security-text"
+                >
                   0 cảnh báo rủi ro
                 </p>
-                <p class="text-xs text-slate-500">2 lớp xác thực bắt buộc</p>
+                <p class="text-xs text-slate-500" id="qt-card-security-meta">
+                  2 lớp xác thực bắt buộc
+                </p>
               </article>
               <article
-                class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 shadow-sm"
+                class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm"
               >
                 <div class="flex items-center justify-between">
                   <h3 class="text-sm font-medium text-slate-600">
@@ -80,10 +92,12 @@
                     >💽</span
                   >
                 </div>
-                <p class="mt-2 text-sm text-amber-600 font-semibold">
+                <p class="mt-2 text-sm text-amber-600 font-semibold" id="qt-card-storage-text">
                   72% đã sử dụng
                 </p>
-                <p class="text-xs text-slate-500">Đề xuất mở rộng quý I</p>
+                <p class="text-xs text-slate-500" id="qt-card-storage-meta">
+                  Đề xuất mở rộng quý I
+                </p>
               </article>
             </section>
 
@@ -105,11 +119,17 @@
                 <div class="space-y-4 text-sm text-slate-600">
                   <div>
                     <div class="flex items-center justify-between mb-1">
-                      <span>Mức sử dụng CPU</span>
-                      <span class="font-medium text-slate-700">45%</span>
+                      <span>Hiệu suất xử lý</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        id="qt-perf-efficiency"
+                      >
+                        45%
+                      </span>
                     </div>
                     <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
+                        id="qt-perf-efficiency-bar"
                         class="h-2 bg-blue-500 rounded-full"
                         style="width: 45%"
                       ></div>
@@ -117,25 +137,37 @@
                   </div>
                   <div>
                     <div class="flex items-center justify-between mb-1">
-                      <span>Mức sử dụng bộ nhớ</span>
-                      <span class="font-medium text-slate-700">68%</span>
+                      <span>Tỷ lệ quá hạn</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        id="qt-perf-overdue"
+                      >
+                        2%
+                      </span>
                     </div>
                     <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
-                        class="h-2 bg-indigo-500 rounded-full"
-                        style="width: 68%"
+                        id="qt-perf-overdue-bar"
+                        class="h-2 bg-amber-500 rounded-full"
+                        style="width: 2%"
                       ></div>
                     </div>
                   </div>
                   <div>
                     <div class="flex items-center justify-between mb-1">
-                      <span>Tốc độ I/O đĩa</span>
-                      <span class="font-medium text-slate-700">120 MB/s</span>
+                      <span>Hàng đợi xử lý</span>
+                      <span
+                        class="font-medium text-slate-700"
+                        id="qt-perf-queue"
+                      >
+                        0 tác vụ
+                      </span>
                     </div>
                     <div class="h-2 rounded-full bg-slate-100 overflow-hidden">
                       <div
+                        id="qt-perf-queue-bar"
                         class="h-2 bg-emerald-500 rounded-full"
-                        style="width: 60%"
+                        style="width: 0%"
                       ></div>
                     </div>
                   </div>
@@ -146,7 +178,10 @@
                       <p class="text-xs text-slate-500 uppercase tracking-wide">
                         Sao lưu gần nhất
                       </p>
-                      <p class="mt-1 text-sm font-semibold text-slate-700">
+                      <p
+                        class="mt-1 text-sm font-semibold text-slate-700"
+                        id="qt-summary-backup"
+                      >
                         19/01/2024 • 23:45
                       </p>
                     </div>
@@ -156,7 +191,10 @@
                       <p class="text-xs text-slate-500 uppercase tracking-wide">
                         Bản vá bảo mật
                       </p>
-                      <p class="mt-1 text-sm font-semibold text-slate-700">
+                      <p
+                        class="mt-1 text-sm font-semibold text-slate-700"
+                        id="qt-summary-patch"
+                      >
                         18/01/2024 • 21:00
                       </p>
                     </div>
@@ -208,55 +246,13 @@
                         </th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-200 text-slate-700">
+                    <tbody
+                      id="qt-maintenance-body"
+                      class="divide-y divide-slate-200 text-slate-700"
+                    >
                       <tr>
-                        <td class="py-2 pr-4">Sao lưu toàn bộ</td>
-                        <td class="py-2 pr-4">Thứ 6 hàng tuần</td>
-                        <td class="py-2 pr-4 text-emerald-600 font-medium">
-                          Hoàn tất
-                        </td>
-                        <td class="py-2 pr-2 text-right">
-                          <button
-                            class="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                            data-action="run-maint"
-                            data-name="backup_weekly"
-                          >
-                            Chạy ngay
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="py-2 pr-4">
-                          Kiểm tra tính toàn vẹn dữ liệu
-                        </td>
-                        <td class="py-2 pr-4">Tuần 3 mỗi tháng</td>
-                        <td class="py-2 pr-4 text-emerald-600 font-medium">
-                          Đang thực hiện
-                        </td>
-                        <td class="py-2 pr-2 text-right">
-                          <button
-                            class="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                            data-action="run-maint"
-                            data-name="integrity_check"
-                          >
-                            Chạy ngay
-                          </button>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td class="py-2 pr-4">Nâng cấp phần mềm</td>
-                        <td class="py-2 pr-4">05/03/2024</td>
-                        <td class="py-2 pr-4 text-amber-600 font-medium">
-                          Chuẩn bị
-                        </td>
-                        <td class="py-2 pr-2 text-right">
-                          <button
-                            class="inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-slate-200 bg-white text-[12px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"
-                            data-action="run-maint"
-                            data-name="app_upgrade"
-                          >
-                            Kiểm tra trước
-                          </button>
+                        <td colspan="4" class="py-4 text-sm text-slate-500 text-center">
+                          Đang tải lịch bảo trì...
                         </td>
                       </tr>
                     </tbody>
@@ -332,73 +328,7 @@
               </article>
             </section>
 
-            <!-- Security + Logs -->
-            <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <article
-                class="bg-white border border-slate-200 rounded-xl p-5 space-y-4 lg:col-span-2"
-              >
-                <header class="flex items-center gap-2">
-                  <span
-                    class="w-5 h-5 rounded-sm bg-slate-100 grid place-items-center text-sm"
-                    >🔐</span
-                  >
-                  <h2 class="text-sm font-semibold text-slate-700">
-                    Tường lửa &amp; bảo mật
-                  </h2>
-                </header>
-                <ul class="space-y-3 text-sm text-slate-600">
-                  <li class="flex items-start gap-3">
-                    <span
-                      class="mt-1 w-2 h-2 rounded-full bg-emerald-500"
-                    ></span>
-                    <div>
-                      <p class="font-medium text-slate-700">
-                        Chế độ bảo vệ nâng cao
-                      </p>
-                      <p>Chặn 12 yêu cầu nghi ngờ trong tuần qua</p>
-                    </div>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span
-                      class="mt-1 w-2 h-2 rounded-full bg-emerald-500"
-                    ></span>
-                    <div>
-                      <p class="font-medium text-slate-700">Xác thực hai lớp</p>
-                      <p>100% tài khoản quản trị đã bật 2FA</p>
-                    </div>
-                  </li>
-                  <li class="flex items-start gap-3">
-                    <span class="mt-1 w-2 h-2 rounded-full bg-amber-500"></span>
-                    <div>
-                      <p class="font-medium text-slate-700">
-                        Cảnh báo đăng nhập
-                      </p>
-                      <p>02 cảnh báo từ IP lạ (15/01) đã bị khóa 24 giờ</p>
-                    </div>
-                  </li>
-                </ul>
-                <div class="pt-1 flex flex-wrap gap-2">
-                  <button
-                    class="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-700 transition-colors"
-                    data-action="audit"
-                  >
-                    🔎 Quét audit
-                  </button>
-                  <button
-                    class="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-700 transition-colors"
-                    data-action="fw-reload"
-                  >
-                    🧱 Nạp lại tường lửa
-                  </button>
-                  <button
-                    class="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800 transition-colors"
-                    data-action="security-patch"
-                  >
-                    🛠 Cập nhật bản vá
-                  </button>
-                </div>
-              </article>
-
+            <section class="grid grid-cols-1 gap-6">
               <article
                 class="bg-white border border-slate-200 rounded-xl p-5 space-y-4"
               >
@@ -407,11 +337,56 @@
                     class="w-5 h-5 rounded-sm bg-slate-100 grid place-items-center text-sm"
                     >📝</span
                   >
-                  <h2 class="text-sm font-semibold text-slate-700">
-                    Nhật ký gần đây
-                  </h2>
+                  <div>
+                    <h2 class="text-sm font-semibold text-slate-700">
+                      Nhật ký hệ thống
+                    </h2>
+                    <p class="text-[12px] text-slate-500">
+                      Theo dõi các sự kiện quan trọng, lọc theo hành động hoặc đối tượng
+                    </p>
+                  </div>
                 </header>
-                <ul class="divide-y divide-slate-200 text-sm text-slate-600">
+                <form id="qt-log-filter-form" class="space-y-3">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <label class="text-[12.5px] text-slate-500">
+                      Hành động
+                      <input
+                        id="qt-log-filter-action"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 focus:border-slate-500 focus:outline-none"
+                        placeholder="e.g. DOC.OUT.REGISTER"
+                        type="text"
+                      />
+                    </label>
+                    <label class="text-[12.5px] text-slate-500">
+                      Đối tượng
+                      <input
+                        id="qt-log-filter-entity"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 focus:border-slate-500 focus:outline-none"
+                        placeholder="document / case"
+                        type="text"
+                      />
+                    </label>
+                    <label class="text-[12.5px] text-slate-500">
+                      Người thực hiện
+                      <input
+                        id="qt-log-filter-actor"
+                        class="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700 focus:border-slate-500 focus:outline-none"
+                        placeholder="qt01"
+                        type="text"
+                      />
+                    </label>
+                  </div>
+                  <button
+                    type="submit"
+                    class="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg bg-slate-900 text-white text-[13px] font-semibold hover:bg-slate-800 transition-colors w-full"
+                  >
+                    📋 Xem toàn bộ nhật ký
+                  </button>
+                </form>
+                <ul
+                  id="qt-audit-log-list"
+                  class="divide-y divide-slate-200 text-sm text-slate-600"
+                >
                   <li class="py-3">
                     <span class="font-medium text-slate-700"
                       >20/01 • 08:21</span
@@ -431,14 +406,6 @@
                     — Cảnh báo dung lượng &gt;70% (đã khắc phục)
                   </li>
                 </ul>
-                <div class="flex items-center gap-2">
-                  <button
-                    class="inline-flex items-center justify-center gap-2 h-10 px-3 rounded-lg border border-slate-200 bg-white text-[13px] font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-700 transition-colors w-full"
-                    data-action="view-logs"
-                  >
-                    Xem toàn bộ nhật ký
-                  </button>
-                </div>
               </article>
             </section>
 
