@@ -85,7 +85,7 @@
       .map((task) => {
         const title = escapeHtml(task.title || 'Nhiệm vụ');
         const assignee = escapeHtml(task.assignee?.full_name || task.assignee?.username || 'Chưa có');
-        const due = escapeHtml(task.due_at || task.due_date || 'Chưa có');
+        const due = escapeHtml(task.due_at || 'Chưa có');
         const status = escapeHtml(task.status || task.status_name || 'Đang xử lý');
         const badge = status.toLowerCase().includes('done')
           ? '<span class="chip chip--green">Hoàn tất</span>'
@@ -133,7 +133,7 @@
       const total = tasks.length;
       const done = tasks.filter((task) => (task.status || task.status_name || '').toLowerCase().includes('done')).length;
       const overdue = tasks.filter((task) => {
-        const due = new Date(task.due_at || task.due_date || task.deadline);
+        const due = new Date(task.due_at);
         return due instanceof Date && !Number.isNaN(due.getTime()) && Date.now() > due.getTime() && !(task.status || task.status_name || '').toLowerCase().includes('done');
       }).length;
       if (document.querySelector(selectors.progressDone))
@@ -167,7 +167,7 @@
     setText(selectors.leader, detail?.leader?.full_name || detail?.leader?.username || '');
     setText(selectors.owner, detail?.owner?.full_name || detail?.owner?.username || '');
     setText(selectors.status, detail?.status?.case_status_name || '');
-    setText(selectors.due, detail?.due_date || '');
+    setText(selectors.due, detail?.deadline || detail?.due_date || '');
     setText(selectors.created, detail?.created_at || '');
     setText(selectors.taskCount, String(detail?.case_tasks?.length || 0));
   }

@@ -305,7 +305,7 @@
         metaField.textContent = doc.department?.name || doc.main_department_name || "—";
       }
       if (metaDeadline) {
-        metaDeadline.textContent = formatDate(doc.due_date || doc.deadline || doc.expected_finish);
+        metaDeadline.textContent = formatDate(doc.deadline || doc.due_date || doc.expected_finish);
       }
       currentStatusKey = statusKey;
       if (workflowLib) {

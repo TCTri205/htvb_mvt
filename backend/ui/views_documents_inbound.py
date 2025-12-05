@@ -124,8 +124,10 @@ class InboundDetailView(LoginRequiredMixin, WorkflowActionMixin, DetailView):
     ACTION_HANDLERS = {
         "receive": "_handle_receive",
         "register": "_handle_register",
-        "assign": "_handle_assign",
-        "ld_assign_officer": "_handle_assign",
+        "assign": "_handle_add_assignee",  # Add assignee only, don't change status
+        "add_assignee": "_handle_add_assignee",  # Explicit add assignee action
+        "ld_assign_officer": "_handle_confirm_assignment",  # Confirm assignment (workflow action)
+        "ld_confirm_assignment": "_handle_confirm_assignment",  # Explicit confirm action
         "ld_approve_inbound": "_handle_leader_approve",
         "ld_request_changes_inbound": "_handle_leader_request_changes",
         "ld_handle_clerk_rejection": "_handle_handle_clerk_rejection",
@@ -272,19 +274,30 @@ class InboundDetailView(LoginRequiredMixin, WorkflowActionMixin, DetailView):
         )
         messages.success(self.request, "Đã đăng ký văn bản.")
 
-    def _handle_assign(self):
+    def _handle_add_assignee(self):
+        """Add assignees without changing status.
+        Status remains at WAITING_ASSIGNMENT until _handle_confirm_assignment is called.
+        """
         assignees = self._resolve_assignees()
         if not assignees:
             raise wf_errors.ValidationError("Phải chọn ít nhất một người được phân công.")
         instruction = self._get_value("instruction")
         due_at = self._parse_datetime("due_at")
-        self.service.assign(
+        self.service.add_assignee(
             self.object,
             assignees,
             instruction=instruction or None,
             due_at=due_at,
         )
-        messages.success(self.request, "Đã phân công văn bản.")
+        messages.success(self.request, "Đã thêm người xử lý. Nhấn 'Xác nhận phân công' để chuyển trạng thái.")
+
+    def _handle_confirm_assignment(self):
+        """Confirm assignment and change status to PROCESSING.
+        Called from workflow status panel.
+        """
+        note = self._get_value("note")
+        self.service.confirm_assignment(self.object, note=note or None)
+        messages.success(self.request, "Đã xác nhận phân công và chuyển văn bản sang xử lý.")
 
     def _handle_start(self):
         self.service.start_processing(self.object)

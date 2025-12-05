@@ -25,10 +25,11 @@ INBOUND_KIND_STATUSES = {
 OUTBOUND_DRAFT_STATUSES = {
     OutboundStatus.DRAFT.value,
     OutboundStatus.SUBMITTED.value,
-    OutboundStatus.RETURNED.value,
-    OutboundStatus.LEGACY_DU_THAO.value,
-    OutboundStatus.LEGACY_TRINH_DUYET.value,
-    OutboundStatus.LEGACY_TRA_LAI.value,
+    # Legacy statuses (no longer in enum, but still in database/alias mappings)
+    "RETURNED",  # Maps to DRAFT
+    "DU_THAO",
+    "TRINH_DUYET",
+    "TRA_LAI",  # Maps to DRAFT
     "DA_TRINH",
     "TRINH_LANH_DAO",
     "DA_TRINH_LANH_DAO",
@@ -40,16 +41,18 @@ OUTBOUND_DRAFT_STATUSES = {
 }
 
 OUTBOUND_OFFICIAL_STATUSES = {
-    OutboundStatus.APPROVED.value,
+    # Canonical statuses
     OutboundStatus.PENDING_CLERK_CHECK.value,
     OutboundStatus.REGISTERED.value,
     OutboundStatus.ISSUED.value,
     OutboundStatus.ARCHIVED.value,
     OutboundStatus.HUY_PHAT_HANH.value,
-    OutboundStatus.LEGACY_PHE_DUYET.value,
-    OutboundStatus.LEGACY_KY_SO.value,
-    OutboundStatus.LEGACY_PHAT_HANH.value,
-    OutboundStatus.LEGACY_LUU_TRU.value,
+    # Legacy statuses (no longer in enum, but still in database/alias mappings)
+    "APPROVED",  # Maps to PENDING_CLERK_CHECK
+    "PHE_DUYET",
+    "KY_SO",
+    "PHAT_HANH",
+    "LUU_TRU",
     "LD_DA_PHE_DUYET",
     "DA_PHAT_HANH",
     "CHO_VAN_THU_KIEM_TRA",

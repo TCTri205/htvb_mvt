@@ -260,9 +260,45 @@ class OutboundDraftView(LoginRequiredMixin, WorkflowActionFormMixin, TemplateVie
         return self._outbound_service
 
     def _get_or_create_document(self) -> Document:
+        from catalog.models import UrgencyLevel, SecurityLevel, DocumentType, Field as FieldModel, DocumentStatus
+        from workflow.services.status_resolver import StatusResolver as SR, OutboundStatus
+        
         doc_id = self._get_int("document_id")
         title = self._get_value("title", required=True)
-        code = self._get_value("code", required=True)
+        code = self._get_value("code") or ""  # Not required for draft
+        
+        # Get DRAFT status_id for new documents
+        draft_status_id = SR.doc_status_id(OutboundStatus.DRAFT.value)
+        
+        # Get optional fields from form
+        urgency_name = self._get_value("urgency") or "Thường"
+        security_name = self._get_value("security") or "Thường"
+        doc_type_name = self._get_value("doc_type")
+        field_name = self._get_value("field")
+        receivers = self._get_value("receivers")
+        abstract = self._get_value("abstract")
+        
+        # Lookup ForeignKey objects
+        urgency_level = None
+        if urgency_name:
+            urgency_level = UrgencyLevel.objects.filter(name__iexact=urgency_name).first()
+            if not urgency_level:
+                urgency_level = UrgencyLevel.objects.filter(code__iexact=urgency_name.upper().replace(" ", "_")).first()
+        
+        security_level = None
+        if security_name:
+            security_level = SecurityLevel.objects.filter(name__iexact=security_name).first()
+            if not security_level:
+                security_level = SecurityLevel.objects.filter(code__iexact=security_name.upper().replace(" ", "_")).first()
+        
+        document_type = None
+        if doc_type_name:
+            document_type = DocumentType.objects.filter(name__iexact=doc_type_name).first()
+        
+        field_obj = None
+        if field_name:
+            field_obj = FieldModel.objects.filter(name__iexact=field_name).first()
+        
         if doc_id:
             document = (
                 Document.objects.filter(document_id=doc_id, doc_direction=Document.Direction.DU_THAO)
@@ -270,9 +306,23 @@ class OutboundDraftView(LoginRequiredMixin, WorkflowActionFormMixin, TemplateVie
             )
             if document is None:
                 raise wf_errors.ValidationError("Không tìm thấy dự thảo.")
+            # Update all fields
             document.title = title
             document.document_code = code
-            document.save(update_fields=["title", "document_code"])
+            # Ensure status is set to DRAFT if not already set
+            if not document.status_id:
+                document.status_id = draft_status_id
+            if urgency_level:
+                document.urgency_level = urgency_level
+            if security_level:
+                document.security_level = security_level
+            if document_type:
+                document.document_type = document_type
+            if field_obj:
+                document.field = field_obj
+            if receivers:
+                document.sender = receivers  # Store receivers in sender field temporarily
+            document.save()
             return document
 
         logger.info(f"[OutboundDraftView] Creating draft for user: {self.request.user.username}, Dept: {self.request.user.department_id} - {self.request.user.department}")
@@ -282,4 +332,11 @@ class OutboundDraftView(LoginRequiredMixin, WorkflowActionFormMixin, TemplateVie
             document_code=code,
             created_by=self.request.user,
             department=self.request.user.department,
+            status_id=draft_status_id,  # CRITICAL: Set status to DRAFT for RBAC permission
+            urgency_level=urgency_level,
+            security_level=security_level,
+            document_type=document_type,
+            field=field_obj,
+            sender=receivers,  # Store receivers in sender field temporarily
         )
+

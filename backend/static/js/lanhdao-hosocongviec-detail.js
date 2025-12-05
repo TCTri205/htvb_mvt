@@ -280,13 +280,16 @@
   }
 
   async function loadTasks() {
+    console.log('[LD] loadTasks: Starting to load tasks for case:', caseId);
     try {
       const tasksRes = await api.request(`/api/v1/cases/${caseId}/tasks/`);
+      console.log('[LD] loadTasks: API response:', tasksRes);
       const tasks = toArray(tasksRes);
+      console.log('[LD] loadTasks: Tasks array:', tasks, 'Length:', tasks.length);
       renderTasks(tasks);
       updateTaskMetrics(tasks);
     } catch (error) {
-      console.error("Error loading tasks:", error);
+      console.error("[LD] Error loading tasks:", error);
       renderPlaceholder("case-tasks", "Không thể tải nhiệm vụ.");
     }
   }
@@ -346,7 +349,7 @@
         data.owner.full_name || data.owner.username || data.owner.id || "—";
     }
     setText("[data-case-assignee]", assigneeDisplay);
-    setText("[data-case-deadline]", formatDateValue(data.due_date, true));
+    setText("[data-case-deadline]", formatDateValue(data.deadline, true));
     setText("[data-case-created]", formatDateValue(data.created_at, false));
 
     const statusEl = $("[data-case-status-chip]");
@@ -401,7 +404,7 @@
       return;
     }
 
-    const caseDueDate = caseData?.due_date || null;
+    const caseDueDate = caseData?.deadline || null;
     const isOverdue = caseDueDate && new Date(caseDueDate) < new Date();
     
     // Check if we can manage members (not CHO_DUYET_DONG or DONG)
@@ -523,58 +526,62 @@
 
     if (!list || list.length === 0) {
       container.innerHTML = `<li class="text-center text-sm text-slate-500 py-2">Chưa có nhiệm vụ.</li>`;
-      return;
-    }
-    
-    // Check if we can manage tasks (not CHO_DUYET_DONG or DONG)
-    const statusCode = getStatusCode(caseData?.status);
-    const normalizedStatus = statusCode ? String(statusCode).toUpperCase().trim() : "";
-    const canManage = normalizedStatus !== "CHO_DUYET_DONG" && normalizedStatus !== "DONG";
+      // Don't return yet - need to update task count
+    } else {
+      // Check if we can manage tasks (not CHO_DUYET_DONG or DONG)
+      const statusCode = getStatusCode(caseData?.status);
+      const normalizedStatus = statusCode ? String(statusCode).toUpperCase().trim() : "";
+      const canManage = normalizedStatus !== "CHO_DUYET_DONG" && normalizedStatus !== "DONG";
 
-    list.forEach((task) => {
-      const li = document.createElement("li");
-      li.className = "rounded-lg border border-slate-100 p-3";
-      
-      // Render action buttons only if we can manage
-      const actionButtonsHtml = canManage
-        ? `<button class="text-blue-600 hover:text-blue-700 text-sm" 
-                  data-edit-task="${task.task_id}"
-                  data-task-data='${JSON.stringify(task)}'>
-            Sửa
-          </button>
-          <button class="text-rose-600 hover:text-rose-700 text-sm" 
-                  data-delete-task="${task.task_id}">
-            Xóa
-          </button>`
-        : '';
-      
-      li.innerHTML = `
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex-1">
-            <div class="font-medium text-slate-700">${helpers.escapeHtml(
-              task.title
-            )}</div>
-            <div class="text-[12px] text-slate-500">
-              Phụ trách: ${helpers.escapeHtml(
-                task.assignee?.full_name || "—"
-              )} • 
-              Hạn: ${formatDateValue(task.due_at, true)}
+      list.forEach((task) => {
+        const li = document.createElement("li");
+        li.className = "rounded-lg border border-slate-100 p-3";
+        
+        // Render action buttons only if we can manage
+        const actionButtonsHtml = canManage
+          ? `<button class="text-blue-600 hover:text-blue-700 text-sm" 
+                    data-edit-task="${task.task_id}"
+                    data-task-data='${JSON.stringify(task)}'>
+              Sửa
+            </button>
+            <button class="text-rose-600 hover:text-rose-700 text-sm" 
+                    data-delete-task="${task.task_id}">
+              Xóa
+            </button>`
+          : '';
+        
+        li.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex-1">
+              <div class="font-medium text-slate-700">${helpers.escapeHtml(
+                task.title
+              )}</div>
+              <div class="text-[12px] text-slate-500">
+                Phụ trách: ${helpers.escapeHtml(
+                  task.assignee?.full_name || "—"
+                )} • 
+                Hạn: ${formatDateValue(task.due_at, true)}
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(
+                task.status
+              )}">
+                ${task.status}
+              </span>
+              ${actionButtonsHtml}
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(
-              task.status
-            )}">
-              ${task.status}
-            </span>
-            ${actionButtonsHtml}
-          </div>
-        </div>
-      `;
-      container.appendChild(li);
-    });
+        `;
+        container.appendChild(li);
+      });
+    }
 
-    setText("[data-case-task-count]", `${list.length} nhiệm vụ`);
+    // ALWAYS update task count, even when list is empty
+    const taskCount = (list && list.length) || 0;
+    console.log('[LD] renderTasks: Setting task count to:', `${taskCount} nhiệm vụ`);
+    console.log('[LD] renderTasks: Element exists:', !!document.querySelector("[data-case-task-count]"));
+    setText("[data-case-task-count]", `${taskCount} nhiệm vụ`);
   }
 
   function renderActivityLogs(list) {
@@ -1396,35 +1403,50 @@
       }
 
       btn.addEventListener("click", () => {
-        if (btn.id === "btnAssignMember") {
-          // Open assignment modal for CHO_PHAN_CONG status
-          const modal = $("#modalAssignment");
-          if (modal) {
-            modal.showModal();
-            // Load specialists into modal dropdown
-            const modalSelect = document.querySelector("#assignment-assignee");
-            if (modalSelect) {
-              loadCandidateSpecialists(null).catch(err => 
-                console.error("[LD] Error loading specialists for modal:", err)
-              );
-            }
-          }
+        // All statuses including CHO_PHAN_CONG use the simple Add Member modal
+        // User adds members one by one, then adds tasks separately
+        if (btn.id === "btnAssignMember" || btn.id === "btnAddMember") {
+          console.log("[LD] Opening simple Add Member modal");
+          handleAddMember();
         } else {
-          const modalAddMember = $("#modalAddMember");
-          if (modalAddMember) {
-            handleAddMember();
-          } else {
-            handleAssign();
-          }
+          // Fallback for any other assign buttons
+          handleAddMember();
         }
       });
 
       btn.setAttribute("data-assign-click-listener", "true");
     });
 
+    // Attach listener for modal add button ("Thêm vào danh sách")
+    const btnAddPending = $("#btnAddPendingSpecialist");
+    if (btnAddPending && !btnAddPending.hasAttribute("data-listener-attached")) {
+      btnAddPending.addEventListener("click", handleAssignSubmit);
+      btnAddPending.setAttribute("data-listener-attached", "true");
+      console.log("[LD] Attached click listener to btnAddPendingSpecialist");
+    }
+
+    // Attach listener for modal form submit - this handles the "Phân công" button click too
+    // NOTE: The button has type="submit" so clicking it triggers form submit automatically
+    const modalForm = $("#assignment-form");
+    if (modalForm && !modalForm.hasAttribute("data-listener-attached")) {
+      modalForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        console.log("[LD] Form submitted, calling handleFinalConfirmation");
+        handleFinalConfirmation();
+      });
+      modalForm.setAttribute("data-listener-attached", "true");
+      console.log("[LD] Attached submit listener to assignment-form");
+    }
+    // NOTE: Do NOT attach a separate click listener to btnConfirmAssign inside modal - it would cause duplicate calls
+    // because the button has type="submit" which already triggers form submit
+
+    // Handler for the "Xác nhận phân công" button in action buttons area (NOT in modal)
     const btnConfirmAssign = $('[data-action="confirm-assign"]');
-    if (btnConfirmAssign) {
-      btnConfirmAssign.addEventListener("click", handleFinalConfirmation);
+    if (btnConfirmAssign && !btnConfirmAssign.hasAttribute("data-listener-attached")) {
+      btnConfirmAssign.addEventListener("click", handleConfirmAssign);
+      btnConfirmAssign.setAttribute("data-listener-attached", "true");
+      console.log("[LD] Attached click listener to confirm-assign button");
     }
 
     const btnPause = $('[data-action="pause"]');
@@ -1808,97 +1830,113 @@
   function loadCandidateSpecialists(departmentId) {
     console.log("[LD] loadCandidateSpecialists called with departmentId:", departmentId);
     
-    const assignSelect = $("#ld-assign-assignee");
+    // Try both selectors - the HTML template uses #assignment-assignee
+    const assignSelect = $("#assignment-assignee") || $("#ld-assign-assignee");
     if (!assignSelect) {
-      console.warn("[LD] Assign select element not found");
+      console.warn("[LD] Assign select element not found (tried #assignment-assignee and #ld-assign-assignee)");
       return Promise.resolve();
     }
+    
+    console.log("[LD] Found assign select element:", assignSelect.id);
 
-    const extractUsers = (payload) => {
-      if (typeof api?.extractItems === "function")
-        return api.extractItems(payload);
-      return toArray(payload);
-    };
-
-    const doLoad = (params, client) => {
-      console.log("[LD] Loading specialists with params:", params);
-      console.log("[LD] Using client:", client === api.specialists ? "api.specialists" : "api.users");
-      
-      showAssignMessage("", false);
-      return client
-        .list(params)
-        .then((payload) => {
-          console.log("[LD] Specialists API response:", payload);
-          const users = extractUsers(payload);
-          console.log("[LD] Extracted users count:", users.length);
-          renderAssignOptions(users);
-          return users;
-        })
-        .catch((error) => {
-          console.error("[LD] Error loading specialists:", error);
-          showAssignMessage("Không tải được danh sách chuyên viên.", true);
-          renderAssignOptions([]);
-          throw error;
-        });
-    };
-
+    // Build params
     const params = { ordering: "full_name" };
     if (departmentId) params.department_id = departmentId;
     
-    // Check if api.specialists exists
-    const client = api?.specialists?.list ? api.specialists : api.users;
-    if (client === api.users) {
-      console.log("[LD] Fallback to api.users, adding role filter");
-      params.role = "CV";
+    console.log("[LD] Loading specialists with params:", params);
+    showAssignMessage("", false);
+    
+    // Try specialists endpoint first, fallback to users endpoint
+    return api.request(buildApiUrl("/api/v1/specialists/", params))
+      .then((payload) => {
+        console.log("[LD] Specialists API response:", payload);
+        const users = extractUsers(payload);
+        console.log("[LD] Extracted users count:", users.length);
+        
+        if (users.length === 0) {
+          console.warn("[LD] No specialists found, may need to check role assignment");
+        }
+        
+        renderAssignOptions(users);
+        return users;
+      })
+      .catch((error) => {
+        console.error("[LD] Error loading specialists:", error);
+        console.error("[LD] Error status:", error.status);
+        console.error("[LD] Error data:", error.data);
+        showAssignMessage("Không tải được danh sách chuyên viên. Vui lòng thử lại.", true);
+        renderAssignOptions([]);
+        throw error;
+      });
+  }
+  
+  // Helper function to build API URL with params
+  function buildApiUrl(path, params) {
+    if (!params || Object.keys(params).length === 0) {
+      return path;
     }
-
-    console.log("[LD] Final params:", params);
-    return doLoad(params, client);
+    const query = Object.keys(params)
+      .filter(k => params[k] !== null && params[k] !== undefined)
+      .map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`)
+      .join('&');
+    return query ? `${path}?${query}` : path;
+  }
+  
+  // Helper to extract users from API response
+  function extractUsers(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload.results)) return payload.results;
+    if (Array.isArray(payload.items)) return payload.items;
+    return [];
   }
 
   function renderAssignOptions(users) {
     console.log("[LD] renderAssignOptions called with:", users);
     
-    // Try modal first, fallback to inline form (for backwards compatibility)
-    const assignSelect = $("#assignment-assignee") || $("#ld-assign-assignee");
-    if (!assignSelect) {
+    // Find all matching selects
+    const selects = [];
+    const s1 = $("#assignment-assignee"); if(s1) selects.push(s1);
+    const s2 = $("#ld-assign-assignee"); if(s2) selects.push(s2);
+
+    if (selects.length === 0) {
       console.warn("[LD] Assign select not found in renderAssignOptions");
       return;
     }
     
-    assignSelect.innerHTML = '<option value="">Chọn chuyên viên</option>';
     const list = Array.isArray(users) ? users : [];
-    
-    console.log("[LD] Rendering", list.length, "specialists");
-    
-    list.forEach((user, index) => {
-      let id = user.user_id || user.id || user.pk;
-      if (!id) {
-        console.warn("[LD] User at index", index, "has no ID:", user);
-        return;
-      }
-      
-      const originalId = String(id);
-      id = String(id).replace(/-/g, "").toLowerCase();
-      const option = document.createElement("option");
-      option.value = id;
-      option.dataset.originalId = originalId;
-      
-      const labelParts = [];
-      if (user.full_name) labelParts.push(user.full_name);
-      const dept = user.department_name || user.department?.name || "";
-      if (dept) labelParts.push(`(${dept})`);
-      
-      option.textContent =
-        labelParts.length > 0
-          ? labelParts.join(" ")
-          : user.username || user.email || option.value;
-      
-      console.log("[LD] Adding option:", option.textContent, "(value:", option.value, ")");
-      assignSelect.appendChild(option);
+    console.log("[LD] Rendering", list.length, "specialists to", selects.length, "selects");
+
+    selects.forEach(assignSelect => {
+        assignSelect.innerHTML = '<option value="">Chọn chuyên viên</option>';
+        
+        list.forEach((user, index) => {
+          let id = user.user_id || user.id || user.pk;
+          if (!id) {
+            if (index === 0) console.warn("[LD] User at index", index, "has no ID:", user);
+            return;
+          }
+          
+          const originalId = String(id);
+          id = String(id).replace(/-/g, "").toLowerCase();
+          const option = document.createElement("option");
+          option.value = id;
+          option.dataset.originalId = originalId;
+          
+          const labelParts = [];
+          if (user.full_name) labelParts.push(user.full_name);
+          const dept = user.department_name || user.department?.name || "";
+          if (dept) labelParts.push(`(${dept})`);
+          
+          option.textContent =
+            labelParts.length > 0
+              ? labelParts.join(" ")
+              : user.username || user.email || option.value;
+          
+          assignSelect.appendChild(option);
+        });
     });
     
-    console.log("[LD] Finished rendering. Total options:", assignSelect.options.length);
+    console.log("[LD] Finished rendering options.");
   }
 
   async function handleAssignSubmit(event) {
@@ -1907,7 +1945,7 @@
       event.stopPropagation();
     }
 
-    const assignSelect = $("#ld-assign-assignee");
+    const assignSelect = $("#assignment-assignee") || $("#ld-assign-assignee");
     if (!assignSelect) return;
 
     const selectedOption = assignSelect.options[assignSelect.selectedIndex];
@@ -1940,28 +1978,33 @@
     }
   }
 
-  async function handleFinalConfirmation() {
-    const confirmBtn = $("#btnConfirmAssign");
+  // Simple assignment handler for the standardized workflow
+  // Called when user clicks "Xác nhận phân công" button after adding members/tasks separately
+  async function handleConfirmAssign() {
+    console.log("[LD] handleConfirmAssign called - simplified workflow");
+    
+    const confirmBtn = $('[data-action="confirm-assign"]');
     if (confirmBtn) {
       confirmBtn.disabled = true;
       confirmBtn.textContent = "Đang xử lý...";
     }
 
     try {
-      // Step 1: Get existing participants to validate
-      const existingParticipants = await api.request(
-        `/api/v1/cases/${caseId}/participants/`
-      );
-      
+      // Get existing participants with assignee role
+      const existingParticipants = await api.request(`/api/v1/cases/${caseId}/participants/`);
       const participants = Array.isArray(existingParticipants) 
         ? existingParticipants 
-        : (existingParticipants.participants || []);
+        : (existingParticipants.results || existingParticipants.participants || []);
+      
+      const assignees = participants
+        .filter(p => p.role_on_case === 'assignee')
+        .map(p => p.user?.user_id || p.user?.id || p.user_id)
+        .filter(Boolean);
 
-      // Check if there are any assignees (role 'assignee')
-      const hasAssignee = participants.some(p => p.role_on_case === 'assignee');
+      console.log("[LD] Found assignees:", assignees);
 
-      if (!hasAssignee) {
-        showToast("Vui lòng phân công ít nhất một chuyên viên trước khi xác nhận.", "warning");
+      if (assignees.length === 0) {
+        showToast("Vui lòng thêm ít nhất 1 chuyên viên phụ trách trước khi phân công.", "warning");
         if (confirmBtn) {
           confirmBtn.disabled = false;
           confirmBtn.textContent = "Xác nhận phân công";
@@ -1969,31 +2012,183 @@
         return;
       }
 
-      // Step 2: Confirm assignment (transition status)
-      const payload = {
-        participants: participants.map(p => ({
-          user_id: p.user.id || p.user.user_id || p.user.pk,
-          role_on_case: p.role_on_case,
-          instruction: p.instruction || ""
-        })),
-        tasks: [] 
-      };
-
-      await api.request(`/api/v1/cases/${caseId}/assign/`, {
+      // Call assign API - tasks are added separately, so send empty tasks array
+      // The API will still transition the case status from CHO_PHAN_CONG to DANG_THUC_HIEN
+      const response = await api.request(`/api/v1/cases/${caseId}/assign/`, {
         method: "POST",
-        body: payload,
+        body: {
+          assignees,
+          tasks: [],  // Tasks already added via modalAddTask
+          instruction: "Đã phân công hồ sơ"
+        }
       });
 
+      console.log("[LD] Assign API response:", response);
       showToast("Đã phân công hồ sơ thành công!", "success");
+      
       setTimeout(() => window.location.reload(), 1500);
 
     } catch (error) {
-      console.error("[LD] Error in final confirmation:", error);
-      showToast(error.message || "Không thể hoàn tất phân công.", "error");
+      console.error("[LD] Error in handleConfirmAssign:", error);
+      const errorMsg = error.data?.detail || error.message || "Không thể hoàn tất phân công.";
+      showToast(errorMsg, "error");
 
       if (confirmBtn) {
         confirmBtn.disabled = false;
         confirmBtn.textContent = "Xác nhận phân công";
+      }
+    }
+  }
+
+  async function handleFinalConfirmation() {
+    console.log("[LD] handleFinalConfirmation called, pendingSpecialists:", pendingSpecialists);
+    
+    const confirmBtn = $("#btnConfirmAssign");
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Đang xử lý...";
+    }
+
+    try {
+      // Validation: Must have at least 1 pending specialist
+      if (!pendingSpecialists || pendingSpecialists.length === 0) {
+        showToast("Vui lòng thêm ít nhất 1 chuyên viên vào danh sách.", "warning");
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Phân công";
+        }
+        return;
+      }
+
+      // Step 1: Add pending specialists as participants (if not already)
+      console.log("[LD] Step 1: Adding pending specialists as participants...");
+      
+      // Get existing participants
+      const existingParticipants = await api.request(`/api/v1/cases/${caseId}/participants/`);
+      const participants = Array.isArray(existingParticipants) 
+        ? existingParticipants 
+        : (existingParticipants.results || existingParticipants.participants || []);
+      
+      const existingUserIds = new Set(
+        participants.map(p => p.user?.user_id || p.user?.id || p.user_id).filter(Boolean)
+      );
+      
+      console.log("[LD] Existing participant user IDs:", [...existingUserIds]);
+
+      // Build new participants list (existing + pending)
+      const newParticipants = participants.map(p => ({
+        user_id: p.user?.user_id || p.user?.id || p.user_id,
+        role_on_case: p.role_on_case
+      }));
+      
+      // Add pending specialists as assignees if not already in participants
+      for (const specialist of pendingSpecialists) {
+        const userId = specialist.user_id;
+        if (!existingUserIds.has(userId)) {
+          newParticipants.push({
+            user_id: userId,
+            role_on_case: "assignee"
+          });
+          console.log("[LD] Adding new participant:", userId);
+        }
+      }
+      
+      // Update participants
+      if (newParticipants.length > participants.length) {
+        console.log("[LD] Updating participants:", newParticipants);
+        await api.request(`/api/v1/cases/${caseId}/participants/`, {
+          method: "PUT",
+          body: { participants: newParticipants }
+        });
+        console.log("[LD] Participants updated successfully");
+      }
+
+      // Step 2: Build tasks from pendingSpecialists
+      console.log("[LD] Step 2: Building tasks from pendingSpecialists...");
+      
+      const tasks = pendingSpecialists
+        .map(s => {
+          const taskTitle = s.task?.title?.trim();
+          if (!taskTitle) {
+            console.warn("[LD] Skipping specialist without task title:", s);
+            return null;
+          }
+          
+          const task = {
+            assignee_id: s.user_id,
+            title: taskTitle
+          };
+          
+          // Normalize datetime to ISO 8601 for backend
+          if (s.task.due_at) {
+            try {
+              const localDatetime = s.task.due_at;
+              const isoDatetime = new Date(localDatetime).toISOString();
+              task.due_at = isoDatetime;
+            } catch (e) {
+              console.warn("[LD] Invalid datetime format:", s.task.due_at, e);
+            }
+          }
+          
+          return task;
+        })
+        .filter(Boolean);
+
+      console.log("[LD] Tasks to create:", tasks);
+
+      if (tasks.length === 0) {
+        showToast("Vui lòng nhập ít nhất 1 nhiệm vụ có tiêu đề.", "warning");
+        if (confirmBtn) {
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = "Phân công";
+        }
+        return;
+      }
+
+      // Step 3: Get instruction from modal
+      const instructionEl = $("#assignment-instruction");
+      const instruction = instructionEl?.value?.trim() || "Đã phân công hồ sơ cho chuyên viên";
+
+      // Step 4: Call assign API
+      console.log("[LD] Step 3: Calling assign API...");
+      const assignees = pendingSpecialists.map(s => s.user_id);
+      
+      const response = await api.request(`/api/v1/cases/${caseId}/assign/`, {
+        method: "POST",
+        body: {
+          assignees,
+          tasks,
+          instruction
+        }
+      });
+
+      console.log("[LD] Assign API response:", response);
+
+      // Step 5: Handle response
+      if (response.warnings && response.warnings.length > 0) {
+        const warningMsg = `Đã phân công thành công với ${response.tasks_created} nhiệm vụ. ` +
+          `Bỏ qua ${response.tasks_skipped} nhiệm vụ:\n` +
+          response.warnings.join('\n');
+        showToast(warningMsg, "warning");
+        console.warn("[LD] Assignment warnings:", response.warnings);
+      } else {
+        showToast("Đã phân công hồ sơ thành công!", "success");
+      }
+      
+      // Close modal and reload page
+      const modal = $("#modalAssignment");
+      if (modal) modal.close();
+      
+      setTimeout(() => window.location.reload(), 1500);
+
+    } catch (error) {
+      console.error("[LD] Error in final confirmation:", error);
+      const errorMsg = error.data?.detail || error.message || "Không thể hoàn tất phân công.";
+      showToast(errorMsg, "error");
+
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = "Phân công";
       }
     }
   }

@@ -14,14 +14,15 @@ from workflow.services.status_resolver import (
 _CV_ASSIGNABLE_DRAFT_STATUS_NAMES: Set[str] = {
     OutboundStatus.DRAFT.value,
     OutboundStatus.SUBMITTED.value,
-    # Legacy mappings included in DRAFT_STATUSES but explicit here for clarity if needed
-    OutboundStatus.LEGACY_DU_THAO.value,
-    OutboundStatus.LEGACY_TRINH_DUYET.value,
+    # Legacy mappings (no longer in enum)
+    "DU_THAO",
+    "TRINH_DUYET",
 }
 
 _CV_ASSIGNABLE_RETURN_STATUS_NAMES: Set[str] = {
-    OutboundStatus.RETURNED.value,
-    OutboundStatus.LEGACY_TRA_LAI.value,
+    # RETURNED status removed from workflow → maps to DRAFT
+    "RETURNED",
+    "TRA_LAI",
 }
 
 

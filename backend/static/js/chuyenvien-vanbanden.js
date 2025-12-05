@@ -64,7 +64,9 @@
     urgency: "",
     page: 1,
     pageSize: 20,
+    myTasks: false, // Filter for items needing action
   };
+  const btnMyTasks = document.getElementById("btnMyTasks");
 
   ready
     .then(() => {
@@ -106,6 +108,15 @@
       state.page += 1;
       loadDocuments();
     });
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        state.page = 1;
+        loadDocuments();
+      });
+    }
   }
 
   function buildFilters() {
@@ -171,13 +182,21 @@
 
   function renderRows(items) {
     if (!tableBody) return;
-    if (!items.length) {
+    // Apply myTasks filter (client-side)
+    let filtered = items || [];
+    if (state.myTasks) {
+      const AI = window.ActionIndicator;
+      if (AI && typeof AI.inboundNeedsAction === "function") {
+        filtered = filtered.filter((doc) => AI.inboundNeedsAction(doc));
+      }
+    }
+    if (!filtered.length) {
       renderEmptyRow();
       return;
     }
     tableBody.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    items.forEach((doc) => fragment.appendChild(createRow(doc)));
+    filtered.forEach((doc) => fragment.appendChild(createRow(doc)));
     tableBody.appendChild(fragment);
   }
 
@@ -237,7 +256,7 @@
       "—";
     const assignee = formatUser(doc.current_assignee) || "Chưa phân công";
     const partners = buildPartnerList(doc.assignments || doc.assignments_data || []);
-    const due = formatDate(doc.due_date || doc.deadline || doc.expected_finish);
+    const due = formatDate(doc.deadline || doc.due_date || doc.expected_finish);
     const rawStatusKey = normalizeStatus(
       doc.status?.code || doc.status?.name || doc.status || doc.state || doc.status_name
     );
@@ -251,6 +270,10 @@
     const detailUrl = detailId
       ? `/chuyenvien/vanbanden/${encodeURIComponent(detailId)}/`
       : "/chuyenvien/vanbanden/";
+
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.inboundNeedsAction === "function" ? AI.inboundNeedsAction(doc) : false;
 
     return buildRowHtml({
       title,
@@ -270,6 +293,7 @@
       urgency,
       security,
       detailUrl,
+      needsAction,
     });
   }
 
@@ -280,9 +304,13 @@
           data.security
         )}</span>`
       : "";
+    // Action indicator HTML for rows needing action
+    const indicatorHtml = data.needsAction ? '<span class="action-indicator" style="position:absolute;top:8px;left:8px;width:10px;height:10px;background:#22c55e;border-radius:50%;animation:action-pulse 2s ease-in-out infinite;"></span>' : '';
     const tr = document.createElement("tr");
-    tr.className = "hover:bg-slate-50/60";
+    tr.className = "hover:bg-slate-50/60" + (data.needsAction ? " action-card relative" : "");
+    tr.dataset.needsAction = data.needsAction ? "1" : "0";
     tr.innerHTML = `
+        ${indicatorHtml}
         <td class="py-3 pl-6 pr-3">
           <div class="font-semibold text-slate-800">${escapeHtml(data.title)}</div>
           <p class="text-[12px] text-slate-500 line-clamp-2">${escapeHtml(

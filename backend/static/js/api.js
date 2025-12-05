@@ -1134,15 +1134,48 @@
       return request(buildUrl("/api/v1/cases/", params));
     },
     retrieve(id) {
-      throw new Error("REST chi tiết hồ sơ đã bị vô hiệu hóa; dùng trang MVT /hosocongviec/{id}/.");
+      // Re-enabled: GET allowed by backend
+      if (!id) throw new Error("Thiếu case_id");
+      return request(`/api/v1/cases/${id}/`);
     },
     create(payload) {
+      // Backend blocks POST /cases/ - use MVT form
       return Promise.reject(
-        new Error("REST tạo hồ sơ đã bị vô hiệu hóa; dùng MVT /hosocongviec/taomoi/.")
+        new Error("Backend chặn REST create. Dùng MVT form: /lanhdao/hosocongviec/taomoi/")
       );
     },
-    update(id, payload, method = "PATCH") {
-      return Promise.reject(new Error("REST cập nhật hồ sơ đã bị vô hiệu hóa."));
+    update(id, payload) {
+      // Backend allows PATCH with restrictions:
+      // - Only owner/leader can edit
+      // - Only allowed fields: {title, description, priority, due_date}
+      // - Blocked if status in CHO_DUYET_DONG/DONG
+      if (!id) throw new Error("Thiếu case_id");
+      
+      const allowedFields = new Set(["title", "description", "priority", "due_date"]);
+      const filtered = Object.fromEntries(
+        Object.entries(payload || {}).filter(([key]) => allowedFields.has(key))
+      );
+      
+      if (Object.keys(filtered).length === 0) {
+        return Promise.reject(
+          new Error("Payload không hợp lệ. Chỉ chấp nhận: title, description, priority, due_date")
+        );
+      }
+      
+      return request(`/api/v1/cases/${id}/`, {
+        method: "PATCH",
+        body: filtered
+      })
+      .catch(error => {
+        // Clarify RBAC vs status errors
+        if (error.status === 403) {
+          throw new Error("Không có quyền chỉnh sửa (chỉ owner/leader)");
+        }
+        if (error.status === 400 && error.data?.detail?.includes("CHO_DUYET_DONG")) {
+          throw new Error("Không thể sửa hồ sơ đang chờ duyệt đóng/đã đóng");
+        }
+        throw error;
+      });
     },
     participants(id, method = "GET", payload) {
       if (!id) throw new Error("Thiếu case_id");

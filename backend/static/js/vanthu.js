@@ -1789,6 +1789,7 @@
           let currentDocId = null;
           let registerLock = false;
           let assignLock = false;
+          const pendingFiles = []; // Store files for upload after registration
 
           // Defaults
           (function initDefaults() {
@@ -1863,8 +1864,11 @@
 
           upload.addEventListener("change", () => {
             Array.from(upload.files || []).forEach((f) => {
+              const fileIndex = pendingFiles.length;
+              pendingFiles.push(f); // Store file for later upload
               const li = document.createElement("li");
               li.dataset.file = "1";
+              li.dataset.fileIndex = String(fileIndex);
               li.className =
                 "rounded-lg border border-slate-100 p-3 flex items-center justify-between gap-3";
               li.innerHTML = `
@@ -1877,6 +1881,10 @@
                 <button type="button" class="btn-icon" title="Gỡ tệp">⛔</button>
               `;
               li.querySelector("button").addEventListener("click", () => {
+                const idx = parseInt(li.dataset.fileIndex, 10);
+                if (!isNaN(idx) && pendingFiles[idx]) {
+                  pendingFiles[idx] = null; // Mark as removed
+                }
                 li.remove();
                 refreshFilesCount();
               });
@@ -2001,6 +2009,35 @@
 
               const note = noteField?.value?.trim();
               await inboundApi.receive(currentDocId, { note });
+              
+              // Upload attached files BEFORE register (register causes page redirect)
+              const docApi = api?.documents;
+              if (docApi && typeof docApi.uploadAttachment === "function") {
+                const filesToUpload = pendingFiles.filter((f) => f !== null);
+                if (filesToUpload.length > 0) {
+                  let uploadSuccess = 0;
+                  let uploadFail = 0;
+                  for (const fileData of filesToUpload) {
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", fileData);
+                      await docApi.uploadAttachment(currentDocId, formData);
+                      uploadSuccess++;
+                    } catch (uploadErr) {
+                      console.error("[vanthu] file upload error:", fileData.name, uploadErr);
+                      uploadFail++;
+                    }
+                  }
+                  if (uploadSuccess > 0) {
+                    toast(`Đã tải lên ${uploadSuccess} tệp đính kèm.`, "success");
+                  }
+                  if (uploadFail > 0) {
+                    toast(`Không thể tải ${uploadFail} tệp.`, "error");
+                  }
+                }
+              }
+
+              // Register last - this triggers form submit which redirects page
               await inboundApi.register(currentDocId, {
                 received_number: soDen,
                 received_date: receivedDate,
@@ -2015,6 +2052,8 @@
               registerLock = false;
             }
           }
+
+
 
           // Register (API-aware)
           btnRegister.addEventListener("click", async () => {

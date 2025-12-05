@@ -9,6 +9,7 @@ from django.core.files.storage import default_storage
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.db.models import ForeignKey, ManyToManyRel, ManyToManyField
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -513,49 +514,138 @@ class CaseViewSet(viewsets.ModelViewSet):
     )
     @action(detail=True, methods=["post"], url_path="assign")
     def assign(self, request, pk=None):
+        """Assign case to specialists with task creation and validation"""
         case = self.get_object()
         _ensure_case_access(request.user, case)
         
         if not _can_act_as_case_leader(request.user, case):
-             raise ForbiddenError(code="RBAC_FORBIDDEN")
+            raise ForbiddenError(code="RBAC_FORBIDDEN")
 
         if case.status.code != "CHO_PHAN_CONG":
-             return Response({"detail": "Hồ sơ không ở trạng thái chờ phân công."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Hồ sơ không ở trạng thái chờ phân công."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Validate request data
         serializer = AssignCaseActionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         validated_data = serializer.validated_data
         
-        # Get assignees from participants (already set via PUT /participants)
-        # Or use assignees from request if provided
-        assignees = validated_data.get("assignees", [])
-        
+        # Get target status
         try:
-            # WORKFLOW CHANGE: Now transition directly to DANG_THUC_HIEN instead of DA_PHAN_CONG
-            stt_dang_thuc_hien = CaseStatus.objects.get(case_status_name="DANG_THUC_HIEN")
+            target_status = CaseStatus.objects.get(case_status_name="DANG_THUC_HIEN")
         except CaseStatus.DoesNotExist:
-             return Response({"detail": "Trạng thái DANG_THUC_HIEN chưa được cấu hình."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        # Update case status and due_date if provided
-        update_fields = ["status"]
-        if validated_data.get("due_date"):
-            case.due_date = validated_data["due_date"]
-            update_fields.append("due_date")
+            return Response(
+                {"detail": "Trạng thái DANG_THUC_HIEN chưa được cấu hình."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
-        case.status = stt_dang_thuc_hien
-        case.save(update_fields=update_fields)
+        # Pre-validate tasks
+        tasks_data = validated_data.get("tasks", [])
+        valid_tasks = []
+        warnings = []
         
-        # Create activity log with instruction if provided
-        instruction = validated_data.get("instruction") or "Đã phân công hồ sơ"
-        CaseActivityLog.objects.create(
-            case=case,
-            actor=request.user,
-            action=CaseActivityLog.Action.ASSIGN,
-            note=instruction
-        )
+        for idx, task_data in enumerate(tasks_data):
+            assignee_id = task_data["assignee_id"]
+            title = task_data["title"]
+            due_at = task_data.get("due_at")
+            
+            # Check 1: User exists
+            try:
+                assignee = User.objects.get(**{USER_PK_FIELD: assignee_id})
+            except User.DoesNotExist:
+                msg = f"Task {idx+1}: User không tồn tại"
+                logger.warning(f"[assign] {msg}")
+                warnings.append(msg)
+                continue
+            
+            # Check 2: Not VT
+            assignee_role = rbac.get_single_role_code(assignee)
+            if assignee_role == Role.VT.value:
+                msg = f"Task {idx+1}: Không thể giao nhiệm vụ cho Văn thư"
+                logger.warning(f"[assign] {msg}")
+                warnings.append(msg)
+                continue
+            
+            # Check 3: Must be participant
+            participant = CaseParticipant.objects.filter(
+                case=case,
+                user=assignee,
+                role_on_case__in=[
+                    CaseParticipant.RoleOnCase.ASSIGNEE,
+                    CaseParticipant.RoleOnCase.COOWNER
+                ]
+            ).first()
+            
+            if participant is None:
+                msg = f"Task {idx+1}: User không phải thành viên phụ trách"
+                logger.warning(f"[assign] {msg}")
+                warnings.append(msg)
+                continue
+            
+            # All checks passed
+            valid_tasks.append({
+                'assignee': assignee,
+                'title': title,
+                'due_at': due_at
+            })
         
-        return Response(CaseSerializer(case).data)
+        # Validate: Must have at least 1 valid task if tasks provided
+        if len(tasks_data) > 0 and len(valid_tasks) == 0:
+            return Response(
+                {
+                    "detail": "Không có nhiệm vụ hợp lệ. Vui lòng thêm chuyên viên trước.",
+                    "warnings": warnings
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Atomic transaction
+        with transaction.atomic():
+            # Update status
+            update_fields = ["status"]
+            case.status = target_status
+            
+            if validated_data.get("due_date"):
+                case.due_date = validated_data["due_date"]
+                update_fields.append("due_date")
+            
+            case.save(update_fields=update_fields)
+            
+            # Create tasks
+            for task_info in valid_tasks:
+                CaseTask.objects.create(
+                    case=case,
+                    title=task_info['title'],
+                    assignee=task_info['assignee'],
+                    due_at=task_info['due_at'],
+                    created_by=request.user,
+                    status=CaseTask.Status.OPEN
+                )
+            
+            # Log activity
+            instruction = validated_data.get("instruction") or "Đã phân công hồ sơ"
+            if len(valid_tasks) > 0:
+                instruction_with_count = f"{instruction} (Tạo {len(valid_tasks)}/{len(tasks_data)} nhiệm vụ)"
+            else:
+                instruction_with_count = instruction
+            
+            CaseActivityLog.objects.create(
+                case=case,
+                actor=request.user,
+                action=CaseActivityLog.Action.ASSIGN,
+                note=instruction_with_count
+            )
+        
+        # Response with warnings
+        response_data = CaseSerializer(case).data
+        if warnings:
+            response_data['warnings'] = warnings
+            response_data['tasks_created'] = len(valid_tasks)
+            response_data['tasks_skipped'] = len(warnings)
+        
+        return Response(response_data, status=status.HTTP_200_OK)
 
     @extend_schema(
         tags=[TAG],

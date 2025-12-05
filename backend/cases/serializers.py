@@ -81,6 +81,7 @@ class CaseSlimSerializer(serializers.ModelSerializer):
     status_name = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
     leader = serializers.SerializerMethodField()
+    owner = serializers.SerializerMethodField()  # Added: person in charge
     case_type = serializers.SerializerMethodField()
     case_type_name = serializers.SerializerMethodField()
     assignee_count = serializers.SerializerMethodField()
@@ -108,6 +109,7 @@ class CaseSlimSerializer(serializers.ModelSerializer):
             "case_type_name",
             "department",
             "leader",
+            "owner",  # Added: person in charge
             "assignee_count",
             "priority",
             "priority_display",
@@ -156,6 +158,15 @@ class CaseSlimSerializer(serializers.ModelSerializer):
         if not leader:
             return None
         data = CompactUserSerializer(leader).data  # ReturnDict
+        return dict(data)  # ép về dict thường để hài lòng type checker
+
+    # ---- owner (compact user) -> người phụ trách ----
+    @extend_schema_field(CompactUserSerializer)
+    def get_owner(self, obj: Case) -> Optional[Dict[str, Any]]:
+        owner = getattr(obj, "owner", None)
+        if not owner:
+            return None
+        data = CompactUserSerializer(owner).data  # ReturnDict
         return dict(data)  # ép về dict thường để hài lòng type checker
 
     @extend_schema_field(OpenApiTypes.INT)
@@ -229,9 +240,10 @@ class CaseSlimSerializer(serializers.ModelSerializer):
     def get_updated_at(self, obj: Case) -> Optional[str]:
         return getattr(obj, "updated_at", None)
 
-    @extend_schema_field(OpenApiTypes.DATE)
+    @extend_schema_field(OpenApiTypes.DATETIME)
     def get_deadline(self, obj: Case) -> Optional[str]:
-        return getattr(obj, "deadline", None)
+        """Return due_date as deadline for frontend consistency."""
+        return getattr(obj, "due_date", None)
 
 
 class CaseDetailSerializer(CaseSlimSerializer):
@@ -445,6 +457,22 @@ class WaitAssignActionSerializer(serializers.Serializer):
     pass
 
 
+class AssignTaskSerializer(serializers.Serializer):
+    """Nested serializer for task assignment validation"""
+    assignee_id = serializers.UUIDField(
+        format="hex",
+        help_text="UUID chuyên viên được giao nhiệm vụ"
+    )
+    title = TrimmedCharField(
+        help_text="Tiêu đề nhiệm vụ"
+    )
+    due_at = serializers.DateTimeField(
+        required=False,
+        allow_null=True,
+        help_text="Hạn hoàn thành (ISO 8601)"
+    )
+
+
 class AssignCaseActionSerializer(serializers.Serializer):
     assignees = serializers.ListField(
         child=serializers.UUIDField(format="hex"),
@@ -461,6 +489,12 @@ class AssignCaseActionSerializer(serializers.Serializer):
     )
     instruction = serializers.CharField(
         required=False, allow_blank=True, allow_null=True, help_text="Ghi chú/Yêu cầu phân công"
+    )
+    tasks = AssignTaskSerializer(
+        many=True,
+        required=False,
+        allow_empty=True,
+        help_text="Danh sách nhiệm vụ cần tạo cho chuyên viên"
     )
 
 

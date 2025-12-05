@@ -254,6 +254,18 @@
                     </button>
                   </div>
                 </div>
+                </div>
+
+                  <!-- My Tasks filter button -->
+                  <button
+                    id="btnMyTasks"
+                    type="button"
+                    class="btn-my-tasks"
+                    title="Chỉ hiển thị văn bản cần xử lý"
+                  >
+                    <span class="indicator-dot"></span>
+                    <span>Cần xử lý</span>
+                  </button>
               </div>
             </section>
 
@@ -296,8 +308,8 @@
           </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'js/doc-helpers.js' %}"></script>
-<script src="{% static 'js/lanhdao-vanbandi.js' %}"></script>
-<script>window.LDOutgoingListOverride = true;</script>
-<script src="{% static 'js/lanhdao.js' %}"></script>
+<script src="{% static 'js/action-indicator.js' %}?v=20251204225500"></script>
+<script src="{% static 'js/doc-helpers.js' %}?v=20251204225500"></script>
+<script src="{% static 'js/lanhdao-vanbandi.js' %}?v=20251204225500"></script>
+<script src="{% static 'js/lanhdao.js' %}?v=20251204225500"></script>
 {% endblock %}

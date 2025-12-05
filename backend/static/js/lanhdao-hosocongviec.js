@@ -40,7 +40,9 @@
       keyword: "",
       status: "",
       priority: "",
+      myTasks: false, // Filter for items needing action
     };
+    const btnMyTasks = document.getElementById("btnMyTasks");
 
     registerFilters();
     renderMessage("Đang tải hồ sơ công việc...");
@@ -80,11 +82,19 @@
           applyFilters();
         });
       }
+      // My Tasks filter button
+      if (btnMyTasks) {
+        btnMyTasks.addEventListener("click", () => {
+          state.myTasks = !state.myTasks;
+          btnMyTasks.classList.toggle("active", state.myTasks);
+          applyFilters();
+        });
+      }
     }
 
     function applyFilters() {
       const keyword = normalizeText(state.keyword);
-      const filtered = state.cases.filter((item) => {
+      let filtered = state.cases.filter((item) => {
         if (!item) return false;
         const statusKey = statusKeyFromCase(item);
         if (state.status && state.status !== statusKey) return false;
@@ -112,6 +122,15 @@
         }
         return true;
       });
+
+      // Apply myTasks filter (client-side)
+      if (state.myTasks) {
+        const AI = window.ActionIndicator;
+        if (AI && typeof AI.caseNeedsAction === "function") {
+          filtered = filtered.filter((item) => AI.caseNeedsAction(item));
+        }
+      }
+
       renderList(filtered);
       updateKPIs(filtered);
     }
@@ -154,7 +173,12 @@
 
     function createCaseRow(item) {
       const tr = document.createElement("tr");
-      tr.className = "border-b border-slate-100 bg-white";
+      // Check if case needs action from current user
+      const AI = window.ActionIndicator;
+      const needsAction = AI && typeof AI.caseNeedsAction === "function" ? AI.caseNeedsAction(item) : false;
+      
+      tr.className = "border-b border-slate-100 bg-white" + (needsAction ? " action-card" : "");
+      tr.dataset.needsAction = needsAction ? "1" : "0";
       const statusKey = statusKeyFromCase(item);
       const isDone = isDoneStatus(statusKey);
       const hasOverdue = !isDone && isOverdue(item);
@@ -184,12 +208,18 @@
       const detailUrl = caseId
         ? `/lanhdao/hosocongviec/${encodeURIComponent(caseId)}/`
         : "#";
+      
+      // Calculate progress from backend field
+      const progress = Math.min(100, Math.max(0, item.progress_percent || 0));
+
+      // Action indicator HTML for rows needing action
+      const indicatorHtml = needsAction ? '<span class="action-indicator" style="position:relative;display:inline-block;width:10px;height:10px;background:#22c55e;border-radius:50%;margin-right:6px;animation:action-pulse 2s ease-in-out infinite;"></span>' : '';
 
       tr.innerHTML = `
         <td class="py-3 pr-3 align-top">
           <div class="font-medium text-slate-800 break-words">
             <a href="${detailUrl}" class="text-blue-700 hover:underline flex flex-wrap items-center gap-2">
-              <span class="badge-dot bg-blue-500"></span>
+              ${indicatorHtml}
               ${escapeHtml(item.title || "Hồ sơ công việc")}
             </a>
           </div>
@@ -209,6 +239,12 @@
         }">
           ${escapeHtml(dueDate)}
         </td>
+        <td class="py-3 pr-3 align-top">
+          <div class="w-28 h-2 rounded-full bg-slate-200">
+            <div class="h-full bg-emerald-600 rounded-full" style="width:${progress}%" aria-label="Tiến độ ${progress}%"></div>
+          </div>
+          <div class="text-xs text-slate-500 mt-1">${progress}%</div>
+        </td>
         <td class="py-3 pr-3 whitespace-nowrap align-top">
           <span class="${statusClass}">${escapeHtml(statusLabel)}</span>
         </td>
@@ -223,7 +259,7 @@
 
     function renderMessage(text) {
       if (!tableBody) return;
-      tableBody.innerHTML = `<tr><td colspan="6" class="px-5 py-8 text-center text-sm text-slate-500">${escapeHtml(
+      tableBody.innerHTML = `<tr><td colspan="7" class="px-5 py-8 text-center text-sm text-slate-500">${escapeHtml(
         text
       )}</td></tr>`;
       updateSummary(0);

@@ -410,12 +410,16 @@ def get_single_role_code(user) -> Optional[str]:
     Fallback: is_superuser => QT.
     """
     names = _get_user_role_names(user)
+    logger.info(f"[RBAC] get_single_role_code: user={getattr(user, 'username', 'N/A')}, role_id={getattr(user, 'role_id', None)}, names={names}")
     for r in (Role.QT, Role.VT, Role.CV, Role.LD):
         if r.value in names:
+            logger.info(f"[RBAC] get_single_role_code: matched role={r.value}")
             return r.value
     if getattr(user, "is_superuser", False):
         return Role.QT.value
+    logger.warning(f"[RBAC] get_single_role_code: no role matched, returning None")
     return None
+
 
 # ===== Quy tắc động mức đối tượng (assignee) =====
 def _is_doc_assignee(user, doc) -> bool:

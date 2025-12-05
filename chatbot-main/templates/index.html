@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reaschchatbot</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #4361ee;
+      --primary-light: #4895ef;
+      --success: #27ae60;
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #2d3436;
+      --text-light: #636e72;
+      --border: #dfe6e9;
+      --shadow: 0 8px 24px rgba(0,0,0,0.08);
+      --radius: 16px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #121212;
+      --card: #1e1e1e;
+      --text: #e0e0e0;
+      --text-light: #b0b0b0;
+      --border: #333;
+      --shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: all 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    h1 {
+      font-size: 2.3rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      color: var(--text-light);
+      font-size: 1.05rem;
+    }
+
+    .chat-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 180px);
+      min-height: 650px;
+    }
+
+    .chat-header {
+      padding: 1rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .chat-header h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .btn-icon {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.3s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .chat-body {
+      flex: 1;
+      padding: 1.5rem;
+      overflow-y: auto;
+      background: var(--card);
+    }
+
+    .message {
+      margin-bottom: 1.2rem;
+      display: flex;
+      gap: 12px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .message.bot { flex-direction: row; }
+    .message.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .bot .avatar {
+      background: var(--primary);
+      color: white;
+    }
+
+    .user .avatar {
+      background: #e9ecef;
+      color: var(--text);
+    }
+
+    [data-theme="dark"] .user .avatar {
+      background: #333;
+    }
+
+    .bubble {
+      max-width: 72%;
+      padding: 1rem 1.3rem;
+      border-radius: 18px;
+      font-size: 0.96rem;
+      line-height: 1.55;
+      word-wrap: break-word;
+    }
+
+    .bot .bubble {
+      background: #eef1ff;
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .user .bubble {
+      background: var(--primary);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .file-upload {
+      text-align: center;
+      padding: 2.2rem;
+      border: 2px dashed var(--border);
+      border-radius: 14px;
+      margin: 1.2rem 0;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--bg);
+    }
+
+    .file-upload:hover {
+      border-color: var(--primary);
+      background: rgba(67, 97, 238, 0.06);
+      transform: translateY(-2px);
+    }
+
+    .file-upload.dragover {
+      border-color: var(--primary);
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .file-upload i {
+      font-size: 2.4rem;
+      color: var(--primary);
+      margin-bottom: 0.6rem;
+    }
+
+    .file-name {
+      margin-top: 0.6rem;
+      font-size: 0.92rem;
+      color: var(--text-light);
+      font-weight: 500;
+    }
+
+    .file-success {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .chat-footer {
+      padding: 1rem 1.5rem;
+      background: var(--card);
+      border-top: 1px solid var(--border);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 0.8rem;
+      align-items: flex-end;
+    }
+
+    .input-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 0.95rem 1.1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      resize: none;
+      font-family: inherit;
+      font-size: 0.96rem;
+      background: var(--bg);
+      color: var(--text);
+      max-height: 130px;
+      transition: all 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    }
+
+    .send-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--primary-light);
+      transform: scale(1.08);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .typing {
+      font-style: italic;
+      color: var(--text-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .typing::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--text-light);
+      border-radius: 50%;
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* History Panel */
+    .history-panel {
+      position: fixed;
+      right: 1rem;
+      top: 160px;
+      width: 300px;
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      max-height: calc(100vh - 200px);
+      overflow: hidden;
+      display: none;
+      flex-direction: column;
+      z-index: 100;
+    }
+
+    .history-panel.open {
+      display: flex;
+    }
+
+    .history-header {
+      padding: 1rem;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .history-item {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      border-radius: 8px;
+      margin: 0.3rem;
+      transition: 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .history-item:hover {
+      background: rgba(67, 97, 238, 0.1);
+    }
+
+    .history-item.active {
+      background: rgba(67, 97, 238, 0.15);
+      font-weight: 500;
+    }
+
+    .clear-history {
+      margin: 0.5rem;
+      padding: 0.5rem;
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .chat-container { margin: 1rem; height: calc(100vh - 100px); border-radius: 12px; }
+      h1 { font-size: 1.9rem; }
+      .bubble { max-width: 88%; }
+      .history-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        display: none;
+      }
+      .history-panel.open { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>Research chatbot </h1>
+      <p class="subtitle">Hỏi đáp tài liệu nghiên cứu, khóa học </p>
+    </header>
+
+    <div class="chat-container">
+      <div class="chat-header">
+        <h3><i class="fas fa-robot"></i> Research chatbot</h3>
+        <div class="header-actions">
+          <button class="btn-icon" id="historyBtn" title="Lịch sử chat">
+            <i class="fas fa-history"></i>
+          </button>
+          <button class="btn-icon" id="clearBtn" title="Xóa lịch sử">
+            <i class="fas fa-trash"></i>
+          </button>
+          <button class="btn-icon" id="themeToggle">
+            <i class="fas fa-moon"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-body" id="chatBody">
+        <div class="message bot">
+          <div class="avatar"><i class="fas fa-robot"></i></div>
+          <div class="bubble">
+            Chào mừng bạn đến với <strong>ResearchBot Pro</strong>!<br>tôi có thể giúp gì cho bạn<br>
+
+          </div>
+        </div>
+
+        <div class="file-upload" id="fileUpload">
+          <input type="file" id="pdfInput" accept=".pdf" hidden />
+          <i class="fas fa-cloud-upload-alt"></i>
+          <div><strong>Kéo & thả hoặc click để upload PDF</strong></div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+      </div>
+
+      <div class="chat-footer">
+        <div class="input-group">
+          <div class="input-wrapper">
+            <textarea id="userInput" placeholder="Hãy hỏi khi bạn thắc mắc..." rows="1"></textarea>
+          </div>
+          <button class="send-btn" id="sendBtn">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Panel -->
+  <div class="history-panel" id="historyPanel">
+    <div class="history-header">
+      <span><i class="fas fa-history"></i> Lịch sử chat</span>
+      <button class="btn-icon" id="closeHistory"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="history-body" id="historyList"></div>
+    <button class="clear-history" id="clearAllHistory">Xóa toàn bộ</button>
+  </div>
+
+  <script>
+    // Elements
+    const chatBody = document.getElementById('chatBody');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const pdfInput = document.getElementById('pdfInput');
+    const fileUpload = document.getElementById('fileUpload');
+    const fileName = document.getElementById('fileName');
+    const themeToggle = document.getElementById('themeToggle');
+    const historyBtn = document.getElementById('historyBtn');
+    const historyPanel = document.getElementById('historyPanel');
+    const historyList = document.getElementById('historyList');
+    const closeHistory = document.getElementById('closeHistory');
+    const clearBtn = document.getElementById('clearBtn');
+    const clearAllHistory = document.getElementById('clearAllHistory');
+
+    let currentPDF = null;
+    let chatHistory = JSON.parse(localStorage.getItem('researchBotHistory')) || [];
+    let currentSessionId = Date.now().toString();
+
+    // Check system status on load
+    async function checkStatus() {
+      try {
+        const response = await fetch('/api/status', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        // Kiểm tra response có phải JSON không
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const text = await response.text();
+          console.error('Server trả về không phải JSON:', text.substring(0, 200));
+          addMessage('bot', ' Không thể kết nối với server. Vui lòng kiểm tra server đã chạy chưa.');
+          return;
+        }
+        
+        const data = await response.json();
+        if (data.initialized) {
+          addMessage('bot', ' Hệ thống đã sẵn sàng! Bạn có thể hỏi về tài liệu hoặc upload PDF mới.');
+        } else {
+          addMessage('bot', ' Hệ thống chưa sẵn sàng. Vui lòng upload file PDF để bắt đầu.');
+        }
+      } catch (error) {
+        console.error('Error checking status:', error);
+        // Không hiển thị lỗi nếu chỉ là vấn đề kết nối
+        if (error.message && !error.message.includes('JSON')) {
+          addMessage('bot', ' Không thể kết nối với server. Vui lòng kiểm tra server đã chạy chưa.');
+        }
+      }
+    }
+
+    // Init
+    checkStatus();
+    loadHistory();
+    renderHistory();
+
+    // Auto resize textarea
+    userInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+
+    // Upload PDF
+    fileUpload.addEventListener('click', () => pdfInput.click());
+    fileUpload.addEventListener('dragover', e => {
+      e.preventDefault();
+      fileUpload.classList.add('dragover');
+    });
+    fileUpload.addEventListener('dragleave', () => {
+      fileUpload.classList.remove('dragover');
+    });
+    fileUpload.addEventListener('drop', e => {
+      e.preventDefault();
+      fileUpload.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type === 'application/pdf') handlePDF(file);
+    });
+
+    pdfInput.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) handlePDF(file);
+    });
+
+    async function handlePDF(file) {
+      // Hiển thị loading
+      fileName.innerHTML = `<span style="color:var(--primary);">Đang upload...</span>`;
+      fileUpload.style.pointerEvents = 'none';
+      
+      const formData = new FormData();
+      formData.append('pdf', file);
+      
+      try {
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        
+        // Kiểm tra response có phải JSON không
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = await response.json();
+          } catch (jsonError) {
+            const text = await response.text();
+            throw new Error(`Server trả về dữ liệu không hợp lệ: ${text.substring(0, 100)}`);
+          }
+        } else {
+          const text = await response.text();
+          throw new Error(`Server trả về định dạng không đúng: ${text.substring(0, 100)}`);
+        }
+        
+        if (response.ok && data.status === 'success') {
+          currentPDF = file.name;
+          fileName.innerHTML = `<span class="file-success">Đã upload:</span> ${file.name}`;
+          fileUpload.innerHTML = `
+            <i class="fas fa-file-pdf" style="color:var(--success);font-size:2.4rem;"></i>
+            <div><strong>${file.name}</strong></div>
+            <div style="font-size:0.85rem;color:var(--text-light);margin-top:0.3rem;">Bây giờ bạn có thể hỏi về nội dung!</div>
+          `;
+          addMessage('bot', data.message || `Đã upload và xử lý file <strong>${file.name}</strong>. Hãy đặt câu hỏi!`);
+        } else {
+          const errorMsg = data.error || data.message || 'Lỗi khi upload file';
+          throw new Error(errorMsg);
+        }
+      } catch (error) {
+        fileName.innerHTML = `<span style="color:#e74c3c;">Lỗi: ${error.message}</span>`;
+        addMessage('bot', ` Lỗi khi upload file: ${error.message}`);
+      } finally {
+        fileUpload.style.pointerEvents = 'auto';
+      }
+    }
+
+    // Send message
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    async function sendMessage() {
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      // Disable input while processing
+      sendBtn.disabled = true;
+      userInput.disabled = true;
+
+      const userMsg = addMessage('user', text);
+      saveToHistory('user', text);
+      userInput.value = '';
+      userInput.style.height = 'auto';
+
+      const typing = addMessage('bot', '<span class="typing">Đang phân tích tài liệu và tìm câu trả lời...</span>');
+
+      try {
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ message: text })
+        });
+
+        // Remove typing indicator
+        chatBody.removeChild(typing);
+
+        // Kiểm tra response có phải JSON không
+        let data;
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          try {
+            data = await response.json();
+          } catch (jsonError) {
+            // Nếu không parse được JSON, lấy text
+            const text = await response.text();
+            throw new Error(`Server trả về dữ liệu không hợp lệ: ${text.substring(0, 100)}`);
+          }
+        } else {
+          // Nếu không phải JSON, lấy text
+          const text = await response.text();
+          throw new Error(`Server trả về định dạng không đúng: ${text.substring(0, 100)}`);
+        }
+
+        if (response.ok) {
+          // Kiểm tra có reply không (có thể có status success hoặc không)
+          const reply = data.reply || data.message || 'Không có phản hồi';
+          const botMsg = addMessage('bot', reply);
+          saveToHistory('bot', reply);
+        } else {
+          // Response có lỗi nhưng vẫn là JSON
+          const errorMsg = data.reply || data.error || data.message || 'Đã xảy ra lỗi không xác định';
+          const botMsg = addMessage('bot', ` ${errorMsg}`);
+          saveToHistory('bot', errorMsg);
+        }
+      } catch (error) {
+        // Đảm bảo remove typing indicator nếu vẫn còn
+        try {
+          const typingElements = chatBody.querySelectorAll('.typing');
+          typingElements.forEach(el => {
+            if (el.closest('.message')) {
+              chatBody.removeChild(el.closest('.message'));
+            }
+          });
+        } catch (e) {}
+        
+        const errorMessage = error.message || 'Lỗi kết nối không xác định';
+        const botMsg = addMessage('bot', ` Lỗi: ${errorMessage}`);
+        saveToHistory('bot', `Lỗi: ${errorMessage}`);
+      } finally {
+        sendBtn.disabled = false;
+        userInput.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    function addMessage(sender, text) {
+      const message = document.createElement('div');
+      message.className = `message ${sender}`;
+      message.innerHTML = `
+        <div class="avatar">${sender === 'bot' ? '<i class="fas fa-robot"></i>' : '<i class="fas fa-user"></i>'}</div>
+        <div class="bubble">${text}</div>
+      `;
+      chatBody.appendChild(message);
+      chatBody.scrollTop = chatBody.scrollHeight;
+      return message;
+    }
+
+    function saveToHistory(sender, text) {
+      chatHistory.push({
+        sessionId: currentSessionId,
+        sender,
+        text,
+        timestamp: new Date().toISOString(),
+        pdf: currentPDF
+      });
+      localStorage.setItem('researchBotHistory', JSON.stringify(chatHistory));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const sessions = {};
+      chatHistory.forEach(msg => {
+        if (!sessions[msg.sessionId]) sessions[msg.sessionId] = [];
+        sessions[msg.sessionId].push(msg);
+      });
+
+      historyList.innerHTML = '';
+      Object.keys(sessions).reverse().slice(0, 10).forEach(sessionId => {
+        const session = sessions[sessionId];
+        const firstMsg = session.find(m => m.sender === 'user') || session[0];
+        const date = new Date(session[0].timestamp).toLocaleString('vi-VN');
+        const pdfName = session[0].pdf || 'Không có PDF';
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        if (sessionId === currentSessionId) item.classList.add('active');
+        item.innerHTML = `
+          <div style="font-weight:600;font-size:0.88rem;">${firstMsg.text.substring(0, 40)}...</div>
+          <div style="font-size:0.78rem;color:var(--text-light);margin-top:0.3rem;">
+            ${date} • ${pdfName}
+          </div>
+        `;
+        item.onclick = () => loadSession(sessionId);
+        historyList.appendChild(item);
+      });
+    }
+
+    function loadSession(sessionId) {
+      const session = chatHistory.filter(m => m.sessionId === sessionId);
+      chatBody.innerHTML = `
+        <div class="message bot">
+          <div class="avatar"><i class="fas fa-robot"></i></div>
+          <div class="bubble">Đã tải lại phiên chat cũ</div>
+        </div>
+      `;
+      session.forEach(msg => {
+        if (msg.sender !== 'user' || msg.text !== 'Đã tải lại phiên chat cũ') {
+          addMessage(msg.sender, msg.text);
+        }
+      });
+      currentSessionId = sessionId;
+      currentPDF = session[0].pdf || null;
+      historyPanel.classList.remove('open');
+    }
+
+    function loadHistory() {
+      if (chatHistory.length > 0) {
+        const lastSession = chatHistory[chatHistory.length - 1].sessionId;
+        if (lastSession === currentSessionId) return;
+        loadSession(lastSession);
+      }
+    }
+
+    // History Panel
+    historyBtn.onclick = () => historyPanel.classList.toggle('open');
+    closeHistory.onclick = () => historyPanel.classList.remove('open');
+
+    // Clear History
+    clearBtn.onclick = clearAllHistory.onclick = () => {
+      if (confirm('Xóa toàn bộ lịch sử chat?')) {
+        localStorage.removeItem('researchBotHistory');
+        chatHistory = [];
+        currentSessionId = Date.now().toString();
+        renderHistory();
+        addMessage('bot', 'Đã xóa lịch sử chat.');
+      }
+    };
+
+    // Theme
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.body.getAttribute('data-theme') === 'dark';
+      document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
+      themeToggle.innerHTML = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    });
+
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.body.setAttribute('data-theme', 'dark');
+      themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+  </script>
+</body>
+</html>
