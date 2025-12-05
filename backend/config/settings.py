@@ -143,6 +143,7 @@ INSTALLED_APPS = [
     "archive",
     "analytics",  # Analytics & Reports API
     "ui",
+    "chatbot",  # Chatbot RAG integration
     "core.apps.CoreConfig",
 ]
 
@@ -228,6 +229,16 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = (BASE_DIR / get_str("MEDIA_ROOT", "media")).resolve()
+
+# =============================================================================
+# Chatbot RAG Settings
+# =============================================================================
+CHATBOT_VECTORSTORE_TYPE = get_str("CHATBOT_VECTORSTORE_TYPE", "faiss")  # 'faiss' or 'chroma'
+CHATBOT_VECTORSTORE_PATH = BASE_DIR / "media" / "chatbot_vectorstore"
+CHATBOT_K = int(get_str("CHATBOT_K", "5"))  # Number of documents to retrieve
+CHATBOT_SCORE_THRESHOLD = float(get_str("CHATBOT_SCORE_THRESHOLD", "0.2"))  # Similarity threshold
+CHATBOT_CHUNK_SIZE = int(get_str("CHATBOT_CHUNK_SIZE", "1200"))  # Chunk size for text splitting
+CHATBOT_CHUNK_OVERLAP = int(get_str("CHATBOT_CHUNK_OVERLAP", "200"))  # Overlap between chunks
 
 
 REST_FRAMEWORK = {

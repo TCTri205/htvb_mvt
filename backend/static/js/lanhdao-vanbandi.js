@@ -1,4 +1,7 @@
 (function () {
+  // CRITICAL: Set this flag FIRST, before any checks, to prevent lanhdao.js from running old code
+  window.LDOutgoingListOverride = true;
+  
   const pageId = (document.body?.dataset?.page || "").toLowerCase();
   if (pageId !== "vanbandi") {
     return;
@@ -54,7 +57,9 @@
     globalKeyword: "",
     status: "all",
     level: "all",
+    myTasks: false, // Filter for items needing action
   };
+  const btnMyTasks = document.getElementById("btnMyTasks");
 
   let normalizedDocs = [];
   const filterTrigger = debounce(applyFilters, 180);
@@ -67,6 +72,14 @@
     bindDropdown(levelBtn, levelMenu, levelLabel, "level");
     registerSearch(searchTitle, "keyword");
     registerSearch(searchGlobal, "globalKeyword");
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        applyFilters();
+      });
+    }
   }
 
   function bindDropdown(button, menu, label, key) {
@@ -155,9 +168,17 @@
     const statusTargets = mapStatusTargets(state.status);
     const levelFilter = state.level;
 
-    const filtered = normalizedDocs.filter((doc) =>
+    let filtered = normalizedDocs.filter((doc) =>
       matchesDoc(doc, statusTargets, levelFilter, normalizedKeyword)
     );
+
+    // Apply myTasks filter (client-side)
+    if (state.myTasks) {
+      const AI = window.ActionIndicator;
+      if (AI && typeof AI.outboundNeedsAction === "function") {
+        filtered = filtered.filter((doc) => AI.outboundNeedsAction(doc.raw || doc));
+      }
+    }
 
     renderRows(filtered);
     updateKPIs(filtered);
@@ -200,11 +221,17 @@
 
   function createRow(doc) {
     const tr = document.createElement("tr");
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.outboundNeedsAction === "function" ? AI.outboundNeedsAction(doc.raw || doc) : false;
+    
     const levelValue = mapLevelFromUrgency(doc.urgencyKey);
     const statusValue = mapStatusForDataset(doc.statusKey);
+    tr.className = needsAction ? "action-card" : "";
     tr.dataset.row = "1";
     tr.dataset.status = statusValue;
     tr.dataset.priority = levelValue;
+    tr.dataset.needsAction = needsAction ? "1" : "0";
     tr.dataset.docId = doc.id != null ? String(doc.id) : "";
     tr.dataset.docTitle = doc.title || "";
     tr.dataset.docNumber = doc.number || "";
@@ -238,8 +265,7 @@
 
     tr.innerHTML = [
       '<td class="py-2 pr-3">',
-      `  <a href="${detailHref}" class="text-blue-700 hover:underline inline-flex items-center gap-2">`,
-      '    <span class="badge-dot bg-blue-600"></span>',
+      `  <a href="${detailHref}" class="text-blue-700 hover:underline">`,
       `    ${helpers.escapeHtml(doc.title || "Văn bản")}`,
       "  </a>",
       "</td>",
@@ -259,27 +285,11 @@
       `<td class="py-2 px-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}">${helpers.escapeHtml(
         STATUS_LABELS[doc.statusKey] || doc.statusLabel || ""
       )}</span></td>`,
-      '<td class="py-2 pl-3 pr-0">',
-      '  <div class="flex items-center justify-end gap-2">',
-      `    <a href="${detailHref}" class="btn-icon text-slate-500" title="Xem" aria-label="Xem chi tiết văn bản">`,
-      '      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
-      '        <circle cx="11" cy="11" r="7"></circle>',
-      '        <line x1="16.65" y1="16.65" x2="21" y2="21"></line>',
-      "      </svg>",
-      "    </a>",
-      '    <button class="btn-icon" title="Nhật ký" data-action="log" type="button">',
-      '      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
-      '        <path d="M4 4h16v16H4z"></path>',
-      '        <path d="M8 4v4h8V4"></path>',
-      "      </svg>",
-      "    </button>",
-      '    <button class="btn-icon" title="Tải xuống" data-action="dl" type="button">',
-      '      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">',
-      '        <path d="M12 5v14"></path>',
-      '        <path d="m19 12-7 7-7-7"></path>',
-      "      </svg>",
-      "    </button>",
-      "  </div>",
+      '<td class="py-2 pl-3 pr-0 text-right relative">',
+      needsAction ? '<span class="action-indicator" style="position:absolute;top:8px;right:8px;width:8px;height:8px;background:#22c55e;border-radius:50%;animation:action-pulse 2s ease-in-out infinite;"></span>' : '',
+      `  <a href="${detailHref}" class="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50 text-[12px]">`,
+      '    Chi tiết',
+      "  </a>",
       "</td>",
     ]
       .filter(Boolean)

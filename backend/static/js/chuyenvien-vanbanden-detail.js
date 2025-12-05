@@ -193,10 +193,10 @@
         metaField.textContent = doc.field?.name || doc.department?.name || "—";
       }
       if (metaDeadline) {
-        metaDeadline.textContent = formatDate(doc.due_date || doc.deadline || doc.expected_finish);
+        metaDeadline.textContent = formatDate(doc.deadline || doc.due_date || doc.expected_finish);
       }
       if (workflowDeadlineChip) {
-        workflowDeadlineChip.textContent = formatDate(doc.due_date || doc.deadline || doc.expected_finish);
+        workflowDeadlineChip.textContent = formatDate(doc.deadline || doc.due_date || doc.expected_finish);
       }
       if (workflowStatusChip) {
         workflowStatusChip.textContent = status.replace(/_/g, " ");

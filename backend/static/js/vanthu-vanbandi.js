@@ -51,7 +51,8 @@
     issued: document.getElementById("kpi-daphathanh"),
   };
 
-  const state = { status: "", level: "", q: "", page: 1, pageSize: 20 };
+  const state = { status: "", level: "", q: "", page: 1, pageSize: 20, myTasks: false };
+  const btnMyTasks = document.getElementById("btnMyTasks");
 
   const layout = window.Layout || {};
   const ready = layout.authPromise && typeof layout.authPromise.then === "function"
@@ -80,6 +81,15 @@
       state.page += 1;
       loadDocuments();
     });
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        state.page = 1;
+        loadDocuments();
+      });
+    }
     loadDocuments();
   }).catch(() => renderEmpty("Không thể xác thực người dùng hiện tại."));
 
@@ -156,13 +166,21 @@
 
   function renderList(items) {
     if (!listEl) return;
-    if (!items.length) {
+    // Apply myTasks filter (client-side)
+    let filtered = items || [];
+    if (state.myTasks) {
+      const AI = window.ActionIndicator;
+      if (AI && typeof AI.outboundNeedsAction === "function") {
+        filtered = filtered.filter((doc) => AI.outboundNeedsAction(doc));
+      }
+    }
+    if (!filtered.length) {
       renderEmpty("Không có văn bản phù hợp.");
       return;
     }
     listEl.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    items.forEach((doc) => {
+    filtered.forEach((doc) => {
       fragment.appendChild(createListItem(doc));
     });
     listEl.appendChild(fragment);
@@ -182,8 +200,14 @@
   }
 
   function createListItem(doc) {
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.outboundNeedsAction === "function" ? AI.outboundNeedsAction(doc) : false;
+    const indicatorHtml = needsAction ? '<span class="action-indicator" style="position:absolute;top:8px;right:8px;width:10px;height:10px;background:#22c55e;border-radius:50%;animation:action-pulse 2s ease-in-out infinite;"></span>' : '';
+    
     const li = document.createElement("li");
-    li.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3";
+    li.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3 relative" + (needsAction ? " action-card" : "");
+    li.dataset.needsAction = needsAction ? "1" : "0";
     const detailId = doc.id || doc.document_id || doc.pk || "";
     const detailUrl = detailId
       ? `/vanthu/vanbandi/${encodeURIComponent(detailId)}/`
@@ -202,6 +226,7 @@
     const due = formatDate(doc.expected_finish || doc.due_date);
 
     li.innerHTML = `
+      ${indicatorHtml}
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="min-w-0 space-y-1">
           <h4 class="text-[15px] font-semibold text-slate-800 line-clamp-1">${escapeHtml(

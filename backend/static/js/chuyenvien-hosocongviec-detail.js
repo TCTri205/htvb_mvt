@@ -167,7 +167,7 @@ function renderCaseInfo(data) {
     setText("[data-case-assignee]", "—");
   }
 
-  setText("[data-case-deadline]", helpers.formatDate(data.due_date));
+  setText("[data-case-deadline]", helpers.formatDate(data.deadline));
   setText("[data-case-created]", helpers.formatDate(data.created_at));
 
   // Status Chip
@@ -251,51 +251,53 @@ function renderTasks(list) {
 
   if (!list || list.length === 0) {
     container.innerHTML = `<li class="text-center text-sm text-slate-500 py-2">Chưa có nhiệm vụ.</li>`;
-    return;
-  }
-
-  list.forEach(task => {
-    const li = document.createElement("li");
-    li.className = "rounded-lg border border-slate-100 p-3";
-    li.innerHTML = `
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <div class="font-medium text-slate-700">${helpers.escapeHtml(task.title)}</div>
-          <div class="text-[12px] text-slate-500">
-            Phụ trách: ${helpers.escapeHtml(task.assignee?.full_name || "—")} • 
-            Hạn: ${helpers.formatDate(task.due_at)}
+    // Don't return yet - need to update task count
+  } else {
+    list.forEach(task => {
+      const li = document.createElement("li");
+      li.className = "rounded-lg border border-slate-100 p-3";
+      li.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div class="font-medium text-slate-700">${helpers.escapeHtml(task.title)}</div>
+            <div class="text-[12px] text-slate-500">
+              Phụ trách: ${helpers.escapeHtml(task.assignee?.full_name || "—")} • 
+              Hạn: ${helpers.formatDate(task.due_at)}
+            </div>
           </div>
+          <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(task.status)}">
+            ${task.status}
+          </span>
         </div>
-        <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(task.status)}">
-          ${task.status}
-        </span>
-      </div>
-    `;
-    
-    // Add "Chi tiết" button
-    const btnDetail = document.createElement("button");
-    btnDetail.className = "text-xs text-blue-600 hover:underline ml-2 font-medium";
-    btnDetail.textContent = "Chi tiết";
-    btnDetail.onclick = () => openTaskDetail(task);
+      `;
+      
+      // Add "Chi tiết" button
+      const btnDetail = document.createElement("button");
+      btnDetail.className = "text-xs text-blue-600 hover:underline ml-2 font-medium";
+      btnDetail.textContent = "Chi tiết";
+      btnDetail.onclick = () => openTaskDetail(task);
 
-    // Find the status span and insert before or append to container
-    const statusDiv = li.querySelector(".flex.items-center.gap-2 > div:last-child") || li.querySelector(".flex.items-center.justify-between > span").parentNode;
-    
-    const rightDiv = document.createElement("div");
-    rightDiv.className = "flex items-center gap-2";
-    rightDiv.appendChild(btnDetail);
-    
-    // Get the status span
-    const statusSpan = li.querySelector("span.rounded");
-    if (statusSpan) {
-        statusSpan.parentNode.insertBefore(rightDiv, statusSpan);
-        rightDiv.appendChild(statusSpan);
-    }
+      // Find the status span and insert before or append to container
+      const statusDiv = li.querySelector(".flex.items-center.gap-2 > div:last-child") || li.querySelector(".flex.items-center.justify-between > span").parentNode;
+      
+      const rightDiv = document.createElement("div");
+      rightDiv.className = "flex items-center gap-2";
+      rightDiv.appendChild(btnDetail);
+      
+      // Get the status span
+      const statusSpan = li.querySelector("span.rounded");
+      if (statusSpan) {
+          statusSpan.parentNode.insertBefore(rightDiv, statusSpan);
+          rightDiv.appendChild(statusSpan);
+      }
 
-    container.appendChild(li);
-  });
+      container.appendChild(li);
+    });
+  }
   
-  setText("[data-case-task-count]", `${list.length} nhiệm vụ`);
+  // ALWAYS update task count, even when list is empty
+  const taskCount = (list && list.length) || 0;
+  setText("[data-case-task-count]", `${taskCount} nhiệm vụ`);
 }
 
 // --- Task Detail Logic ---

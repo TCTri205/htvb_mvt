@@ -72,15 +72,25 @@
                   <dt class="font-semibold text-slate-700">
                     Chuyên viên phụ trách
                   </dt>
-                  <dd data-case-assignee data-case-assignee-list>—</dd>
+                  <dd data-case-owner>
+                    {% if case.owner %}
+                      {{ case.owner.full_name|default:case.owner.username|default:"—" }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </dd>
                 </div>
                 <div class="flex flex-col gap-1">
                   <dt class="font-semibold text-slate-700">Hạn hoàn thành</dt>
-                  <dd class="text-rose-600 font-medium" data-case-deadline>{{ case.due_date|date:"Y-m-d"|default:"—" }}</dd>
+                  <dd class="text-rose-600 font-medium" data-case-deadline>{{ case.deadline|date:"Y-m-d"|default:"—" }}</dd>
                 </div>
                 <div class="flex flex-col gap-1">
                   <dt class="font-semibold text-slate-700">Ngày tạo</dt>
                   <dd data-case-created>{{ case.created_at|date:"Y-m-d"|default:"—" }}</dd>
+                </div>
+                <div class="flex flex-col gap-1">
+                  <dt class="font-semibold text-slate-700">Số nhiệm vụ</dt>
+                  <dd data-case-task-count>—</dd>
                 </div>
               </dl>
             </article>

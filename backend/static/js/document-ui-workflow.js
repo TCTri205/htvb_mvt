@@ -267,12 +267,14 @@
     DA_TRINH_LD: "SUBMITTED",
     CHO_LANH_DAO_PHE_DUYET: "SUBMITTED",
     CHO_LD_PHE_DUYET: "SUBMITTED",
-    // Map RETURNED aliases to DRAFT (status removed)
+    // ⚠️ Map RETURNED aliases to DRAFT (status removed from workflow)
+    // RETURNED no longer exists as a separate status in the workflow
     BI_TRA_LAI: "DRAFT",
     DU_THAO: "DRAFT",
     TRA_LAI: "DRAFT",
     RETURNED: "DRAFT",
-    // Map APPROVED aliases to PENDING_CLERK_CHECK (LD approval goes directly to clerk now)
+    // ⚠️ Map APPROVED aliases to PENDING_CLERK_CHECK (workflow changed)
+    // Leader approval now transitions directly to clerk check
     PHE_DUYET: "PENDING_CLERK_CHECK",
     LD_DA_PHE_DUYET: "PENDING_CLERK_CHECK",
     KY_SO: "PENDING_CLERK_CHECK",
@@ -348,7 +350,7 @@
       key.includes("PENDING_LEADER");
     if (isSubmitted) return "SUBMITTED";
 
-    // RETURNED/TRA_LAI -> DRAFT (status removed)
+    // ⚠️ RETURNED/TRA_LAI → DRAFT (status removed from workflow)
     const isReturned = key.includes("RETURN") || key.includes("TRA_LAI");
     if (isReturned) return "DRAFT";
 

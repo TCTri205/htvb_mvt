@@ -92,13 +92,16 @@ async function loadParticipants(caseId) {
 }
 
 async function loadTasks(caseId) {
+  console.log('[VT] loadTasks: Starting to load tasks for case:', caseId);
   try {
     const res = await api.request(`/api/v1/cases/${caseId}/tasks/`);
+    console.log('[VT] loadTasks: API response:', res);
     const tasks = res.results || res;
+    console.log('[VT] loadTasks: Tasks array:', tasks, 'Length:', Array.isArray(tasks) ? tasks.length : 'NOT ARRAY');
     renderTasks(tasks);
     updateTaskMetrics(tasks);
   } catch (e) {
-    console.error("Error loading tasks:", e);
+    console.error("[VT] Error loading tasks:", e);
   }
 }
 
@@ -160,7 +163,7 @@ function renderCaseInfo(data) {
      setText("[data-case-assignee]", "—");
   }
 
-  setText("[data-case-deadline]", helpers.formatDate(data.due_date));
+  setText("[data-case-deadline]", helpers.formatDate(data.deadline));
   setText("[data-case-created]", helpers.formatDate(data.created_at));
 
   // Status Chip
@@ -234,30 +237,34 @@ function renderTasks(list) {
 
   if (!list || list.length === 0) {
     container.innerHTML = `<li class="text-center text-sm text-slate-500 py-2">Chưa có nhiệm vụ.</li>`;
-    return;
-  }
-
-  list.forEach(task => {
-    const li = document.createElement("li");
-    li.className = "rounded-lg border border-slate-100 p-3";
-    li.innerHTML = `
-      <div class="flex items-center justify-between gap-2">
-        <div>
-          <div class="font-medium text-slate-700">${helpers.escapeHtml(task.title)}</div>
-          <div class="text-[12px] text-slate-500">
-            Phụ trách: ${helpers.escapeHtml(task.assignee?.full_name || "—")} • 
-            Hạn: ${helpers.formatDate(task.due_at)}
+    // Don't return yet - need to update task count
+  } else {
+    list.forEach(task => {
+      const li = document.createElement("li");
+      li.className = "rounded-lg border border-slate-100 p-3";
+      li.innerHTML = `
+        <div class="flex items-center justify-between gap-2">
+          <div>
+            <div class="font-medium text-slate-700">${helpers.escapeHtml(task.title)}</div>
+            <div class="text-[12px] text-slate-500">
+              Phụ trách: ${helpers.escapeHtml(task.assignee?.full_name || "—")} • 
+              Hạn: ${helpers.formatDate(task.due_at)}
+            </div>
           </div>
+          <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(task.status)}">
+            ${task.status}
+          </span>
         </div>
-        <span class="px-2 py-0.5 rounded text-xs font-medium ${getTaskStatusColor(task.status)}">
-          ${task.status}
-        </span>
-      </div>
-    `;
-    container.appendChild(li);
-  });
+      `;
+      container.appendChild(li);
+    });
+  }
   
-  setText("[data-case-task-count]", `${list.length} nhiệm vụ`);
+  // ALWAYS update task count, even when list is empty
+  const taskCount = (list && list.length) || 0;
+  console.log('[VT] renderTasks: Setting task count to:', `${taskCount} nhiệm vụ`);
+  console.log('[VT] renderTasks: Element exists:', !!document.querySelector("[data-case-task-count]"));
+  setText("[data-case-task-count]", `${taskCount} nhiệm vụ`);
 }
 
 function renderActivityLogs(list) {

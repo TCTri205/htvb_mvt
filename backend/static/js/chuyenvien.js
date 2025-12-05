@@ -1687,23 +1687,21 @@
     }
 
     function computeProgressPercent(raw) {
+      // Use backend's task-based progress_percent instead of time-based calculation
       if (!raw) return 0;
-      const created = parseDate(raw.created_at);
-      const due = parseDate(raw.deadline);
-      if (!created || !due) {
-        const statusKey = helpers.normalizeText(raw.status_name);
-        if (/hoan thanh|done|completed/.test(statusKey)) {
-          return 100;
-        }
-        return 0;
+      
+      // Backend calculates progress as (completed_tasks / total_tasks) * 100
+      const backendProgress = raw.progress_percent;
+      if (typeof backendProgress === 'number') {
+        return Math.max(0, Math.min(100, backendProgress));
       }
-      const total = due - created;
-      if (total <= 0) {
-        return created >= due ? 100 : 0;
+      
+      // Fallback: check if status indicates completion
+      const statusKey = helpers.normalizeText(raw.status_name);
+      if (/hoan thanh|done|completed/.test(statusKey)) {
+        return 100;
       }
-      const now = Date.now();
-      const percent = Math.round(((now - created) / total) * 100);
-      return Math.max(0, Math.min(100, percent));
+      return 0;
     }
 
     function applyFilters() {

@@ -102,7 +102,7 @@
                     <!-- advanced -->
                     <button
                       type="button"
-                      class="md:col-span-2 h-10 rounded-lg border border-slate-200 px-3 text-[14px] flex items-center gap-2 hover:bg-slate-50"
+                      class="md:col-span-1 h-10 rounded-lg border border-slate-200 px-3 text-[14px] flex items-center gap-2 hover:bg-slate-50"
                       data-action="open-advanced-filter"
                     >
                       <svg
@@ -113,7 +113,18 @@
                       >
                         <path d="M3 5h18v2H3zM6 11h12v2H6zM10 17h4v2h-4z" />
                       </svg>
-                      Lọc nâng cao
+                      Lọc
+                    </button>
+
+                    <!-- My Tasks filter button -->
+                    <button
+                      id="btnMyTasks"
+                      type="button"
+                      class="btn-my-tasks md:col-span-1"
+                      title="Chỉ hiển thị văn bản cần xử lý"
+                    >
+                      <span class="indicator-dot"></span>
+                      <span>Cần xử lý</span>
                     </button>
                   </div>
                 </section>
@@ -727,6 +738,7 @@
           </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'js/action-indicator.js' %}"></script>
 <script src="{% static 'js/doc-helpers.js' %}"></script>
 <script src="{% static 'js/chuyenvien-vanbanden.js' %}"></script>
 <script src="{% static 'js/chuyenvien.js' %}"></script>

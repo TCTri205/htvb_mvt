@@ -48,6 +48,15 @@ class CaseService:
             case.description = description
         if not getattr(case, "created_by_id", None):
             case.created_by_id = self.actor.user_id
+        
+        # Automatically set owner to creator if not set
+        if not getattr(case, "owner_id", None):
+            case.owner_id = self.actor.user_id
+        
+        # Automatically set department to creator's department if not set
+        if not getattr(case, "department_id", None) and hasattr(self.actor, "department_id"):
+            case.department_id = self.actor.department_id
+        
         case.save()
         _log(case, actor=self.actor, action="CREATE", note=description)
         audit_log(actor=self.actor, action="CASE.CREATE", entity_type="case", entity_id=case.case_id)

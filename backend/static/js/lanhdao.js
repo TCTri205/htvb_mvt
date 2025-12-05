@@ -1068,6 +1068,12 @@
   };
 
   pageHandlers["vanbandi"] = function () {
+        // Check if modern implementation exists (lanhdao-vanbandi.js)
+        if (window.LDOutgoingListOverride) {
+          console.log('[lanhdao] Skipping legacy vanbandi handler - using lanhdao-vanbandi.js');
+          return;
+        }
+        
         const api = window.ApiClient;
         const helpers = window.DocHelpers;
         const tableBody = document.getElementById("docTableBody");

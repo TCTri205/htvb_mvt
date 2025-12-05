@@ -245,6 +245,17 @@
                       </button>
                     </div>
                   </div>
+
+                  <!-- My Tasks filter button -->
+                  <button
+                    id="btnMyTasks"
+                    type="button"
+                    class="btn-my-tasks"
+                    title="Chỉ hiển thị văn bản cần xử lý"
+                  >
+                    <span class="indicator-dot"></span>
+                    <span>Cần xử lý</span>
+                  </button>
                 </div>
               </div>
             </section>
@@ -264,6 +275,7 @@
           </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'js/action-indicator.js' %}"></script>
 <script src="{% static 'js/doc-helpers.js' %}"></script>
 <script src="{% static 'js/lanhdao-vanbanden.js' %}"></script>
 <script src="{% static 'js/lanhdao.js' %}"></script>

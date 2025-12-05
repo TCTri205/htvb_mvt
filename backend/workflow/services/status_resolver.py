@@ -7,6 +7,11 @@ from django.apps import apps
 
 
 class InboundStatus(StrEnum):
+    """Canonical inbound document statuses.
+    
+    Legacy Vietnamese statuses (TIEP_NHAN, PHAN_CONG, etc.) are handled
+    via alias mappings below for backward compatibility with old data.
+    """
     RECEIVED = "RECEIVED"
     WAITING_ASSIGNMENT = "WAITING_ASSIGNMENT"
     PROCESSING = "PROCESSING"
@@ -16,33 +21,24 @@ class InboundStatus(StrEnum):
     DISPATCHED = "DISPATCHED"
     ARCHIVED = "ARCHIVED"
     THU_HOI = "THU_HOI"
-    # Legacy
-    LEGACY_TIEP_NHAN = "TIEP_NHAN"
-    LEGACY_DANG_KY = "DANG_KY"
-    LEGACY_PHAN_CONG = "PHAN_CONG"
-    LEGACY_DANG_XU_LY = "DANG_XU_LY"
-    LEGACY_HOAN_TAT = "HOAN_TAT"
-    LEGACY_LUU_TRU = "LUU_TRU"
 
 
 class OutboundStatus(StrEnum):
+    """Canonical outbound document statuses.
+    
+    NOTE: RETURNED and APPROVED have been removed from the workflow.
+    - RETURNED is now mapped to DRAFT (status removed)
+    - APPROVED is now mapped to PENDING_CLERK_CHECK (workflow changed)
+    
+    Legacy statuses are handled via alias mappings below for backward compatibility.
+    """
     DRAFT = "DRAFT"
     SUBMITTED = "SUBMITTED"
-    RETURNED = "RETURNED"
-    APPROVED = "APPROVED"
     PENDING_CLERK_CHECK = "PENDING_CLERK_CHECK"
     REGISTERED = "REGISTERED"
     ISSUED = "ISSUED"
     ARCHIVED = "ARCHIVED"
     HUY_PHAT_HANH = "HUY_PHAT_HANH"
-    # Legacy
-    LEGACY_DU_THAO = "DU_THAO"
-    LEGACY_TRINH_DUYET = "TRINH_DUYET"
-    LEGACY_TRA_LAI = "TRA_LAI"
-    LEGACY_PHE_DUYET = "PHE_DUYET"
-    LEGACY_KY_SO = "KY_SO"
-    LEGACY_PHAT_HANH = "PHAT_HANH"
-    LEGACY_LUU_TRU = "LUU_TRU"
 
 
 # --- Canonical Sets ---
@@ -61,8 +57,6 @@ ALL_INBOUND_STATUSES = {
 ALL_OUTBOUND_STATUSES = {
     OutboundStatus.DRAFT.value,
     OutboundStatus.SUBMITTED.value,
-    OutboundStatus.RETURNED.value,
-    OutboundStatus.APPROVED.value,
     OutboundStatus.PENDING_CLERK_CHECK.value,
     OutboundStatus.REGISTERED.value,
     OutboundStatus.ISSUED.value,
@@ -74,26 +68,15 @@ ALL_OUTBOUND_STATUSES = {
 DRAFT_STATUSES = {
     OutboundStatus.DRAFT.value,
     OutboundStatus.SUBMITTED.value,
-    OutboundStatus.RETURNED.value,
-    # Legacy mappings included for safety in checks
-    OutboundStatus.LEGACY_DU_THAO.value,
-    OutboundStatus.LEGACY_TRINH_DUYET.value,
-    OutboundStatus.LEGACY_TRA_LAI.value,
 }
 
 # Official statuses (processed, immutable content usually)
 OFFICIAL_STATUSES = ALL_INBOUND_STATUSES.union({
-    OutboundStatus.APPROVED.value,
     OutboundStatus.PENDING_CLERK_CHECK.value,
     OutboundStatus.REGISTERED.value,
     OutboundStatus.ISSUED.value,
     OutboundStatus.ARCHIVED.value,
     OutboundStatus.HUY_PHAT_HANH.value,
-    # Legacy
-    OutboundStatus.LEGACY_PHE_DUYET.value,
-    OutboundStatus.LEGACY_KY_SO.value,
-    OutboundStatus.LEGACY_PHAT_HANH.value,
-    OutboundStatus.LEGACY_LUU_TRU.value,
 })
 
 
@@ -181,12 +164,13 @@ _INBOUND_STATUS_ALIASES = _build_alias_map(
         ("Đã phát hành kết quả", InboundStatus.DISPATCHED.value),
         ("Đã lưu trữ", InboundStatus.ARCHIVED.value),
         ("Thu hồi", InboundStatus.THU_HOI.value),
-        # Legacy
-        (InboundStatus.LEGACY_TIEP_NHAN.value, InboundStatus.RECEIVED.value),
-        (InboundStatus.LEGACY_PHAN_CONG.value, InboundStatus.WAITING_ASSIGNMENT.value),
-        (InboundStatus.LEGACY_DANG_XU_LY.value, InboundStatus.PROCESSING.value),
-        (InboundStatus.LEGACY_HOAN_TAT.value, InboundStatus.DISPATCHED.value),
-        (InboundStatus.LEGACY_LUU_TRU.value, InboundStatus.ARCHIVED.value),
+        # Legacy Vietnamese status codes (no longer in enum, but still mapped)
+        ("TIEP_NHAN", InboundStatus.RECEIVED.value),
+        ("PHAN_CONG", InboundStatus.WAITING_ASSIGNMENT.value),
+        ("DANG_XU_LY", InboundStatus.PROCESSING.value),
+        ("DANG_KY", InboundStatus.REGISTERED.value),
+        ("HOAN_TAT", InboundStatus.DISPATCHED.value),
+        ("LUU_TRU", InboundStatus.ARCHIVED.value),
     ],
 )
 
@@ -196,20 +180,20 @@ _OUTBOUND_STATUS_ALIASES = _build_alias_map(
         ("Đã phát hành", OutboundStatus.ISSUED.value),
         ("Đã phát hành kết quả", OutboundStatus.ISSUED.value),
         ("Đã lưu trữ", OutboundStatus.ARCHIVED.value),
-        # Legacy → canonical outbound codes
-        (OutboundStatus.LEGACY_DU_THAO.value, OutboundStatus.DRAFT.value),
-        (OutboundStatus.LEGACY_TRINH_DUYET.value, OutboundStatus.SUBMITTED.value),
-        # Map RETURNED/TRA_LAI → DRAFT (status no longer exists, use DRAFT instead)
-        (OutboundStatus.LEGACY_TRA_LAI.value, OutboundStatus.DRAFT.value),
+        # Legacy Vietnamese status codes → canonical outbound codes
+        ("DU_THAO", OutboundStatus.DRAFT.value),
+        ("TRINH_DUYET", OutboundStatus.SUBMITTED.value),
+        # Map RETURNED/TRA_LAI → DRAFT (⚠️ status removed from workflow)
         ("RETURNED", OutboundStatus.DRAFT.value),
+        ("TRA_LAI", OutboundStatus.DRAFT.value),
         ("BI_TRA_LAI", OutboundStatus.DRAFT.value),
-        # Map APPROVED/PHE_DUYET → PENDING_CLERK_CHECK (LD approve goes directly to clerk check now)
-        (OutboundStatus.LEGACY_PHE_DUYET.value, OutboundStatus.PENDING_CLERK_CHECK.value),
-        (OutboundStatus.LEGACY_KY_SO.value, OutboundStatus.PENDING_CLERK_CHECK.value),
+        # Map APPROVED/PHE_DUYET → PENDING_CLERK_CHECK (⚠️ workflow changed)
         ("APPROVED", OutboundStatus.PENDING_CLERK_CHECK.value),
+        ("PHE_DUYET", OutboundStatus.PENDING_CLERK_CHECK.value),
+        ("KY_SO", OutboundStatus.PENDING_CLERK_CHECK.value),
         ("LD_DA_PHE_DUYET", OutboundStatus.PENDING_CLERK_CHECK.value),
-        (OutboundStatus.LEGACY_PHAT_HANH.value, OutboundStatus.ISSUED.value),
-        (OutboundStatus.LEGACY_LUU_TRU.value, OutboundStatus.ARCHIVED.value),
+        ("PHAT_HANH", OutboundStatus.ISSUED.value),
+        ("LUU_TRU", OutboundStatus.ARCHIVED.value),
         # Additional aliases frequently used in UI/payloads
         ("DA_TRINH", OutboundStatus.SUBMITTED.value),
         ("TRINH_LANH_DAO", OutboundStatus.SUBMITTED.value),

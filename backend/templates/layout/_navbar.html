@@ -48,6 +48,24 @@
     </div>
 
     <div class="ml-auto flex items-center gap-2 md:gap-4">
+      <!-- Chatbot Button -->
+      <a
+        href="/chatbot/"
+        class="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 group"
+        title="Chatbot RAG"
+        aria-label="Chatbot"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-600 group-hover:text-blue-600" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H6L4 18V4H20V16Z"/>
+          <circle cx="8" cy="10" r="1.5"/>
+          <circle cx="12" cy="10" r="1.5"/>
+          <circle cx="16" cy="10" r="1.5"/>
+        </svg>
+        <span class="absolute -bottom-5 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-slate-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity">
+          Chatbot
+        </span>
+      </a>
+      
       <button
         id="notifBtn"
         type="button"

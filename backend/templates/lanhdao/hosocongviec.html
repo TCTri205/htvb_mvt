@@ -136,6 +136,16 @@
                         <option value="LOW">Thấp</option>
                       </select>
                     </div>
+                    <!-- My Tasks filter button -->
+                    <button
+                      id="btnMyTasks"
+                      type="button"
+                      class="btn-my-tasks"
+                      title="Chỉ hiển thị hồ sơ cần xử lý"
+                    >
+                      <span class="indicator-dot"></span>
+                      <span>Cần xử lý</span>
+                    </button>
                   </div>
                 </section>
 
@@ -154,13 +164,14 @@
                           <th class="px-4 py-3 font-semibold">Chủ trì</th>
                           <th class="px-4 py-3 font-semibold">Ngày tạo</th>
                           <th class="px-4 py-3 font-semibold">Hạn hoàn thành</th>
+                          <th class="px-4 py-3 font-semibold">Tiến độ</th>
                           <th class="px-4 py-3 font-semibold">Trạng thái</th>
                           <th class="px-4 py-3 font-semibold text-right">Hành động</th>
                         </tr>
                       </thead>
                       <tbody id="cvCaseTableBody">
                         <tr>
-                          <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-500">
+                          <td colspan="7" class="px-5 py-8 text-center text-sm text-slate-500">
                             Đang tải hồ sơ công việc...
                           </td>
                         </tr>
@@ -679,6 +690,7 @@
           </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'js/action-indicator.js' %}"></script>
 <script src="{% static 'js/doc-helpers.js' %}"></script>
 <script src="{% static 'js/lanhdao.js' %}"></script>
 <script src="{% static 'js/lanhdao-hosocongviec.js' %}"></script>

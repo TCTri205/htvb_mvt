@@ -333,35 +333,18 @@ class DocumentViewSet(DocumentBaseViewSet):
         serializer.is_valid(raise_exception=True)
         assignments = serializer.save(document=doc, assigned_by=request.user)
 
-        # Nếu là văn bản đến, chuyển trạng thái sang Đang xử lý sau khi phân công
+        # Log assignment without changing status
+        # Status change to PROCESSING is now done via confirm_assignment action
         if doc.doc_direction == Document.Direction.DEN:
-            processing_status = SR.doc_status_id(InboundStatus.PROCESSING.value)
-            from_status_id = getattr(doc, "status_id", None)
-            if from_status_id != processing_status:
-                Document.objects.filter(pk=doc.pk).update(status_id=processing_status)
-                DocumentWorkflowLog.objects.create(
-                    document=doc,
-                    action=Act.LD_ASSIGN_OFFICER.value,
-                    from_status_id=from_status_id,
-                    to_status_id=processing_status,
-                    acted_by=request.user,
-                )
-                audit_log(
-                    actor=request.user,
-                    action="DOC.IN.ASSIGN.API",
-                    entity_type="document",
-                    entity_id=doc.document_id,
-                    before={"status_id": from_status_id},
-                    after={"status_id": processing_status},
-                )
-                emit(
-                    "doc_in.assigned",
-                    {
-                        "document_id": doc.document_id,
-                        "assignees": [str(a["user_id"]) for a in serializer.validated_data.get("assignments", [])],
-                    },
-                )
-                doc.status_id = processing_status
+            audit_log(
+                actor=request.user,
+                action="DOC.IN.ADD_ASSIGNEE.API",
+                entity_type="document",
+                entity_id=doc.document_id,
+                after={
+                    "assignees": [str(a["user_id"]) for a in serializer.validated_data.get("assignments", [])],
+                },
+            )
         return Response(DocumentAssignmentSerializer(assignments, many=True).data)
 
     # ---- Approvals ---------------------------------------------------------------
@@ -475,8 +458,41 @@ class DocumentViewSet(DocumentBaseViewSet):
         return DocumentAttachment.objects.filter(document=doc)
 
     def _user_is_assigned(self, user, doc):
+        """Check if user can upload attachments to this document.
+        
+        Returns True if user is:
+        - Assigned to the document (as OWNER or ASSIGNEE)
+        - The document creator
+        - The document receiver (for inbound docs)
+        - Has VT/LD/QT role (clerks, leaders, admins can always upload)
+        """
         if user is None or doc is None:
             return False
+        
+        # Văn thư, Lãnh đạo, Quản trị can always upload
+        user_role = _user_role(user)
+        if user_role in (Role.VT.value, Role.LD.value, Role.QT.value):
+            return True
+        
+        # Check if user created the document
+        created_by = getattr(doc, "created_by", None)
+        if created_by is not None:
+            if getattr(created_by, "pk", None) == getattr(user, "pk", None):
+                return True
+            if getattr(created_by, "user_id", None) == getattr(user, "user_id", None):
+                return True
+        created_by_id = getattr(doc, "created_by_id", None)
+        if created_by_id is not None:
+            if created_by_id == getattr(user, "pk", None) or created_by_id == getattr(user, "id", None):
+                return True
+        
+        # Check if user received the document (for inbound docs)
+        received_by = getattr(doc, "received_by", None)
+        if received_by is not None:
+            if getattr(received_by, "pk", None) == getattr(user, "pk", None):
+                return True
+        
+        # Check assignment
         return DocumentAssignment.objects.filter(
             document=doc,
             user=user,
@@ -485,6 +501,7 @@ class DocumentViewSet(DocumentBaseViewSet):
                 DocumentAssignment.RoleOnDoc.OWNER.value,
             ),
         ).exists()
+
 
     def _allow_json_upload(self) -> bool:
         allow_json = getattr(settings, "ALLOW_JSON_UPLOAD_FALLBACK", None)

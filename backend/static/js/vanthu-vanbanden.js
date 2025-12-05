@@ -154,6 +154,9 @@
   function createListItem(doc) {
     const rawStatusKey = normalizeStatusKey(doc);
     const statusKey = canonicalStatusKey(doc);
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.inboundNeedsAction === "function" ? AI.inboundNeedsAction(doc) : false;
     const detailId = doc.id || doc.document_id || doc.uuid || doc.pk || "";
     const detailUrl = detailId ? `/vanthu/vanbanden/${encodeURIComponent(String(detailId))}/` : "#";
     const label = STATUS_LABELS[statusKey] || STATUS_LABELS[rawStatusKey] || statusKey;
@@ -166,11 +169,15 @@
     const department = doc.main_department_name || doc.department?.name || "";
     const assignee = doc.current_assignee?.full_name || doc.assignee_name || "";
     const receivedAt = formatDate(doc.received_date || doc.created_at);
-    const deadline = formatDate(doc.due_date || doc.deadline || doc.expected_finish);
+    const deadline = formatDate(doc.deadline || doc.due_date || doc.expected_finish);
     const urgencyBadge = buildUrgencyBadge(doc);
+    // Action indicator HTML
+    const indicatorHtml = needsAction ? '<span class="action-indicator" style="position:absolute;top:8px;right:8px;width:10px;height:10px;background:#22c55e;border-radius:50%;animation:action-pulse 2s ease-in-out infinite;"></span>' : '';
     const li = document.createElement("li");
-    li.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm";
+    li.className = "bg-white border border-slate-200 rounded-xl p-4 shadow-sm" + (needsAction ? " action-card" : "");
+    li.dataset.needsAction = needsAction ? "1" : "0";
     li.innerHTML = `
+      ${indicatorHtml}
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <h4 class="text-[15px] font-semibold text-slate-800 truncate">${escapeHtml(title)}</h4>
@@ -249,7 +256,9 @@
       receivedTo: "",
       page: 1,
       pageSize: 20,
+      myTasks: false, // Filter for items needing action
     };
+    const btnMyTasks = document.getElementById("btnMyTasks");
 
     const layout = window.Layout || {};
     const ready =
@@ -260,6 +269,16 @@
     ready
       .then(() => fetchDocuments())
       .catch(() => renderMessage("Không thể xác thực người dùng hiện tại."));
+
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        state.page = 1;
+        fetchDocuments();
+      });
+    }
 
     if (statusMenu) {
       statusMenu.addEventListener("click", (event) => {
@@ -390,13 +409,21 @@
 
     function renderList(items) {
       if (!listEl) return;
-      if (!items || !items.length) {
+      // Apply myTasks filter (client-side)
+      let filtered = items || [];
+      if (state.myTasks) {
+        const AI = window.ActionIndicator;
+        if (AI && typeof AI.inboundNeedsAction === "function") {
+          filtered = filtered.filter((doc) => AI.inboundNeedsAction(doc));
+        }
+      }
+      if (!filtered.length) {
         renderEmpty();
         return;
       }
       listEl.innerHTML = "";
       const fragment = document.createDocumentFragment();
-      items.forEach((doc) => fragment.appendChild(createListItem(doc)));
+      filtered.forEach((doc) => fragment.appendChild(createListItem(doc)));
       listEl.appendChild(fragment);
     }
 

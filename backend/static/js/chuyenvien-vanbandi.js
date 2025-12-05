@@ -1,4 +1,7 @@
 (function () {
+  // CRITICAL: Set this flag FIRST, before any checks, to prevent chuyenvien.js from running old code
+  window.CVOutgoingListOverride = true;
+  
   const PAGE_ID = "vanbandi";
   const STATUS_META = {
     DRAFT: { label: "Dự thảo", classes: "bg-slate-100 text-slate-700" },
@@ -22,8 +25,6 @@
     return;
   }
 
-  window.CVOutgoingListOverride = true;
-
   const api = window.ApiClient;
   const docApi = api?.documents;
   if (!docApi) {
@@ -36,7 +37,8 @@
   const levelSelect = document.querySelector('select[data-filter="level"]');
   const searchInput = document.querySelector('input[data-filter="q"]');
   const summaryCount = document.querySelector("[data-count='rows']");
-  const state = { q: "", status: "", level: "", page: 1, pageSize: 20 };
+  const state = { q: "", status: "", level: "", page: 1, pageSize: 20, myTasks: false };
+  const btnMyTasks = document.getElementById("btnMyTasks");
 
   const layout = window.Layout || {};
   const ready =
@@ -73,6 +75,15 @@
         loadDocuments();
       }, 250);
       searchInput.addEventListener("input", handler);
+    }
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        state.page = 1;
+        loadDocuments();
+      });
     }
   }
 
@@ -114,15 +125,24 @@
 
   function renderRows(items) {
     if (!tableBody) return;
-    if (!items.length) {
+    // Apply myTasks filter (client-side)
+    let filtered = items || [];
+    if (state.myTasks) {
+      const AI = window.ActionIndicator;
+      if (AI && typeof AI.outboundNeedsAction === "function") {
+        filtered = filtered.filter((doc) => AI.outboundNeedsAction(doc));
+      }
+    }
+    if (!filtered.length) {
       renderEmpty("Không có văn bản phù hợp.");
       updateSummary(0);
       return;
     }
     tableBody.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    items.forEach((doc) => fragment.appendChild(createRow(doc)));
+    filtered.forEach((doc) => fragment.appendChild(createRow(doc)));
     tableBody.appendChild(fragment);
+    updateSummary(filtered.length);
   }
 
   function renderLoading() {
@@ -144,8 +164,13 @@
   }
 
   function createRow(doc) {
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.outboundNeedsAction === "function" ? AI.outboundNeedsAction(doc) : false;
+    
     const row = document.createElement("tr");
-    row.className = "hover:bg-slate-50/60";
+    row.className = "hover:bg-slate-50/60" + (needsAction ? " action-card" : "");
+    row.dataset.needsAction = needsAction ? "1" : "0";
     const detailId = doc.id || doc.document_id || doc.pk || "";
     const detailUrl = detailId
       ? `/chuyenvien/vanbandi/${encodeURIComponent(detailId)}/`
@@ -197,7 +222,8 @@
           ${escapeHtml(statusMeta.label)}
         </span>
       </td>
-      <td class="py-2 pl-3 pr-0 text-right text-[12px]">
+      <td class="py-2 pl-3 pr-0 text-right text-[12px] relative">
+        ${needsAction ? '<span class="action-indicator" style="position:absolute;top:8px;right:8px;width:8px;height:8px;background:#22c55e;border-radius:50%;animation:action-pulse 2s ease-in-out infinite;"></span>' : ''}
         <a
           href="${escapeHtml(detailUrl)}"
           class="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-slate-200 text-slate-600 hover:bg-slate-50"

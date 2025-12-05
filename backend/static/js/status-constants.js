@@ -32,12 +32,14 @@
     PENDING_LEADER_APPROVAL: "SUBMITTED",
     SUBMITTED: "SUBMITTED",
     
-    // RETURNED mapped to DRAFT (status removed from workflow)
+    // ⚠️ RETURNED mapped to DRAFT (status removed from workflow - no longer used)
+    // Documents previously in RETURNED status are now treated as DRAFT
     BI_TRA_LAI: "DRAFT",
     TRA_LAI: "DRAFT",
     RETURNED: "DRAFT",
     
-    // APPROVED/PENDING_CLERK_CHECK variations
+    // ⚠️ APPROVED mapped to PENDING_CLERK_CHECK (workflow changed)
+    // Leader approval now goes directly to clerk check instead of APPROVED status
     PHE_DUYET: "PENDING_CLERK_CHECK",
     LD_DA_PHE_DUYET: "PENDING_CLERK_CHECK",
     KY_SO: "PENDING_CLERK_CHECK",

@@ -156,6 +156,7 @@ urlpatterns = [
     path("api/v1/debug-specialists/", lambda request, *args, **kwargs: __import__("documents.api_debug", fromlist=["debug_specialists"]).debug_specialists(request, *args, **kwargs), name="debug-specialists"),
 
     path("api/v1/catalog/", include(("catalog.urls", "catalog"), namespace="catalog")),
+    path("api/v1/chatbot/", include("chatbot.urls")),  # Chatbot RAG integration
 
     # ---- UI routes (MVT) ----
     path("", include(("ui.urls_chung", "ui"), namespace="ui")),

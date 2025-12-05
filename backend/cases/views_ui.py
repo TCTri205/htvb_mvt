@@ -280,3 +280,68 @@ class VanthuCaseCreateView(CaseCreateView):
 
         messages.success(request, "Đã tạo hồ sơ công việc.")
         return redirect(reverse("ui_vanthu:hosocongviec_detail", args=[case.case_id]))
+
+
+class ChuyenvienCaseCreateView(CaseCreateView):
+    template_name = "chuyenvien/hosocongviec-taomoi.html"
+    extra_context = {"body_role": "chuyenvien", "body_page": "hosocongviec-taomoi"}
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add leaders list for chairperson selection
+        from accounts.models import Role as RoleModel, UserRole
+        ld_role = RoleModel.objects.filter(name__in=['LD', 'LANH_DAO']).first()
+        if ld_role:
+            leader_user_ids = UserRole.objects.filter(role=ld_role).values_list('user_id', flat=True)
+            leaders = User.objects.filter(user_id__in=leader_user_ids, is_active=True).order_by('full_name')
+            context['leaders'] = leaders
+        else:
+            context['leaders'] = []
+        return context
+
+    def post(self, request, *args, **kwargs):
+        require_can(self.request.user, Act.CASE_CREATE)
+        title = self._get_value("title", required=True)
+        case_code = self._get_value("case_code") or f"HS-{uuid.uuid4().hex[:8]}"
+        description = self._get_value("description")
+        case_type = self._resolve_case_type()
+        if not case_type:
+            messages.error(request, "Cần chọn loại hồ sơ.")
+            return redirect(request.path)
+        due_date = self._parse_datetime("due_date")
+        priority = self._get_value("priority")
+        department = self._resolve_department()
+
+        # Handle leader (chairperson) selection
+        leader_id = self._get_value("leader_id")
+        leader = None
+        if leader_id:
+            try:
+                leader = User.objects.filter(user_id=leader_id, is_active=True).first()
+            except Exception:
+                pass
+
+        case = Case(
+            case_code=case_code,
+            title=title,
+            description=description or None,
+            case_type=case_type,
+            due_date=due_date,
+            priority=priority or None,
+            leader=leader,  # Set the selected chairperson
+        )
+        if department is not None:
+            case.department = department
+
+        try:
+            self.service.create(case, description=description or None)
+        except (wf_errors.PermissionDenied, wf_errors.ValidationError, wf_errors.InvalidTransition) as exc:
+            messages.error(request, str(exc))
+            return redirect(request.path)
+        except Exception:
+            logger.exception("Không thể tạo hồ sơ công việc.", exc_info=True)
+            messages.error(request, "Đã xảy ra lỗi trong quá trình tạo hồ sơ.")
+            return redirect(request.path)
+
+        messages.success(request, "Đã tạo hồ sơ công việc.")
+        return redirect(reverse("ui_chuyenvien:hosocongviec_detail", args=[case.case_id]))

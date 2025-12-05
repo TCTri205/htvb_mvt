@@ -359,6 +359,17 @@
                     >0</span
                   >
                 </button>
+
+                <!-- My Tasks filter button -->
+                <button
+                  id="btnMyTasks"
+                  type="button"
+                  class="btn-my-tasks"
+                  title="Chỉ hiển thị văn bản cần xử lý"
+                >
+                  <span class="indicator-dot"></span>
+                  <span>Cần xử lý</span>
+                </button>
               </div>
 
               <!-- Action: Tiếp nhận -->
@@ -425,6 +436,7 @@
           </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'js/action-indicator.js' %}"></script>
 <script src="{% static 'js/vanthu.js' %}"></script>
 <script src="{% static 'js/vanthu-vanbanden.js' %}"></script>
 {% endblock %}

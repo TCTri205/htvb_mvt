@@ -3,7 +3,7 @@ from django.urls import path
 
 from . import views_chuyenvien as v
 from .views_documents_inbound import InboundDetailView, LegacyDocumentDetailPageView
-from cases.views_ui import CaseDetailView
+from cases.views_ui import CaseDetailView, ChuyenvienCaseCreateView
 from documents.views_ui import OutboundDetailView, OutboundDraftView
 
 app_name = "ui_chuyenvien"
@@ -35,6 +35,8 @@ urlpatterns = [
         ),
     ),
     path("hosocongviec/<int:pk>/", CaseDetailView.as_view(), name="hosocongviec_detail"),
+    path("hosocongviec-taomoi.html", ChuyenvienCaseCreateView.as_view()),
+    path("hosocongviec-taomoi/", ChuyenvienCaseCreateView.as_view(), name="hosocongviec_taomoi"),
     path("taikhoan.html", v.ChuyenvienTaiKhoanView.as_view()),
     path("taikhoan/", v.ChuyenvienTaiKhoanView.as_view(), name="taikhoan"),
     path("thongbaonhacviec.html", v.ChuyenvienThongBaoNhacViecView.as_view()),

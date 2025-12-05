@@ -280,6 +280,17 @@
                     </ul>
                   </div>
                 </div>
+
+                <!-- My Tasks filter button -->
+                <button
+                  id="btnMyTasks"
+                  type="button"
+                  class="btn-my-tasks"
+                  title="Chỉ hiển thị văn bản cần xử lý"
+                >
+                  <span class="indicator-dot"></span>
+                  <span>Cần xử lý</span>
+                </button>
               </div>
 
               <div class="px-4 py-3 rounded-lg border border-dashed border-slate-200 bg-slate-50 text-[13px] text-slate-600">
@@ -322,6 +333,7 @@
           </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'js/vanthu-vanbandi.js' %}"></script>
-<script src="{% static 'js/vanthu.js' %}"></script>
+<script src="{% static 'js/action-indicator.js' %}?v=20251204223500"></script>
+<script src="{% static 'js/vanthu-vanbandi.js' %}?v=20251204223500"></script>
+<script src="{% static 'js/vanthu.js' %}?v=20251204223500"></script>
 {% endblock %}

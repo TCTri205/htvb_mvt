@@ -86,42 +86,116 @@ class InboundService:
             audit_log(actor=self.actor, action="DOC.IN.REGISTER", entity_type="document", entity_id=doc.document_id,
                       before={"status_id":from_id}, after={"status_id":waiting_status,"received_number":received_number,"state":InboundStatus.WAITING_ASSIGNMENT.value})
 
-    # ===== Phân công (DANG_KY -> PHAN_CONG) =====
-    def assign(self, doc: Any, assignees: Iterable[Any], *, instruction: Optional[str]=None, due_at=None):
+    # ===== Thêm người được phân công (giữ nguyên trạng thái) =====
+    def add_assignee(self, doc: Any, assignees: Iterable[Any], *, instruction: Optional[str]=None, due_at=None):
+        """Add assignees without changing document status.
+        Status remains at WAITING_ASSIGNMENT until confirm_assignment() is called.
+        """
         if not can(self.actor, Act.IN_ASSIGN, obj=doc):
             raise PermissionDenied("Không có quyền phân luồng/chuyển xử lý VB đến.")
-        from_id = _status_id(doc)
-        processing_status = SR.doc_status_id(InboundStatus.PROCESSING.value)
-
+        
         Doc, _, Assign = _doc_models()
+        now = timezone.now()
+        added_users = []
+        
         with transaction.atomic():
-            doc = Doc.objects.select_for_update().get(pk=doc.pk)
-            # chuyển trạng thái
-            doc.status_id = processing_status
-            doc.save(update_fields=["status_id"])
-            # ghi phân công
-            now = timezone.now()
             for u in assignees:
                 Assign.objects.update_or_create(
                     document_id=doc.document_id,
                     user_id=u.user_id,
                     defaults={
                         "role_on_doc": "assignee",
-                        "assigned_by": self.actor.user_id,
+                        "assigned_by": self.actor,
                         "assigned_at": now,
                         "due_at": due_at,
                         "instruction": instruction,
                         "is_owner": False,
                     },
                 )
+                added_users.append(u)
+        
+        # Log activity without changing status
+        if added_users:
+            audit_log(
+                actor=self.actor,
+                action="DOC.IN.ADD_ASSIGNEE",
+                entity_type="document",
+                entity_id=doc.document_id,
+                after={
+                    "assignees": [str(u.user_id) for u in added_users],
+                    "due_at": str(due_at) if due_at else None,
+                    "instruction": instruction,
+                },
+            )
+        
+        return added_users
 
-            _insert_wf_log(doc, action=Act.LD_ASSIGN_OFFICER.value, from_status_id=from_id, to_status_id=processing_status,
-                           actor=self.actor, comment=instruction, meta={"assignees":[str(u.user_id) for u in assignees], "due_at": str(due_at) if due_at else None})
-            audit_log(actor=self.actor, action="DOC.IN.ASSIGN", entity_type="document", entity_id=doc.document_id,
-                      after={"to":InboundStatus.PROCESSING.value,"assignees":[str(u.user_id) for u in assignees],"due_at": str(due_at) if due_at else None})
-
+    # ===== Xác nhận phân công (chuyển sang ĐANG XỬ LÝ) =====
+    def confirm_assignment(self, doc: Any, *, note: Optional[str]=None):
+        """Confirm assignment and change status to PROCESSING.
+        Called when leader clicks 'Thực hiện' in workflow status panel.
+        """
+        if not can(self.actor, Act.IN_ASSIGN, obj=doc):
+            raise PermissionDenied("Không có quyền xác nhận phân công.")
+        
+        from_id = _status_id(doc)
+        waiting_status = SR.doc_status_id(InboundStatus.WAITING_ASSIGNMENT.value)
+        processing_status = SR.doc_status_id(InboundStatus.PROCESSING.value)
+        
+        # Only allow confirming from WAITING_ASSIGNMENT status
+        if from_id != waiting_status:
+            raise InvalidTransition("Chỉ xác nhận phân công khi đang ở trạng thái Chờ phân công.")
+        
+        Doc, _, Assign = _doc_models()
+        
+        # Check if there are any assignees
+        assignee_count = Assign.objects.filter(document_id=doc.document_id).count()
+        if assignee_count == 0:
+            raise ValidationError("Phải phân công ít nhất một người trước khi xác nhận.")
+        
+        with transaction.atomic():
+            doc = Doc.objects.select_for_update().get(pk=doc.pk)
+            doc.status_id = processing_status
+            doc.save(update_fields=["status_id"])
+            
+            _insert_wf_log(
+                doc,
+                action=Act.LD_ASSIGN_OFFICER.value,
+                from_status_id=from_id,
+                to_status_id=processing_status,
+                actor=self.actor,
+                comment=note,
+            )
+            audit_log(
+                actor=self.actor,
+                action="DOC.IN.CONFIRM_ASSIGNMENT",
+                entity_type="document",
+                entity_id=doc.document_id,
+                before={"status_id": from_id},
+                after={"status_id": processing_status, "state": InboundStatus.PROCESSING.value},
+            )
+        
         doc.refresh_from_db()
-        emit("doc_in.assigned", {"document_id": doc.document_id, "assignees":[str(u.user_id) for u in assignees]})
+        
+        # Get all assignees for event
+        assignees = Assign.objects.filter(document_id=doc.document_id).values_list("user_id", flat=True)
+        emit("doc_in.assigned", {"document_id": doc.document_id, "assignees": [str(uid) for uid in assignees]})
+
+    # ===== Phân công (backward compatible - gọi add_assignee + confirm_assignment) =====
+    def assign(self, doc: Any, assignees: Iterable[Any], *, instruction: Optional[str]=None, due_at=None):
+        """Legacy method: add assignees AND confirm in one step.
+        For new UI, use add_assignee() then confirm_assignment() separately.
+        """
+        # Add assignees first
+        self.add_assignee(doc, assignees, instruction=instruction, due_at=due_at)
+        
+        # Then confirm (changes status to PROCESSING)
+        # Skip if doc is already in PROCESSING
+        from_id = _status_id(doc)
+        processing_status = SR.doc_status_id(InboundStatus.PROCESSING.value)
+        if from_id != processing_status:
+            self.confirm_assignment(doc, note=instruction)
+
 
     # ===== Bắt đầu xử lý (PHAN_CONG -> DANG_XU_LY) =====
     def start_processing(self, doc: Any):
@@ -184,7 +258,7 @@ class InboundService:
         from_id = _status_id(doc)
         valid_from = _status_ids(
             InboundStatus.PENDING_LEADER_APPROVAL.value,
-            InboundStatus.LEGACY_HOAN_TAT.value,
+            "HOAN_TAT",  # Legacy status
         )
         if from_id not in valid_from:
             raise InvalidTransition("Chỉ được phê duyệt khi đang chờ lãnh đạo.")
@@ -396,8 +470,10 @@ class InboundService:
         from_id = _status_id(doc)
         thu_hoi = SR.doc_status_id("THU_HOI")
         valid_from = _status_ids(
-            InboundStatus.LEGACY_TIEP_NHAN.value, InboundStatus.LEGACY_DANG_KY.value, InboundStatus.LEGACY_PHAN_CONG.value,
-            InboundStatus.LEGACY_DANG_XU_LY.value, InboundStatus.LEGACY_HOAN_TAT.value,
+            # Legacy statuses (no longer in enum)
+            "TIEP_NHAN", "DANG_KY", "PHAN_CONG",
+            "DANG_XU_LY", "HOAN_TAT",
+            # Canonical statuses
             InboundStatus.RECEIVED.value, InboundStatus.WAITING_ASSIGNMENT.value, InboundStatus.PROCESSING.value,
             InboundStatus.PENDING_LEADER_APPROVAL.value, InboundStatus.PENDING_CLERK_CHECK.value,
             InboundStatus.REGISTERED.value, InboundStatus.DISPATCHED.value,

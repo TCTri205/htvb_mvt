@@ -353,8 +353,9 @@
     const creatorName = raw?.creator?.full_name || raw?.creator?.username || "";
     const docType = raw?.document_type?.name || raw?.document_type?.code || "";
     const dueDate =
-      raw?.due_date ||
       raw?.deadline ||
+      raw?.due_date ||
+      raw?.due_at ||
       (typeof raw?.expected_finish === "string"
         ? raw.expected_finish.slice(0, 10)
         : "");

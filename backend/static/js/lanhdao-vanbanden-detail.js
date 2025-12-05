@@ -352,7 +352,7 @@
         metaField.textContent = doc.department?.name || doc.field?.name || "—";
       }
       if (metaDeadline) {
-        metaDeadline.textContent = formatDate(doc.due_date || doc.deadline);
+        metaDeadline.textContent = formatDate(doc.deadline || doc.due_date);
       }
       if (identifierEl) {
         const code = doc.number || doc.document_code || "—";

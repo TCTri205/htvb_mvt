@@ -72,7 +72,9 @@
     q: "",
     status: "",
     level: "",
+    myTasks: false, // Filter for items needing action
   };
+  const btnMyTasks = document.getElementById("btnMyTasks");
 
   const layout = window.Layout || {};
   const ready =
@@ -127,6 +129,14 @@
         }
       });
     }
+    // My Tasks filter button
+    if (btnMyTasks) {
+      btnMyTasks.addEventListener("click", () => {
+        state.myTasks = !state.myTasks;
+        btnMyTasks.classList.toggle("active", state.myTasks);
+        loadDocuments();
+      });
+    }
   }
 
   function attachSearch() {
@@ -178,13 +188,21 @@
 
   function renderRows(items) {
     if (!docList) return;
-    if (!items.length) {
-      renderEmpty("Không có văn bản phù hợp.");
+    // Apply client-side myTasks filter
+    let filtered = items;
+    if (state.myTasks) {
+      const AI = window.ActionIndicator;
+      if (AI && typeof AI.inboundNeedsAction === "function") {
+        filtered = items.filter((doc) => AI.inboundNeedsAction(doc));
+      }
+    }
+    if (!filtered.length) {
+      renderEmpty(state.myTasks ? "Không có văn bản cần xử lý." : "Không có văn bản phù hợp.");
       return;
     }
     docList.innerHTML = "";
     const fragment = document.createDocumentFragment();
-    items.forEach((doc) => fragment.appendChild(createCard(doc)));
+    filtered.forEach((doc) => fragment.appendChild(createCard(doc)));
     docList.appendChild(fragment);
   }
 
@@ -217,8 +235,12 @@
 
   function createCard(doc) {
     const card = document.createElement("article");
-    card.className = "bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden";
+    // Check if document needs action from current user
+    const AI = window.ActionIndicator;
+    const needsAction = AI && typeof AI.inboundNeedsAction === "function" ? AI.inboundNeedsAction(doc) : false;
+    card.className = "bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden" + (needsAction ? " action-card" : "");
     card.dataset.docId = doc.id || doc.document_id || "";
+    card.dataset.needsAction = needsAction ? "1" : "0";
     const rawStatusKey = normalizeStatus(
       doc.status?.code || doc.status?.name || doc.status || doc.state || doc.status_name
     );
@@ -244,8 +266,11 @@
     const detailUrl = detailId
       ? `/lanhdao/vanbanden/${encodeURIComponent(detailId)}/`
       : "/lanhdao/vanbanden/";
+    // Action indicator HTML
+    const indicatorHtml = needsAction ? '<span class="action-indicator" title="Cần xử lý"></span>' : '';
 
     card.innerHTML = `
+      ${indicatorHtml}
       <div class="px-4 py-4 space-y-3">
         <div class="flex flex-wrap items-center gap-2 text-[13px] text-slate-500">
           <span class="font-semibold text-slate-800">${escapeHtml(
@@ -269,7 +294,7 @@
             doc.from_org_name || doc.sender || "—"
           )}</span></div>
           <div>Hạn xử lý: <span class="font-semibold text-slate-700">${escapeHtml(
-            formatDateValue(doc.due_date || doc.deadline || doc.expected_finish)
+            formatDateValue(doc.deadline || doc.due_date || doc.expected_finish)
           )}</span></div>
           <div>Chủ trì: <span class="font-semibold text-slate-700">${escapeHtml(
             assigned || assignee

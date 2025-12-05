@@ -130,7 +130,7 @@
                         <option value="DONG">Đóng</option>
                       </select>
                     </div>
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-1">
                       <select
                         data-filter="priority"
                         class="w-full border border-slate-200 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-500"
@@ -142,6 +142,17 @@
                         <option value="LOW">Thấp</option>
                       </select>
                     </div>
+
+                    <!-- My Tasks filter button -->
+                    <button
+                      id="btnMyTasks"
+                      type="button"
+                      class="btn-my-tasks md:col-span-1"
+                      title="Chỉ hiển thị công việc cần xử lý"
+                    >
+                      <span class="indicator-dot"></span>
+                      <span>Cần xử lý</span>
+                    </button>
                   </div>
                 </section>
 
@@ -1114,6 +1125,8 @@
           </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'js/action-indicator.js' %}"></script>
 <script src="{% static 'js/doc-helpers.js' %}"></script>
+<script src="{% static 'js/chuyenvien-hosocongviec.js' %}"></script>
 <script src="{% static 'js/chuyenvien.js' %}"></script>
 {% endblock %}
